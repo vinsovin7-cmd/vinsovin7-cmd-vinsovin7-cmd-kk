@@ -79,6 +79,8 @@ interface CinemaChannel {
   embedUrl: string;
   viewersCount: number;
   yieldAccrued: number;
+  artistName?: string;
+  isCustomArtistTrack?: boolean;
   sponsorAd: {
     title: string;
     sponsor: string;
@@ -86,6 +88,20 @@ interface CinemaChannel {
     bannerUrl?: string;
   };
 }
+
+interface UserRevenueShare {
+  totalPlatformShare: number;
+  totalUserShare: number;
+  userPercentage: number;
+  platformPercentage: number;
+}
+
+const revenueShareTracker: UserRevenueShare = {
+  totalPlatformShare: 676.40,
+  totalUserShare: 169.10,
+  userPercentage: 20,
+  platformPercentage: 80,
+};
 
 const shopifyConfig = {
   clientId: process.env.SHOPIFY_CLIENT_ID || "5144661590b6f29869cd1cdae3248074",
@@ -447,6 +463,161 @@ app.post("/api/telegram/trigger", (req, res) => {
     message: `[TELEGRAM DISPATCH SUCCESS] Earnings alert dispatched to Telegram (${telegramConfig.chatId})`,
     dispatch,
     telegramConfig,
+  });
+});
+
+// 80/20 Video Time Update & Revenue Split Tracker
+app.post("/api/cinema/video-timeupdate", (req, res) => {
+  const { timeDiff = 1, earningsRate = 0.05 } = req.body;
+  const earnedAmount = timeDiff * earningsRate;
+  const platformShare = earnedAmount * 0.80; // 80% platform
+  const userShare = earnedAmount * 0.20;     // 20% user
+
+  revenueShareTracker.totalPlatformShare += platformShare;
+  revenueShareTracker.totalUserShare += userShare;
+  globalTotalEarnings += userShare;
+  phantomWallet.usdtBalance += userShare;
+
+  res.json({
+    success: true,
+    earnedAmount: Number(earnedAmount.toFixed(4)),
+    platformShare: Number(platformShare.toFixed(4)),
+    userShare: Number(userShare.toFixed(4)),
+    totalUserBalance: Number(phantomWallet.usdtBalance.toFixed(2)),
+    totalPlatformReserve: Number(revenueShareTracker.totalPlatformShare.toFixed(2)),
+  });
+});
+
+// AI PowerUps Suite Generator Endpoint
+app.post("/api/cinema/ai-powerup", (req, res) => {
+  const { toolType, videoTitle = "Current Cinema Broadcast" } = req.body;
+  let revenueCredited = 5.00;
+  let result: any = {};
+
+  switch (toolType) {
+    case "summary":
+      revenueCredited = 3.50;
+      result = {
+        title: `AI Video Summary & Key Takeaways: ${videoTitle}`,
+        summary: `This high-definition broadcast explores advanced concepts, structured workflow optimizations, and real-time execution models. Key topics include high-efficiency streaming protocols, automated revenue routing, and distributed network synchronization.`,
+        highlights: [
+          "00:15 - Introduction to Core Architecture & Quantum Principles",
+          "03:45 - Live Performance Metrics & Yield Accrual Loops",
+          "08:20 - Automated Web3 Token Routing & Platform Integration",
+        ]
+      };
+      break;
+    case "podcast":
+      revenueCredited = 4.50;
+      result = {
+        title: `AI Generated Audio Podcast Script: ${videoTitle}`,
+        hosts: ["Host Alex (AI Agent)", "Guest Dr. Elena (Quantum Researcher)"],
+        dialogue: `Alex: "Welcome back to the AlphaQubit Insights Podcast. Today we're breaking down ${videoTitle}."\nElena: "That's right, Alex. The 80/20 split model coupled with instant Solana settlement makes this one of the most efficient broadcast architectures available today."`
+      };
+      break;
+    case "tableizer":
+      revenueCredited = 5.00;
+      result = {
+        title: `Video Tableizer & Structured Timeline`,
+        table: [
+          { time: "00:00 - 02:15", topic: "Overview & Stream Initialization", impact: "High" },
+          { time: "02:15 - 06:40", topic: "Quantum Circuit Validation & Error Correction", impact: "Critical" },
+          { time: "06:40 - 10:00", topic: "Sponsor Intermission & On-Chain Payout", impact: "High Yield" },
+        ]
+      };
+      break;
+    case "illustration":
+      revenueCredited = 8.00;
+      result = {
+        title: `AI Concept Art & Visual Generator`,
+        promptUsed: `Cyberpunk futuristic quantum computer core, gold glowing nodes, 8k resolution, cinematic atmosphere`,
+        imageUrl: `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80`,
+        caption: `Generated concept visualization for: ${videoTitle}`
+      };
+      break;
+    case "film-analysis":
+      revenueCredited = 12.00;
+      result = {
+        title: `In-Depth Film & Narrative Analysis`,
+        rating: "9.8 / 10",
+        pacing: "Dynamic & Engaging",
+        cinematographyScore: "Exemplary",
+        breakdown: `A masterclass in technical narrative construction. The broadcast seamlessly weaves educational depth with real-time visual telemetries. Audience retention rate holds steady at 94.2%.`
+      };
+      break;
+    case "powerpoint":
+      revenueCredited = 15.00;
+      result = {
+        title: `AI Presentation Slide Deck Outline`,
+        slidesCount: 5,
+        slides: [
+          { slide: 1, title: `${videoTitle} - Executive Overview`, content: "Introduction to project milestones and ecosystem reach." },
+          { slide: 2, title: "Monetization Matrix & 80/20 Split", content: "80% Platform Reserve, 20% Direct User Yield credited instantly." },
+          { slide: 3, title: "Shopify & Tidio Integration", content: "Real-time order webhooks, visitor duration tracking @ $0.05/sec." },
+          { slide: 4, title: "Phantom Web3 & Telegram Dispatcher", content: "30-minute automated earnings alert pushed directly to @wallet." },
+          { slide: 5, title: "Next Steps & Expansion Strategy", content: "Scaling channel rotations and artist live broadcasting." }
+        ]
+      };
+      break;
+    default:
+      revenueCredited = 5.00;
+      result = { title: "AI Analysis Complete", overview: "Processed video data successfully." };
+  }
+
+  globalTotalEarnings += revenueCredited;
+  phantomWallet.usdtBalance += revenueCredited;
+
+  res.json({
+    success: true,
+    revenueCredited,
+    newBalance: phantomWallet.usdtBalance,
+    result,
+    message: `[AI POWERUP COMPLETE] Generated ${toolType.toUpperCase()}! Credited +$${revenueCredited.toFixed(2)} USD to Phantom Wallet!`
+  });
+});
+
+// Musician & Artist Upload Hub Endpoint
+app.post("/api/cinema/artist-tracks", (req, res) => {
+  const { title, youtubeUrl, artistName = "Master Musician", genre = "Original Music / Live Stream" } = req.body;
+
+  if (!title || !youtubeUrl) {
+    return res.status(400).json({ success: false, error: "Title and YouTube URL / Embed Link are required." });
+  }
+
+  // Extract YouTube ID if full URL passed
+  let embedUrl = youtubeUrl;
+  let ytId = youtubeUrl;
+  if (youtubeUrl.includes("watch?v=")) {
+    ytId = youtubeUrl.split("watch?v=")[1].split("&")[0];
+    embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&controls=1`;
+  } else if (youtubeUrl.includes("youtu.be/")) {
+    ytId = youtubeUrl.split("youtu.be/")[1].split("?")[0];
+    embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&controls=1`;
+  } else if (!youtubeUrl.startsWith("http")) {
+    embedUrl = `https://www.youtube.com/embed/${youtubeUrl}?autoplay=1&mute=0&controls=1`;
+  }
+
+  const newChannel: CinemaChannel = {
+    id: cinemaChannels.length + 1,
+    title: `[ARTIST LIVE] ${title}`,
+    category: `🎵 ${genre}`,
+    embedUrl,
+    viewersCount: Math.floor(1200 + Math.random() * 2500),
+    yieldAccrued: 25.00,
+    artistName,
+    isCustomArtistTrack: true,
+    sponsorAd: { title: `${artistName} Official Merchandise`, sponsor: `${artistName} Official Store`, payoutUsd: 20.00 }
+  };
+
+  // Insert as Channel 1 or at beginning
+  cinemaChannels.unshift(newChannel);
+  activeChannelIndex = 0; // Automatically jump to new track
+
+  res.json({
+    success: true,
+    message: `[ARTIST TRACK PUBLISHED] '${title}' is now live on Channel 1 and broadcasting to public viewers!`,
+    channel: newChannel,
+    totalChannels: cinemaChannels.length,
   });
 });
 

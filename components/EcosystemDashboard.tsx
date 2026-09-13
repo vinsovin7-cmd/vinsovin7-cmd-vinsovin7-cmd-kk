@@ -28,7 +28,18 @@ import {
   Pause,
   SkipForward,
   Award,
-  Layers
+  Layers,
+  Music,
+  FileText,
+  Headphones,
+  Wand2,
+  Image as ImageIcon,
+  Video,
+  BarChart3,
+  Presentation,
+  PlusCircle,
+  Radio,
+  Film
 } from "lucide-react";
 
 interface Session {
@@ -96,6 +107,8 @@ interface CinemaChannel {
   embedUrl: string;
   viewersCount: number;
   yieldAccrued: number;
+  artistName?: string;
+  isCustomArtistTrack?: boolean;
   sponsorAd: {
     title: string;
     sponsor: string;
@@ -125,7 +138,7 @@ interface StatsData {
 export const EcosystemDashboard: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "matrix" | "cinema" | "phantom" | "telegram" | "urls" | "cli" | "paradise"
+    "matrix" | "cinema" | "artist" | "phantom" | "telegram" | "urls" | "cli" | "paradise"
   >("matrix");
   
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -137,6 +150,22 @@ export const EcosystemDashboard: React.FC = () => {
   const [isAdPlaying, setIsAdPlaying] = useState(false);
   const [adCountdown, setAdCountdown] = useState(5);
   const adTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 80/20 Video Revenue Tracking State
+  const [userShareAccumulated, setUserShareAccumulated] = useState(169.10);
+  const [platformReserveAccumulated, setPlatformReserveAccumulated] = useState(676.40);
+  const [totalSecondsWatched, setTotalSecondsWatched] = useState(3382);
+
+  // AI PowerUp Tools State
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState<{ toolType: string; result: any; revenueCredited: number } | null>(null);
+
+  // Musician Upload Form State
+  const [songTitle, setSongTitle] = useState("");
+  const [youtubeLink, setYoutubeLink] = useState("");
+  const [artistNameInput, setArtistNameInput] = useState("");
+  const [musicGenreInput, setMusicGenreInput] = useState("");
+  const [uploadMessage, setUploadMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Withdrawal Form State
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -180,6 +209,102 @@ export const EcosystemDashboard: React.FC = () => {
     const interval = setInterval(fetchStats, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // 80/20 Revenue video update ticker (simulates video timeupdate events)
+  useEffect(() => {
+    const videoTicker = setInterval(async () => {
+      if (activeTab === "cinema") {
+        try {
+          const res = await fetch("/api/cinema/video-timeupdate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timeDiff: 2, earningsRate: 0.05 }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setUserShareAccumulated(data.totalUserBalance);
+            setPlatformReserveAccumulated(data.totalPlatformReserve);
+            setTotalSecondsWatched(prev => prev + 2);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }, 2000);
+    return () => clearInterval(videoTicker);
+  }, [activeTab]);
+
+  // AI PowerUp Generator Handler
+  const handleRunAiPowerUp = async (toolType: string) => {
+    setAiGenerating(true);
+    setAiResult(null);
+    try {
+      const currentChTitle = stats?.cinemaChannels?.[currentChannelIdx]?.title || "Cinema Stream Broadcast";
+      const res = await fetch("/api/cinema/ai-powerup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toolType, videoTitle: currentChTitle }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAiResult({
+          toolType,
+          result: data.result,
+          revenueCredited: data.revenueCredited,
+        });
+        fetchStats();
+        triggerNotification(`[AI POWERUP COMPLETE] Generated ${toolType.toUpperCase()}! Credited +$${data.revenueCredited.toFixed(2)} USD!`);
+      }
+    } catch (err) {
+      triggerNotification("Failed to generate AI PowerUp output.");
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  // Musician Upload Track Handler
+  const handleUploadArtistTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setUploadMessage(null);
+
+    if (!songTitle.trim() || !youtubeLink.trim()) {
+      setUploadMessage({ type: "error", text: "Song/Video Title and YouTube Link are required." });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/cinema/artist-tracks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: songTitle.trim(),
+          youtubeUrl: youtubeLink.trim(),
+          artistName: artistNameInput.trim() || "Master Musician",
+          genre: musicGenreInput.trim() || "Original Music / Live Stream",
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUploadMessage({ type: "success", text: data.message });
+        setSongTitle("");
+        setYoutubeLink("");
+        setArtistNameInput("");
+        setMusicGenreInput("");
+        fetchStats();
+        setCurrentChannelIdx(0); // Jump to new channel 1
+        triggerNotification(`[ARTIST MUSIC PUBLISHED] Live broadcast started!`);
+      } else {
+        setUploadMessage({ type: "error", text: data.error || "Upload failed." });
+      }
+    } catch (err) {
+      setUploadMessage({ type: "error", text: "Network error submitting track." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const triggerNotification = (msg: string) => {
     setNotification(msg);
@@ -527,6 +652,15 @@ export const EcosystemDashboard: React.FC = () => {
               </button>
 
               <button
+                onClick={() => setActiveTab("artist")}
+                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTab === "artist" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <Music size={14} className="text-amber-400" /> Artist Studio & YouTube Upload
+              </button>
+
+              <button
                 onClick={() => setActiveTab("phantom")}
                 className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
                   activeTab === "phantom" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
@@ -836,35 +970,368 @@ export const EcosystemDashboard: React.FC = () => {
                   </div>
 
                   {/* DEDICATED CINEMA MONETIZATION TELEMETRY CARD (LOCATED CLEANLY BELOW THE VIDEO) */}
-                  <div className="p-5 bg-stone-950 rounded-xl border border-stone-800 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                    <div>
-                      <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">CURRENT BROADCAST</span>
-                      <h4 className="font-serif text-sm font-bold text-white truncate">{currentCh.title}</h4>
-                      <p className="text-[11px] text-nobel-gold">{currentCh.category} • {currentCh.viewersCount} Viewers</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">CHANNEL ACCRUED YIELD</span>
-                      <div className="text-lg font-mono font-bold text-emerald-400">+${currentCh.yieldAccrued.toFixed(2)} USD</div>
-                      <p className="text-[10px] text-stone-400">Stream Yield + Ad Revenues</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">AUDIO & BITRATE RAMP</span>
-                      <div className="text-xs font-mono text-stone-300 flex items-center gap-1.5 mt-1">
-                        <Volume2 size={14} className="text-cyan-400" /> 1080p 60fps • 90% Optimal Ramp
+                  <div className="p-5 bg-stone-950 rounded-xl border border-stone-800 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b border-stone-900 pb-4">
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">CURRENT BROADCAST</span>
+                        <h4 className="font-serif text-sm font-bold text-white truncate">{currentCh.title}</h4>
+                        <p className="text-[11px] text-nobel-gold">{currentCh.category} • {currentCh.viewersCount} Viewers</p>
                       </div>
-                      <p className="text-[10px] text-stone-500 mt-0.5">Bitrate: 8.5 Mbps High Fidelity</p>
+
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">CHANNEL ACCRUED YIELD</span>
+                        <div className="text-lg font-mono font-bold text-emerald-400">+${currentCh.yieldAccrued.toFixed(2)} USD</div>
+                        <p className="text-[10px] text-stone-400">Stream Yield + Ad Revenues</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">AUDIO & BITRATE RAMP</span>
+                        <div className="text-xs font-mono text-stone-300 flex items-center gap-1.5 mt-1">
+                          <Volume2 size={14} className="text-cyan-400" /> 1080p 60fps • 90% Optimal Ramp
+                        </div>
+                        <p className="text-[10px] text-stone-500 mt-0.5">Bitrate: 8.5 Mbps High Fidelity</p>
+                      </div>
+
+                      <div className="flex flex-col items-end justify-center">
+                        <button
+                          onClick={handleTriggerSponsorAd}
+                          className="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-nobel-gold/40 text-nobel-gold hover:text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Sparkles size={12} /> Trigger Ad Payout (+${currentCh.sponsorAd.payoutUsd.toFixed(2)})
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col items-end justify-center">
+                    {/* 80/20 Revenue Split Telemetry & Script Tracking Bar */}
+                    <div className="p-4 bg-stone-900/80 rounded-lg border border-stone-800/80 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-amber-950/80 border border-amber-800 flex items-center justify-center text-amber-400">
+                          <DollarSign size={18} />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">80% PLATFORM RESERVE</span>
+                          <span className="font-mono text-sm font-bold text-amber-300">${platformReserveAccumulated.toFixed(2)} USD</span>
+                          <span className="text-[9px] text-stone-500 block">($0.04/sec platform share)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400">
+                          <Wallet size={18} />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">20% USER SHARE (YOUR WALLET)</span>
+                          <span className="font-mono text-sm font-bold text-emerald-400">${userShareAccumulated.toFixed(2)} USD</span>
+                          <span className="text-[9px] text-stone-500 block">($0.01/sec user yield share)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">CONTINUOUS PLAYBACK QUEUE</span>
+                          <span className="text-xs font-mono text-cyan-300 flex items-center gap-1 mt-0.5">
+                            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                            Auto-Advancing Queue Active
+                          </span>
+                        </div>
+                        <span className="text-[10px] px-2.5 py-1 bg-stone-800 text-stone-300 rounded-md font-mono">
+                          {totalSecondsWatched}s Streamed
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI POWERUPS & STUDIO REVENUE SUITE PANEL */}
+                  <div className="p-5 bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 rounded-xl border border-stone-800 space-y-4">
+                    <div className="flex justify-between items-center flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <Wand2 size={18} className="text-purple-400" />
+                        <h4 className="font-serif text-base font-bold text-white">AI Studio & Monetization Suite</h4>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">
+                          INSTANT REVENUE CREDITING
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-400">Run AI analysis on live video to generate summary, podcast, slides & earn instant yield.</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                       <button
-                        onClick={handleTriggerSponsorAd}
-                        className="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-nobel-gold/40 text-nobel-gold hover:text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors"
+                        onClick={() => handleRunAiPowerUp("summary")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-purple-950/40 border border-stone-800 hover:border-purple-600/60 rounded-xl text-left transition-all cursor-pointer group"
                       >
-                        <Sparkles size={12} /> Trigger Ad Payout (+${currentCh.sponsorAd.payoutUsd.toFixed(2)})
+                        <FileText size={18} className="text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">Generate Summary</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$3.50 Yield</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiPowerUp("podcast")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-cyan-950/40 border border-stone-800 hover:border-cyan-600/60 rounded-xl text-left transition-all cursor-pointer group"
+                      >
+                        <Headphones size={18} className="text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">Generate Podcast</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$4.50 Yield</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiPowerUp("tableizer")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-emerald-950/40 border border-stone-800 hover:border-emerald-600/60 rounded-xl text-left transition-all cursor-pointer group"
+                      >
+                        <BarChart3 size={18} className="text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">Video Tableizer</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$5.00 Yield</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiPowerUp("illustration")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-amber-950/40 border border-stone-800 hover:border-amber-600/60 rounded-xl text-left transition-all cursor-pointer group"
+                      >
+                        <ImageIcon size={18} className="text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">Illustration Generator</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$8.00 Yield</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiPowerUp("film-analysis")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-rose-950/40 border border-stone-800 hover:border-rose-600/60 rounded-xl text-left transition-all cursor-pointer group"
+                      >
+                        <Film size={18} className="text-rose-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">In-Depth Analysis</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$12.00 Yield</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiPowerUp("powerpoint")}
+                        disabled={aiGenerating}
+                        className="p-3 bg-stone-900 hover:bg-blue-950/40 border border-stone-800 hover:border-blue-600/60 rounded-xl text-left transition-all cursor-pointer group"
+                      >
+                        <Presentation size={18} className="text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-bold text-white block truncate">Create PowerPoint</span>
+                        <span className="text-[10px] text-emerald-400 font-mono block mt-1">+$15.00 Yield</span>
                       </button>
                     </div>
+
+                    {/* AI Output Display Card */}
+                    {aiGenerating && (
+                      <div className="p-4 bg-stone-950 rounded-lg border border-stone-800 text-center text-xs text-purple-300 font-mono flex items-center justify-center gap-2 animate-pulse">
+                        <Wand2 size={16} className="animate-spin" /> Processing AI tool analysis and updating revenue share ledger...
+                      </div>
+                    )}
+
+                    {aiResult && !aiGenerating && (
+                      <div className="p-4 bg-stone-950 rounded-xl border border-purple-800/60 space-y-3 animate-fade-in text-xs">
+                        <div className="flex justify-between items-center border-b border-stone-800 pb-2">
+                          <span className="font-bold text-white font-serif text-sm flex items-center gap-2">
+                            <Sparkles size={14} className="text-nobel-gold" /> {aiResult.result.title}
+                          </span>
+                          <span className="px-2.5 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono font-bold rounded-full">
+                            +${aiResult.revenueCredited.toFixed(2)} USD CREDITED TO PHANTOM WALLET
+                          </span>
+                        </div>
+
+                        {aiResult.result.summary && (
+                          <p className="text-stone-300 leading-relaxed">{aiResult.result.summary}</p>
+                        )}
+
+                        {aiResult.result.highlights && (
+                          <div className="space-y-1">
+                            <span className="font-bold text-stone-400 uppercase text-[10px]">Key Video Chapters:</span>
+                            {aiResult.result.highlights.map((h: string, idx: number) => (
+                              <div key={idx} className="text-stone-300 font-mono text-[11px] bg-stone-900 p-2 rounded border border-stone-800">
+                                {h}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {aiResult.result.table && (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left font-mono text-[11px]">
+                              <thead>
+                                <tr className="border-b border-stone-800 text-stone-400">
+                                  <th className="py-1">Timestamp</th>
+                                  <th className="py-1">Topic</th>
+                                  <th className="py-1">Impact</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {aiResult.result.table.map((row: any, i: number) => (
+                                  <tr key={i} className="border-b border-stone-900 text-stone-300">
+                                    <td className="py-1 text-nobel-gold">{row.time}</td>
+                                    <td className="py-1">{row.topic}</td>
+                                    <td className="py-1 text-emerald-400">{row.impact}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {aiResult.result.dialogue && (
+                          <pre className="font-mono text-[11px] text-cyan-300 bg-stone-900 p-3 rounded border border-stone-800 whitespace-pre-wrap">
+                            {aiResult.result.dialogue}
+                          </pre>
+                        )}
+
+                        {aiResult.result.imageUrl && (
+                          <div className="flex items-center gap-4 bg-stone-900 p-3 rounded-xl border border-stone-800">
+                            <img src={aiResult.result.imageUrl} alt="AI Concept" className="w-24 h-24 object-cover rounded-lg" />
+                            <div>
+                              <span className="font-bold text-amber-300 text-xs block">{aiResult.result.caption}</span>
+                              <p className="text-[10px] text-stone-400 mt-1 font-mono">Prompt: "{aiResult.result.promptUsed}"</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {aiResult.result.slides && (
+                          <div className="space-y-2">
+                            <span className="font-bold text-blue-300 uppercase text-[10px]">PowerPoint Deck Outline ({aiResult.result.slidesCount} Slides):</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {aiResult.result.slides.map((s: any) => (
+                                <div key={s.slide} className="p-2.5 bg-stone-900 rounded border border-stone-800">
+                                  <span className="font-bold text-white text-[11px] block">{s.slide}. {s.title}</span>
+                                  <p className="text-[10px] text-stone-400 mt-0.5">{s.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB: MUSICIAN & ARTIST STUDIO / YOUTUBE UPLOAD */}
+              {activeTab === "artist" && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* Header Banner */}
+                  <div className="p-6 bg-gradient-to-r from-stone-950 via-amber-950/40 to-stone-950 rounded-2xl border border-nobel-gold/40">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-12 h-12 rounded-xl bg-amber-950 text-nobel-gold border border-amber-800 flex items-center justify-center shadow-lg">
+                        <Music size={24} />
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-xl font-bold text-white">Musician & Artist Live Broadcast Studio</h3>
+                        <p className="text-xs text-stone-400">
+                          Upload your music videos, tracks, or YouTube Live streams. They will immediately broadcast in public Sreymara Cinema Channel #1 and generate 80/20 streaming yields!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Form & Live Preview Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Form */}
+                    <div className="p-5 bg-stone-950 rounded-xl border border-stone-800 space-y-4">
+                      <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                        <PlusCircle size={16} className="text-nobel-gold" /> Upload New Track / YouTube Live Video
+                      </h4>
+
+                      {uploadMessage && (
+                        <div className={`p-3 rounded-lg text-xs font-mono border ${
+                          uploadMessage.type === "success" 
+                            ? "bg-emerald-950 text-emerald-300 border-emerald-800" 
+                            : "bg-red-950 text-red-300 border-red-800"
+                        }`}>
+                          {uploadMessage.text}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleUploadArtistTrack} className="space-y-3 text-xs">
+                        <div>
+                          <label className="block text-stone-400 font-bold mb-1">Song / Video Title *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. My Original Single / Live Acoustic Session 2026"
+                            value={songTitle}
+                            onChange={(e) => setSongTitle(e.target.value)}
+                            className="w-full px-3 py-2 bg-stone-900 border border-stone-800 rounded-lg text-white focus:outline-none focus:border-nobel-gold"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-stone-400 font-bold mb-1">YouTube Video Link or Embed ID *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ or YouTube Live ID"
+                            value={youtubeLink}
+                            onChange={(e) => setYoutubeLink(e.target.value)}
+                            className="w-full px-3 py-2 bg-stone-900 border border-stone-800 rounded-lg text-white font-mono focus:outline-none focus:border-nobel-gold"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-stone-400 font-bold mb-1">Artist Name</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Kansas Nelly"
+                              value={artistNameInput}
+                              onChange={(e) => setArtistNameInput(e.target.value)}
+                              className="w-full px-3 py-2 bg-stone-900 border border-stone-800 rounded-lg text-white focus:outline-none focus:border-nobel-gold"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-stone-400 font-bold mb-1">Genre / Category</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Pop / Synthwave / Live"
+                              value={musicGenreInput}
+                              onChange={(e) => setMusicGenreInput(e.target.value)}
+                              className="w-full px-3 py-2 bg-stone-900 border border-stone-800 rounded-lg text-white focus:outline-none focus:border-nobel-gold"
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full py-3 bg-nobel-gold hover:bg-amber-600 text-stone-950 font-bold rounded-lg text-xs shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                        >
+                          <Radio size={16} /> Publish Track to Sreymara Live Channel #1
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Artist Channel Showcase */}
+                    <div className="p-5 bg-stone-950 rounded-xl border border-stone-800 space-y-4">
+                      <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                        <Radio size={16} className="text-emerald-400 animate-pulse" /> Live Musician Broadcast Preview
+                      </h4>
+
+                      <div className="relative rounded-xl overflow-hidden border border-stone-800 bg-black aspect-video flex items-center justify-center">
+                        <iframe
+                          src={currentCh.embedUrl}
+                          title={currentCh.title}
+                          className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+
+                      <div className="p-3 bg-stone-900 rounded-lg border border-stone-800 text-xs space-y-1">
+                        <div className="flex justify-between font-bold text-white">
+                          <span>{currentCh.title}</span>
+                          <span className="text-nobel-gold">{currentCh.category}</span>
+                        </div>
+                        <p className="text-[10px] text-stone-400">
+                          Artist: {currentCh.artistName || "Master Musician"} • Broadcast Status: <span className="text-emerald-400 font-mono">LIVE ON public YouTube & Sreymara Cinema</span>
+                        </p>
+                      </div>
+                    </div>
+
                   </div>
 
                 </div>

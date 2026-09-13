@@ -63,16 +63,40 @@ const App: React.FC = () => {
             </span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide text-stone-600">
-            <a href="#introduction" onClick={scrollToSection('introduction')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Introduction</a>
-            <a href="#science" onClick={scrollToSection('science')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">The Surface Code</a>
-            <a href="#impact" onClick={scrollToSection('impact')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Impact</a>
-            <a href="#authors" onClick={scrollToSection('authors')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Authors</a>
+          <div className="hidden md:flex items-center gap-4 text-xs font-bold tracking-wide">
+            <a 
+              href="#introduction" 
+              onClick={scrollToSection('introduction')} 
+              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
+            >
+              Introduction
+            </a>
+            <a 
+              href="#science" 
+              onClick={scrollToSection('science')} 
+              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
+            >
+              The Surface Code
+            </a>
+            <a 
+              href="#impact" 
+              onClick={scrollToSection('impact')} 
+              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
+            >
+              Impact
+            </a>
+            <a 
+              href="#authors" 
+              onClick={scrollToSection('authors')} 
+              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
+            >
+              Authors
+            </a>
             <a 
               href="https://doi.org/10.1038/s41586-024-08148-8" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="px-5 py-2 bg-stone-900 text-white rounded-full hover:bg-stone-800 transition-colors shadow-sm cursor-pointer"
+              className="px-4 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-full transition-all shadow-md cursor-pointer border border-red-400/50 text-xs flex items-center gap-1 ml-2"
             >
               View Paper
             </a>
@@ -86,17 +110,17 @@ const App: React.FC = () => {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#F9F8F4] flex flex-col items-center justify-center gap-8 text-xl font-serif animate-fade-in">
-            <a href="#introduction" onClick={scrollToSection('introduction')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Introduction</a>
-            <a href="#science" onClick={scrollToSection('science')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">The Science</a>
-            <a href="#impact" onClick={scrollToSection('impact')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Impact</a>
-            <a href="#authors" onClick={scrollToSection('authors')} className="hover:text-nobel-gold transition-colors cursor-pointer uppercase">Authors</a>
+        <div className="fixed inset-0 z-40 bg-[#F9F8F4] flex flex-col items-center justify-center gap-6 text-base font-bold animate-fade-in">
+            <a href="#introduction" onClick={scrollToSection('introduction')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Introduction</a>
+            <a href="#science" onClick={scrollToSection('science')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">The Surface Code</a>
+            <a href="#impact" onClick={scrollToSection('impact')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Impact</a>
+            <a href="#authors" onClick={scrollToSection('authors')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Authors</a>
             <a 
               href="https://doi.org/10.1038/s41586-024-08148-8" 
               target="_blank" 
               rel="noopener noreferrer" 
               onClick={() => setMenuOpen(false)} 
-              className="px-6 py-3 bg-stone-900 text-white rounded-full shadow-lg cursor-pointer"
+              className="px-6 py-3 bg-red-700 text-white font-bold rounded-full shadow-lg cursor-pointer border border-red-400/50"
             >
               View Paper
             </a>
