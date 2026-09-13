@@ -1,0 +1,8 @@
+{
+  "name": "AlphaQubit Quantum Research & Live Ecosystem",
+  "description": "Interactive AlphaQubit research platform integrated with real-time Shopify & Tidio visitor, active session, and revenue analytics ecosystem.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
