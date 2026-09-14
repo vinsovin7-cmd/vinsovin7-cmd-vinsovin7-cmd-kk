@@ -7,6 +7,30 @@
     <meta name="description" content="Interactive AlphaQubit research platform integrated with real-time Shopify & Tidio visitor, active session, and revenue analytics ecosystem." />
     <meta property="og:title" content="AlphaQubit Quantum Research & Live Ecosystem" />
     <meta property="og:description" content="Interactive AlphaQubit research platform integrated with real-time Shopify & Tidio visitor, active session, and revenue analytics ecosystem." />
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- RichAds Telegram Mini App Integration (Pub ID: 1018890, App ID: 8887) -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+      if (!window.TelegramAdsControllerInitialized) {
+        window.TelegramAdsControllerInitialized = true;
+        try {
+          if (typeof TelegramAdsController !== 'undefined') {
+            window.TelegramAdsController = new TelegramAdsController();
+            window.TelegramAdsController.initialize({
+              pubId: "1018890",
+              appId: "8887",
+            });
+            console.log("[RichAds] Controller initialized with Pub ID: 1018890, App ID: 8887");
+          }
+        } catch (e) {
+          console.warn("[RichAds] Initialization notice:", e);
+        }
+      }
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,8 +60,8 @@
         scroll-padding-top: 100px;
       }
       body {
-        background-color: #F9F8F4;
-        color: #1a1a1a;
+        background-color: #090A0E;
+        color: #f3f4f6;
       }
       @media print {
         nav, footer, button {

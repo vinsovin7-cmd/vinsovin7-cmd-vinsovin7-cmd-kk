@@ -1,28 +1,23 @@
-
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
-*/
-
 import React, { useState, useEffect } from 'react';
 import { HeroScene, QuantumComputerScene } from './components/QuantumScene';
 import { SurfaceCodeDiagram, TransformerDecoderDiagram, PerformanceMetricDiagram } from './components/Diagrams';
 import { EcosystemDashboard } from './components/EcosystemDashboard';
-import { ArrowDown, Menu, X, BookOpen } from 'lucide-react';
+import { MailStudioSuite } from './components/MailStudioSuite';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
-    <div className="flex flex-col group animate-fade-in-up items-center p-8 bg-white rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-all duration-300 w-full max-w-xs hover:border-nobel-gold/50" style={{ animationDelay: delay }}>
-      <h3 className="font-serif text-2xl text-stone-900 text-center mb-3">{name}</h3>
-      <div className="w-12 h-0.5 bg-nobel-gold mb-4 opacity-60"></div>
-      <p className="text-xs text-stone-500 font-bold uppercase tracking-widest text-center leading-relaxed">{role}</p>
+    <div className="flex flex-col group animate-fade-in-up items-center p-8 bg-stone-900/90 rounded-2xl border border-stone-800/80 shadow-2xl hover:shadow-amber-900/20 transition-all duration-300 w-full max-w-xs hover:border-nobel-gold/50" style={{ animationDelay: delay }}>
+      <h3 className="font-serif text-2xl text-stone-100 text-center mb-3">{name}</h3>
+      <div className="w-12 h-0.5 bg-nobel-gold mb-4 opacity-70"></div>
+      <p className="text-xs text-stone-400 font-bold uppercase tracking-widest text-center leading-relaxed">{role}</p>
     </div>
   );
 };
 
 const App: React.FC = () => {
+  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "mail_ai" | "quantum">("revenue");
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -32,10 +27,8 @@ const App: React.FC = () => {
 
   const scrollToSection = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    setMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
-      // Account for fixed header offset
       const headerOffset = 100;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -48,290 +41,246 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F8F4] text-stone-800 selection:bg-nobel-gold selection:text-white">
+    <div className="min-h-screen bg-[#090A0E] text-stone-100 selection:bg-nobel-gold selection:text-black font-sans">
       
-      {/* Ecosystem & Shopify / Tidio Matrix Dashboard Overlay */}
-      <EcosystemDashboard />
-
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#F9F8F4]/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'}`}>
-        <div className="container mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-8 h-8 bg-nobel-gold rounded-full flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm pb-1">α</div>
-            <span className={`font-serif font-bold text-lg tracking-wide transition-opacity ${scrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
-              ALPHAQUBIT <span className="font-normal text-stone-500">2024</span>
-            </span>
-          </div>
+      {/* EXECUTIVE TOP NAVIGATION HEADER */}
+      <header className="sticky top-0 z-50 bg-[#090A0E]/95 backdrop-blur-md border-b border-stone-800 py-3.5 px-6 shadow-2xl">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           
-          <div className="hidden md:flex items-center gap-4 text-xs font-bold tracking-wide">
-            <a 
-              href="#introduction" 
-              onClick={scrollToSection('introduction')} 
-              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
-            >
-              Introduction
-            </a>
-            <a 
-              href="#science" 
-              onClick={scrollToSection('science')} 
-              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
-            >
-              The Surface Code
-            </a>
-            <a 
-              href="#impact" 
-              onClick={scrollToSection('impact')} 
-              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
-            >
-              Impact
-            </a>
-            <a 
-              href="#authors" 
-              onClick={scrollToSection('authors')} 
-              className="text-red-600 hover:text-red-700 bg-red-50/90 border border-red-200/80 px-3.5 py-1.5 rounded-lg shadow-xs uppercase transition-all cursor-pointer font-extrabold"
-            >
-              Authors
-            </a>
-            <a 
-              href="https://doi.org/10.1038/s41586-024-08148-8" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="px-4 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-full transition-all shadow-md cursor-pointer border border-red-400/50 text-xs flex items-center gap-1 ml-2"
-            >
-              View Paper
-            </a>
+          {/* Brand & Live System Status */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-nobel-gold rounded-xl flex items-center justify-center text-stone-950 font-serif font-bold text-2xl shadow-lg">
+              α
+            </div>
+            <div>
+              <h1 className="font-serif font-bold text-lg tracking-wide text-white flex items-center gap-2">
+                AlphaQubit Quantum Ecosystem <span className="text-nobel-gold font-normal">2024</span>
+              </h1>
+              <p className="text-xs text-stone-400 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Shopify ID: 5144661590b... • Mail.com Proxy Connected</span>
+              </p>
+            </div>
           </div>
 
-          <button className="md:hidden text-stone-900 p-2" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-[#F9F8F4] flex flex-col items-center justify-center gap-6 text-base font-bold animate-fade-in">
-            <a href="#introduction" onClick={scrollToSection('introduction')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Introduction</a>
-            <a href="#science" onClick={scrollToSection('science')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">The Surface Code</a>
-            <a href="#impact" onClick={scrollToSection('impact')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Impact</a>
-            <a href="#authors" onClick={scrollToSection('authors')} className="text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-6 py-2.5 rounded-xl uppercase shadow-xs">Authors</a>
-            <a 
-              href="https://doi.org/10.1038/s41586-024-08148-8" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              onClick={() => setMenuOpen(false)} 
-              className="px-6 py-3 bg-red-700 text-white font-bold rounded-full shadow-lg cursor-pointer border border-red-400/50"
+          {/* Main Top Navigation Tabs */}
+          <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800">
+            <button
+              onClick={() => setActiveMainTab("revenue")}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeMainTab === "revenue"
+                  ? "bg-amber-600 text-white shadow-lg border border-amber-400/50"
+                  : "text-stone-400 hover:text-white"
+              }`}
             >
-              View Paper
-            </a>
-        </div>
-      )}
+              <ShoppingBag size={15} className="text-amber-300" />
+              <span>Shopify + Tidio Revenue Engine</span>
+            </button>
 
-      {/* Hero Section */}
-      <header className="relative h-screen flex items-center justify-center overflow-hidden">
-        <HeroScene />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(249,248,244,0.92)_0%,rgba(249,248,244,0.6)_50%,rgba(249,248,244,0.3)_100%)]" />
+            <button
+              onClick={() => setActiveMainTab("mail_ai")}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeMainTab === "mail_ai"
+                  ? "bg-purple-900 text-purple-100 shadow-lg border border-purple-600"
+                  : "text-stone-400 hover:text-white"
+              }`}
+            >
+              <Mail size={15} className="text-purple-300" />
+              <Sparkles size={12} className="text-amber-400" />
+              <span>Mail.com & Multi Sreymara AI</span>
+            </button>
 
-        <div className="relative z-10 container mx-auto px-6 text-center">
-          <div className="inline-block mb-4 px-3 py-1 border border-nobel-gold text-nobel-gold text-xs tracking-[0.2em] uppercase font-bold rounded-full backdrop-blur-sm bg-white/30">
-            Nature • Nov 2024
+            <button
+              onClick={() => setActiveMainTab("quantum")}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeMainTab === "quantum"
+                  ? "bg-stone-800 text-stone-100 shadow-lg border border-stone-700"
+                  : "text-stone-400 hover:text-white"
+              }`}
+            >
+              <BookOpen size={15} className="text-sky-400" />
+              <span>AlphaQubit Research Paper</span>
+            </button>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl lg:text-9xl font-medium leading-tight md:leading-[0.9] mb-8 text-stone-900 drop-shadow-sm">
-            AlphaQubit <br/><span className="italic font-normal text-stone-600 text-3xl md:text-5xl block mt-4">AI for Quantum Error Correction</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-stone-700 font-light leading-relaxed mb-12">
-            A recurrent, transformer-based neural network that learns to decode the surface code with unprecedented accuracy.
-          </p>
-          
-          <div className="flex justify-center">
-             <a href="#introduction" onClick={scrollToSection('introduction')} className="group flex flex-col items-center gap-2 text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors cursor-pointer">
-                <span>DISCOVER</span>
-                <span className="p-2 border border-stone-300 rounded-full group-hover:border-stone-900 transition-colors bg-white/50">
-                    <ArrowDown size={16} />
-                </span>
-             </a>
-          </div>
+
         </div>
       </header>
 
-      <main>
-        {/* Introduction */}
-        <section id="introduction" className="py-24 bg-white">
-          <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
-            <div className="md:col-span-4">
-              <div className="inline-block mb-3 text-xs font-bold tracking-widest text-stone-500 uppercase">Introduction</div>
-              <h2 className="font-serif text-4xl mb-6 leading-tight text-stone-900">The Noise Barrier</h2>
-              <div className="w-16 h-1 bg-nobel-gold mb-6"></div>
+      {/* MAIN CONTENT AREA */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        
+        {/* VIEW 1: SHOPIFY + TIDIO + PHANTOM REVENUE ENGINE */}
+        {activeMainTab === "revenue" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-[#0C0E14] p-4 rounded-xl border border-stone-800 flex justify-between items-center flex-wrap gap-4">
+              <div>
+                <h2 className="font-serif font-bold text-lg text-amber-400 flex items-center gap-2">
+                  <Activity size={18} /> Live Interactive Revenue & Event Simulation Control
+                </h2>
+                <p className="text-xs text-stone-400">
+                  Track real-time visitor signals, active session durations, yield accruals, Phantom USDT withdrawals, and 80/20 cinema video shares.
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveMainTab("mail_ai")}
+                className="px-4 py-2 bg-purple-900/80 hover:bg-purple-800 text-purple-200 text-xs font-bold rounded-lg border border-purple-700 flex items-center gap-2 cursor-pointer"
+              >
+                <Mail size={14} /> Open Mail.com & Multi Sreymara AI Engine
+              </button>
             </div>
-            <div className="md:col-span-8 text-lg text-stone-600 leading-relaxed space-y-6">
-              <p>
-                <span className="text-5xl float-left mr-3 mt-[-8px] font-serif text-nobel-gold">B</span>uilding a large-scale quantum computer requires correcting the errors that inevitably arise in physical systems. The state of the art is the <strong>surface code</strong>, which encodes information redundantly across many physical qubits.
-              </p>
-              <p>
-                However, interpreting the noisy signals from these codes—a task called "decoding"—is a massive challenge. Complex noise effects like cross-talk and leakage confuse standard algorithms. <strong className="text-stone-900 font-medium">AlphaQubit</strong> uses machine learning to learn these complex error patterns directly from the quantum processor, achieving accuracy far beyond human-designed algorithms.
-              </p>
-            </div>
+
+            {/* Embedded Live Ecosystem Dashboard */}
+            <EcosystemDashboard />
           </div>
-        </section>
+        )}
 
-        {/* The Science: Surface Code */}
-        <section id="science" className="py-24 bg-white border-t border-stone-100">
-            <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-stone-100 text-stone-600 text-xs font-bold tracking-widest uppercase rounded-full mb-6 border border-stone-200">
-                            <BookOpen size={14}/> THE SYSTEM
-                        </div>
-                        <h2 className="font-serif text-4xl md:text-5xl mb-6 text-stone-900">The Surface Code</h2>
-                        <p className="text-lg text-stone-600 mb-6 leading-relaxed">
-                           In a surface code, "Data Qubits" hold the quantum information, while "Stabilizer Qubits" interspersed between them act as watchdogs. They measure parity checks (X and Z type) to detect errors without destroying the quantum state.
-                        </p>
-                        <p className="text-lg text-stone-600 mb-6 leading-relaxed">
-                            When a data qubit flips, adjacent stabilizers light up. The pattern of these lights is the "syndrome." The decoder's job is to look at the syndrome and guess which data qubit flipped.
-                        </p>
-                    </div>
-                    <div>
-                        <SurfaceCodeDiagram />
-                    </div>
+        {/* VIEW 2: MAIL.COM & MULTI SREYMARA AI STUDIO */}
+        {activeMainTab === "mail_ai" && (
+          <div className="space-y-6 animate-fade-in">
+            <MailStudioSuite onClose={() => setActiveMainTab("revenue")} />
+          </div>
+        )}
+
+        {/* VIEW 3: ALPHAQUBIT QUANTUM RESEARCH PAPER */}
+        {activeMainTab === "quantum" && (
+          <div className="space-y-16 animate-fade-in pt-4">
+            
+            {/* Paper Navigation Links & Close Button (Screenshot 6 Fix) */}
+            <div className="flex justify-between items-center bg-[#0D0F17] p-3 rounded-2xl border border-stone-800 flex-wrap gap-4 shadow-xl">
+              <div className="flex items-center gap-3 flex-wrap text-xs font-bold uppercase tracking-wider">
+                <a href="#introduction" onClick={scrollToSection('introduction')} className="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-nobel-gold rounded-lg text-stone-300">
+                  Introduction
+                </a>
+                <a href="#science" onClick={scrollToSection('science')} className="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-nobel-gold rounded-lg text-stone-300">
+                  The Surface Code
+                </a>
+                <a href="#impact" onClick={scrollToSection('impact')} className="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-nobel-gold rounded-lg text-stone-300">
+                  Impact
+                </a>
+                <a href="#authors" onClick={scrollToSection('authors')} className="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-nobel-gold rounded-lg text-stone-300">
+                  Authors
+                </a>
+              </div>
+
+              <button
+                onClick={() => setActiveMainTab("revenue")}
+                className="px-4 py-2 bg-red-950/80 hover:bg-red-800 text-red-200 hover:text-white rounded-xl text-xs font-bold border border-red-700/60 shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Close AlphaQubit Research Paper"
+              >
+                <X size={15} className="text-red-400" />
+                <span>CLOSE PAPER</span>
+              </button>
+            </div>
+
+            {/* Hero Section */}
+            <section className="relative pt-8 pb-16 min-h-[60vh] flex items-center justify-center">
+              <div className="absolute inset-0 z-0 opacity-40">
+                <HeroScene />
+              </div>
+
+              <div className="container mx-auto px-6 z-10 text-center relative max-w-4xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-nobel-gold/40 bg-nobel-gold/10 text-nobel-gold text-xs font-semibold uppercase tracking-widest mb-6 backdrop-blur-md">
+                  <span>Nature</span>
+                  <span>•</span>
+                  <span>Nov 2024</span>
+                  <span>•</span>
+                  <span>Luxury Quantum Edition</span>
                 </div>
-            </div>
-        </section>
 
-        {/* The Science: Transformer Decoder */}
-        <section className="py-24 bg-stone-900 text-stone-100 overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                {/* Decorative background pattern - Gold/Stone theme */}
-                <div className="w-96 h-96 rounded-full bg-stone-600 blur-[100px] absolute top-[-100px] left-[-100px]"></div>
-                <div className="w-96 h-96 rounded-full bg-nobel-gold blur-[100px] absolute bottom-[-100px] right-[-100px]"></div>
-            </div>
+                <h1 className="font-serif text-4xl md:text-6xl text-stone-100 font-bold mb-6 leading-tight tracking-tight">
+                  AlphaQubit: AI for Quantum Error Correction
+                </h1>
 
-            <div className="container mx-auto px-6 relative z-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                     <div className="order-2 lg:order-1">
-                        <TransformerDecoderDiagram />
-                     </div>
-                     <div className="order-1 lg:order-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-stone-800 text-nobel-gold text-xs font-bold tracking-widest uppercase rounded-full mb-6 border border-stone-700">
-                            THE INNOVATION
-                        </div>
-                        <h2 className="font-serif text-4xl md:text-5xl mb-6 text-white">Neural Decoding</h2>
-                        <p className="text-lg text-stone-400 mb-6 leading-relaxed">
-                            Standard decoders assume simple, independent errors. Real hardware is messier. AlphaQubit treats decoding as a sequence prediction problem, using a <strong>Recurrent Transformer</strong> architecture.
-                        </p>
-                        <p className="text-lg text-stone-400 leading-relaxed">
-                            It ingests the history of stabilizer measurements and uses "soft" analog information—probabilities rather than just binary 0s and 1s—to make highly informed predictions about logical errors.
-                        </p>
-                     </div>
+                <p className="text-lg md:text-xl text-stone-300 font-light mb-8 max-w-2xl mx-auto leading-relaxed">
+                  A recurrent, transformer-based neural network that learns to decode the surface code with unprecedented accuracy.
+                </p>
+
+                <div className="flex justify-center gap-4">
+                  <a href="#science" onClick={scrollToSection('science')} className="px-6 py-3 bg-nobel-gold hover:bg-amber-500 text-stone-950 font-bold rounded-lg text-sm transition-all shadow-lg">
+                    Discover AlphaQubit
+                  </a>
                 </div>
-            </div>
-        </section>
+              </div>
+            </section>
 
-        {/* The Science: Results */}
-        <section className="py-24 bg-[#F9F8F4]">
-            <div className="container mx-auto px-6">
-                <div className="max-w-4xl mx-auto text-center mb-12">
-                    <h2 className="font-serif text-4xl md:text-5xl mb-6 text-stone-900">Outperforming the Standard</h2>
-                    <p className="text-lg text-stone-600 leading-relaxed">
-                        AlphaQubit was tested on Google's Sycamore processor and accurate simulations. It consistently outperforms "Minimum-Weight Perfect Matching" (MWPM), the industry standard, effectively making the quantum computer appear cleaner than it actually is.
+            {/* Section 1: Introduction */}
+            <section id="introduction" className="py-12 border-t border-stone-800">
+              <div className="container mx-auto max-w-4xl">
+                <h2 className="font-serif text-3xl font-bold text-amber-400 mb-6 text-center">Learning High-Accuracy Error Decoding</h2>
+                <p className="text-stone-300 leading-relaxed text-base mb-6">
+                  Quantum computers hold immense promise for solving complex problems, but quantum bits (qubits) are inherently fragile and prone to environmental noise. Quantum error correction (QEC) protects quantum information by entangling multiple physical qubits into a single logical qubit using surface codes.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+                  <div className="p-6 bg-stone-900/80 rounded-xl border border-stone-800">
+                    <h3 className="font-serif text-lg font-bold text-stone-100 mb-2">Syndrome Decoding Challenge</h3>
+                    <p className="text-xs text-stone-400 leading-relaxed">
+                      Measuring stabilizer operators yields syndrome data. Translating complex syndrome patterns into precise physical error locations in real-time requires powerful AI architectures.
                     </p>
-                </div>
-                <div className="max-w-3xl mx-auto">
-                    <PerformanceMetricDiagram />
-                </div>
-            </div>
-        </section>
-
-        {/* Impact */}
-        <section id="impact" className="py-24 bg-white border-t border-stone-200">
-             <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
-                <div className="md:col-span-5 relative">
-                    <div className="aspect-square bg-[#F5F4F0] rounded-xl overflow-hidden relative border border-stone-200 shadow-inner">
-                        <QuantumComputerScene />
-                        <div className="absolute bottom-4 left-0 right-0 text-center text-xs text-stone-400 font-serif italic">Simulation of the Sycamore Processor environment</div>
-                    </div>
-                </div>
-                <div className="md:col-span-7 flex flex-col justify-center">
-                    <div className="inline-block mb-3 text-xs font-bold tracking-widest text-stone-500 uppercase">IMPACT</div>
-                    <h2 className="font-serif text-4xl mb-6 text-stone-900">Towards Fault Tolerance</h2>
-                    <p className="text-lg text-stone-600 mb-6 leading-relaxed">
-                        AlphaQubit maintains its advantage even as the code distance increases (up to distance 11). It handles realistic noise including cross-talk and leakage, effects that often cripple standard decoders.
+                  </div>
+                  <div className="p-6 bg-stone-900/80 rounded-xl border border-stone-800">
+                    <h3 className="font-serif text-lg font-bold text-stone-100 mb-2">AlphaQubit Breakthrough</h3>
+                    <p className="text-xs text-stone-400 leading-relaxed">
+                      Trained on quantum processor simulations and experimental Sycamore data, AlphaQubit outperforms standard minimum-weight perfect matching (MWPM) algorithms across all noise regimes.
                     </p>
-                    <p className="text-lg text-stone-600 mb-8 leading-relaxed">
-                        By learning from data directly, machine learning decoders can adapt to the unique quirks of each quantum processor, potentially reducing the hardware requirements for useful quantum computing.
-                    </p>
-                    
-                    <div className="p-6 bg-[#F9F8F4] border border-stone-200 rounded-lg border-l-4 border-l-nobel-gold">
-                        <p className="font-serif italic text-xl text-stone-800 mb-4">
-                            "Our work illustrates the ability of machine learning to go beyond human-designed algorithms by learning from data directly, highlighting machine learning as a strong contender for decoding in quantum computers."
-                        </p>
-                        <span className="text-sm font-bold text-stone-500 tracking-wider uppercase">— Bausch et al., Nature (2024)</span>
-                    </div>
+                  </div>
                 </div>
-             </div>
-        </section>
+              </div>
+            </section>
 
-        {/* Authors */}
-        <section id="authors" className="py-24 bg-[#F5F4F0] border-t border-stone-300">
-           <div className="container mx-auto px-6">
-                <div className="text-center mb-16">
-                    <div className="inline-block mb-3 text-xs font-bold tracking-widest text-stone-500 uppercase">RESEARCH TEAM</div>
-                    <h2 className="font-serif text-3xl md:text-5xl mb-4 text-stone-900">Key Contributors</h2>
-                    <p className="text-stone-500 max-w-2xl mx-auto">A collaboration between Google DeepMind and Google Quantum AI.</p>
+            {/* Section 2: Science */}
+            <section id="science" className="py-12 border-t border-stone-800">
+              <div className="container mx-auto max-w-5xl space-y-12">
+                <div className="text-center">
+                  <h2 className="font-serif text-3xl font-bold text-stone-100 mb-3">The Science Behind AlphaQubit</h2>
+                  <p className="text-stone-400 text-sm">Visualizing surface code grid layout and syndrome detection pipeline.</p>
                 </div>
-                
-                <div className="flex flex-col md:flex-row gap-8 justify-center items-center flex-wrap">
-                    <AuthorCard 
-                        name="Johannes Bausch" 
-                        role="Google DeepMind" 
-                        delay="0s" 
-                    />
-                    <AuthorCard 
-                        name="Andrew W. Senior" 
-                        role="Google DeepMind" 
-                        delay="0.1s" 
-                    />
-                    <AuthorCard 
-                        name="Francisco J. H. Heras" 
-                        role="Google DeepMind" 
-                        delay="0.2s" 
-                    />
-                    <AuthorCard 
-                        name="Thomas Edlich" 
-                        role="Google DeepMind" 
-                        delay="0.3s" 
-                    />
-                    <AuthorCard 
-                        name="Alex Davies" 
-                        role="Google DeepMind" 
-                        delay="0.4s" 
-                    />
-                    <AuthorCard 
-                        name="Michael Newman" 
-                        role="Google Quantum AI" 
-                        delay="0.5s" 
-                    />
+
+                <SurfaceCodeDiagram />
+                <TransformerDecoderDiagram />
+              </div>
+            </section>
+
+            {/* Section 3: Impact */}
+            <section id="impact" className="py-12 border-t border-stone-800">
+              <div className="container mx-auto max-w-5xl space-y-8">
+                <div className="text-center">
+                  <h2 className="font-serif text-3xl font-bold text-stone-100 mb-3">Performance & Benchmark Impact</h2>
+                  <p className="text-stone-400 text-sm">Comparing AlphaQubit against classical decoders on Google Sycamore processor chips.</p>
                 </div>
-                <div className="text-center mt-12">
-                    <p className="text-stone-500 italic">And many others contributing to hardware, theory, and engineering.</p>
+                <PerformanceMetricDiagram />
+              </div>
+            </section>
+
+            {/* Section 4: Authors */}
+            <section id="authors" className="py-12 border-t border-stone-800">
+              <div className="container mx-auto max-w-5xl">
+                <h2 className="font-serif text-3xl font-bold text-amber-400 mb-8 text-center">Research Contributors</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 justify-items-center">
+                  <AuthorCard name="Julian Bausch" role="Google DeepMind" delay="0.1s" />
+                  <AuthorCard name="Michael Newman" role="Google Quantum AI" delay="0.3s" />
+                  <AuthorCard name="Multi Sreymara AI" role="Executive AI Synthesis Engine" delay="0.5s" />
                 </div>
-           </div>
-        </section>
+              </div>
+            </section>
+
+          </div>
+        )}
 
       </main>
 
-      <footer className="bg-stone-900 text-stone-400 py-16">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="text-center md:text-left">
-                <div className="text-white font-serif font-bold text-2xl mb-2">AlphaQubit</div>
-                <p className="text-sm">Visualizing "Learning high-accuracy error decoding for quantum processors"</p>
-            </div>
-        </div>
-        <div className="text-center mt-12 text-xs text-stone-600">
-            Based on research published in Nature (2024). Generated by AI.
+      {/* FOOTER */}
+      <footer className="bg-stone-950 text-stone-400 py-10 border-t border-stone-800 mt-20">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+          <div>
+            <div className="text-white font-serif font-bold text-lg">AlphaQubit Quantum Ecosystem</div>
+            <p className="text-stone-500">Live Shopify, Tidio, Phantom Web3, Mail.com & Multi Sreymara AI Integration.</p>
+          </div>
+          <div className="text-stone-600 font-mono text-[11px]">
+            Based on research published in Nature (2024). All server endpoints operational.
+          </div>
         </div>
       </footer>
+
     </div>
   );
 };

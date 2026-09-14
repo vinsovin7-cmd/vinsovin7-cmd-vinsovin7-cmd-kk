@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { SreymaraVideogram } from "./SreymaraVideogram";
 import { 
   Zap, 
   ShoppingBag, 
@@ -136,7 +137,7 @@ interface StatsData {
 }
 
 export const EcosystemDashboard: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<
     "matrix" | "cinema" | "artist" | "phantom" | "telegram" | "urls" | "cli" | "paradise"
   >("matrix");
@@ -631,79 +632,97 @@ export const EcosystemDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex border-b border-stone-800 bg-stone-950/60 px-6 gap-1 text-xs font-medium uppercase tracking-wider overflow-x-auto">
-              <button
-                onClick={() => setActiveTab("matrix")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "matrix" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Activity size={14} /> Live Revenue & Visitor Tracker
-              </button>
+            {/* Navigation Tabs Container - Wrap Responsive & High Visibility */}
+            <div className="bg-stone-950/90 border-b border-stone-800 p-3 px-6">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <button
+                  onClick={() => setActiveTab("matrix")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "matrix"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Activity size={15} /> Live Revenue & Visitor Tracker
+                </button>
 
-              <button
-                onClick={() => setActiveTab("cinema")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "cinema" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Tv size={14} /> Sreymara Cinema (20 Channels) & Ads
-              </button>
+                <button
+                  onClick={() => setActiveTab("cinema")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "cinema"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Tv size={15} /> Sreymara Cinema (20 Channels) & Ads
+                </button>
 
-              <button
-                onClick={() => setActiveTab("artist")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "artist" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Music size={14} className="text-amber-400" /> Artist Studio & YouTube Upload
-              </button>
+                <button
+                  onClick={() => setActiveTab("artist")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "artist"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Music size={15} className={activeTab === "artist" ? "text-stone-950" : "text-amber-400"} /> Artist Studio & YouTube Upload
+                </button>
 
-              <button
-                onClick={() => setActiveTab("phantom")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "phantom" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Wallet size={14} /> Phantom Wallet & Withdrawal Portal
-              </button>
+                <button
+                  onClick={() => setActiveTab("phantom")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "phantom"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Wallet size={15} /> Phantom Wallet & Withdrawal
+                </button>
 
-              <button
-                onClick={() => setActiveTab("telegram")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "telegram" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Send size={14} /> Telegram 30-Min Alert Dispatcher
-              </button>
+                <button
+                  onClick={() => setActiveTab("telegram")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "telegram"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Send size={15} /> Telegram 30-Min Alert
+                </button>
 
-              <button
-                onClick={() => setActiveTab("urls")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "urls" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Globe size={14} /> URLs & Integration
-              </button>
+                <button
+                  onClick={() => setActiveTab("urls")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "urls"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Globe size={15} /> Integration URLs
+                </button>
 
-              <button
-                onClick={() => setActiveTab("cli")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "cli" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <Terminal size={14} /> CLI Console
-              </button>
+                <button
+                  onClick={() => setActiveTab("cli")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "cli"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <Terminal size={15} /> CLI Console
+                </button>
 
-              <button
-                onClick={() => setActiveTab("paradise")}
-                className={`py-3.5 px-4 border-b-2 flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                  activeTab === "paradise" ? "border-nobel-gold text-nobel-gold font-bold" : "border-transparent text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <ShieldCheck size={14} /> Paradise Status
-              </button>
+                <button
+                  onClick={() => setActiveTab("paradise")}
+                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
+                    activeTab === "paradise"
+                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
+                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
+                  }`}
+                >
+                  <ShieldCheck size={15} /> Paradise Status
+                </button>
+              </div>
             </div>
 
             {/* Modal Scrollable Body */}
@@ -1545,11 +1564,14 @@ export const EcosystemDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* TAB 4: TELEGRAM 30-MIN AUTOMATED ALERT DISPATCHER */}
+              {/* TAB 4: TELEGRAM 30-MIN AUTOMATED ALERT DISPATCHER & SREYMARA VIDEOGRAM SUITE */}
               {activeTab === "telegram" && (
                 <div className="space-y-6 animate-fade-in">
                   
-                  {/* Telegram Header */}
+                  {/* Sreymara Videogram Executive Telegram App Suite */}
+                  <SreymaraVideogram />
+
+                  {/* Telegram Automated Dispatcher */}
                   <div className="p-6 bg-gradient-to-r from-stone-950 via-cyan-950/30 to-stone-950 rounded-2xl border border-cyan-800/40">
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                       <div className="flex items-center gap-3">
