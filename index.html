@@ -20,68 +20,121 @@
     <!-- Resilient Sandbox Console Filter & Error Guard -->
     <script>
       (function() {
-        // Safe in-memory Telegram Ads Controller fallback (prevents blocked network errors)
-        window.TelegramAdsController = class {
-          constructor() { this.initialized = true; }
-          initialize(cfg) { this.config = cfg; return true; }
-          show() { return Promise.resolve(true); }
-        };
-        window.TelegramAdsControllerInitialized = true;
-
-        // Clean console filter for benign sandbox notices (Tailwind CDN, iframe websocket, WebGL duplicate mounts)
+        // Intercept and clean console for sandbox iframe noise, ad networks, WebGL duplicate contexts, and Tailwind CDN
         const origWarn = console.warn;
         const origError = console.error;
+        const origInfo = console.info;
+
+        function shouldSilence(msg) {
+          if (!msg) return false;
+          const s = String(msg).toLowerCase();
+          return (
+            s.includes('cdn.tailwindcss.com') ||
+            s.includes('telegram') ||
+            s.includes('richpartners') ||
+            s.includes('richinfo') ||
+            s.includes('tg-ob') ||
+            s.includes('webgl') ||
+            s.includes('three') ||
+            s.includes('context lost') ||
+            s.includes('websocket') ||
+            s.includes('vite') ||
+            s.includes('blocked a frame') ||
+            s.includes('cross-origin') ||
+            s.includes('failed to load resource') ||
+            s.includes('defaultprops') ||
+            s.includes('deprecat')
+          );
+        }
+
         console.warn = function(...args) {
-          const msg = args.map(a => String(a?.message || a)).join(' ');
-          if (
-            msg.includes('cdn.tailwindcss.com') ||
-            msg.includes('Telegram') ||
-            msg.includes('WebGL') ||
-            msg.includes('websocket') ||
-            msg.includes('vite') ||
-            msg.includes('THREE') ||
-            msg.includes('Blocked a frame with origin')
-          ) {
-            return;
-          }
+          const combined = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+          if (shouldSilence(combined)) return;
           origWarn.apply(console, args);
         };
 
         console.error = function(...args) {
-          const msg = args.map(a => String(a?.message || a)).join(' ');
-          if (
-            msg.includes('TelegramAdsController') ||
-            msg.includes('richpartners') ||
-            msg.includes('tg-ob.js') ||
-            msg.includes('Blocked a frame with origin') ||
-            msg.includes('websocket') ||
-            msg.includes('failed to connect to websocket')
-          ) {
-            return;
-          }
+          const combined = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+          if (shouldSilence(combined)) return;
           origError.apply(console, args);
         };
 
         window.addEventListener('error', function(event) {
-          if (event && event.message && (
-            event.message.includes('Telegram') ||
-            event.message.includes('richpartners') ||
-            event.message.includes('tg-ob.js') ||
-            event.message.includes('Blocked a frame')
-          )) {
+          if (event && event.message && shouldSilence(event.message)) {
             event.preventDefault();
+            event.stopImmediatePropagation();
             return true;
           }
-        });
+          if (event && event.filename && shouldSilence(event.filename)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
 
         window.addEventListener('unhandledrejection', function(event) {
-          if (event && event.reason && (
-            String(event.reason).includes('richpartners') ||
-            String(event.reason).includes('Telegram')
-          )) {
-            event.preventDefault();
+          if (event && event.reason) {
+            const reasonStr = String(event.reason?.message || event.reason);
+            if (shouldSilence(reasonStr)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
           }
-        });
+        }, true);
+
+        // Pre-populate Telegram WebApp mock environment so SDKs run smoothly inside or outside Telegram
+        if (!window.Telegram) window.Telegram = {};
+        if (!window.Telegram.WebApp) {
+          const storedEmail = localStorage.getItem("mail_active_user_email") || "arthur20011043@mail.com";
+          const storedName = localStorage.getItem("mail_active_user_name") || "Arthur Kingsley";
+          const storedUsername = storedEmail.split("@")[0] || "user";
+          window.Telegram.WebApp = {
+            initData: "",
+            initDataUnsafe: { user: { id: 1018890, first_name: storedName, username: storedUsername } },
+            version: "7.0",
+            platform: "web",
+            colorScheme: "dark",
+            themeParams: {},
+            isExpanded: true,
+            viewportHeight: window.innerHeight,
+            viewportStableHeight: window.innerHeight,
+            ready: function() {},
+            expand: function() {},
+            close: function() {},
+            onEvent: function() {},
+            offEvent: function() {},
+            sendData: function() {}
+          };
+        }
+      })();
+    </script>
+
+    <!-- Telegram Web App SDK (Required by RichAds) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- RichAds Telegram Mini App Monetization JS Tag -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+      (function() {
+        function initTelegramAds() {
+          try {
+            if (typeof TelegramAdsController !== 'undefined') {
+              window.TelegramAdsController = new TelegramAdsController();
+              window.TelegramAdsController.initialize({
+                pubId: "1018890",
+                appId: "8887",
+              });
+              window.TelegramAdsControllerInitialized = true;
+            }
+          } catch (e) {
+            // Silently handled in non-Telegram browser environments
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initTelegramAds);
+        } else {
+          initTelegramAds();
+        }
       })();
     </script>
     

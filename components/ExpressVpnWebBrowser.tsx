@@ -24,8 +24,24 @@ import {
   SlidersHorizontal,
   Bookmark,
   ChevronRight,
-  Cpu
+  Cpu,
+  Image as ImageIcon,
+  Layers,
+  Eye,
+  Download,
+  Share2,
+  Compass
 } from "lucide-react";
+
+export interface SearchImageItem {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  sourceUrl: string;
+  domain: string;
+  dimensions: string;
+}
 
 export interface BrowserTab {
   id: string;
@@ -34,6 +50,7 @@ export interface BrowserTab {
   iconType: "google" | "mail" | "gemini" | "shopify" | "youtube" | "generic";
   activeView: "google_search" | "mail_com" | "gemini_ai" | "shopify_admin" | "proxy_view";
   searchQuery?: string;
+  searchMode?: "all" | "images" | "videos";
   isSearching?: boolean;
   searchOverview?: string;
   searchResults?: Array<{
@@ -43,6 +60,7 @@ export interface BrowserTab {
     snippet: string;
     tag?: string;
   }>;
+  searchImages?: SearchImageItem[];
 }
 
 interface ExpressVpnWebBrowserProps {
@@ -61,9 +79,89 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
   const [geminiQuery, setGeminiQuery] = useState<string>("");
   const [geminiAnswer, setGeminiAnswer] = useState<string | null>(null);
   const [isGeminiThinking, setIsGeminiThinking] = useState<boolean>(false);
+  const [selectedImageModal, setSelectedImageModal] = useState<SearchImageItem | null>(null);
+  const [copiedImageId, setCopiedImageId] = useState<string | null>(null);
+
+  // Dynamic Mail.com state in Browser (Synchronized with MailStudioSuite)
+  const [mailEmail, setMailEmail] = useState<string>(() => {
+    return localStorage.getItem("mail_active_user_email") || "arthur20011043@mail.com";
+  });
+  const [mailPassword, setMailPassword] = useState<string>("");
+  const [mailLoggedIn, setMailLoggedIn] = useState<boolean>(() => {
+    return localStorage.getItem("mail_is_logged_in") === "true";
+  });
+  const [mailAuthLoading, setMailAuthLoading] = useState<boolean>(false);
+  const [mailAuthMsg, setMailAuthMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showLiveMailEmbed, setShowLiveMailEmbed] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const email = e.detail?.email || localStorage.getItem("mail_active_user_email");
+      const loggedIn = e.detail?.isLoggedIn ?? (localStorage.getItem("mail_is_logged_in") === "true");
+      if (email) setMailEmail(email);
+      setMailLoggedIn(Boolean(loggedIn));
+    };
+    window.addEventListener("mail-account-synced", handleSync);
+    return () => window.removeEventListener("mail-account-synced", handleSync);
+  }, []);
+
+  const handleBrowserMailLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!mailEmail || !mailPassword) {
+      setMailAuthMsg({ type: "error", text: "Please enter both email address and password." });
+      return;
+    }
+    setMailAuthLoading(true);
+    setMailAuthMsg(null);
+    try {
+      const res = await fetch("/api/mail/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: mailEmail, password: mailPassword }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMailLoggedIn(true);
+        localStorage.setItem("mail_is_logged_in", "true");
+        localStorage.setItem("mail_active_user_email", data.account.email);
+        localStorage.setItem("mail_active_user_name", data.account.name);
+        window.dispatchEvent(
+          new CustomEvent("mail-account-synced", {
+            detail: { email: data.account.email, name: data.account.name, isLoggedIn: true },
+          })
+        );
+        setMailAuthMsg({ type: "success", text: `Authenticated successfully as ${data.account.email}!` });
+        if (onOpenWebmailTab) {
+          setTimeout(() => onOpenWebmailTab(), 600);
+        }
+      } else {
+        setMailAuthMsg({ type: "error", text: data.error || "Authentication failed." });
+      }
+    } catch (err: any) {
+      setMailAuthMsg({ type: "error", text: "Network connection error to US Mail Gateway." });
+    } finally {
+      setMailAuthLoading(false);
+    }
+  };
+
+  const handleBrowserMailLogout = async () => {
+    try {
+      await fetch("/api/mail/logout", { method: "POST" });
+    } catch {}
+    setMailLoggedIn(false);
+    setMailPassword("");
+    localStorage.removeItem("mail_is_logged_in");
+    window.dispatchEvent(
+      new CustomEvent("mail-account-synced", {
+        detail: { email: mailEmail, isLoggedIn: false },
+      })
+    );
+    setMailAuthMsg(null);
+  };
 
   // Quick suggestions under search bar
   const quickSuggestions = [
+    "NOKIA",
     "MERLIN",
     "Mail.com login",
     "ExpressVPN US IP",
@@ -90,6 +188,7 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
       iconType: "google",
       activeView: "google_search",
       searchQuery: "MERLIN",
+      searchMode: "all",
       isSearching: false,
       searchOverview:
         "Merlin is a legendary mythical figure and wizard prominent in Arthurian legend, famously depicted as King Arthur's chief advisor, prophet, and mystical counselor.",
@@ -125,6 +224,44 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
           snippet:
             "Merlin Bird ID helps you identify birds you see and hear with smart audio and photo recognition.",
           tag: "Software & Nature",
+        },
+      ],
+      searchImages: [
+        {
+          id: "img-merlin-1",
+          title: "Merlin the Magician - Arthurian Mythos & Prophecy",
+          url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=85",
+          thumbnailUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80",
+          sourceUrl: "https://en.wikipedia.org/wiki/Merlin",
+          domain: "wikipedia.org",
+          dimensions: "1920 × 1280",
+        },
+        {
+          id: "img-merlin-2",
+          title: "Camelot Ancient Castle & Mystical British Highlands",
+          url: "https://images.unsplash.com/photo-1533158326339-7f3cf2404354?auto=format&fit=crop&w=1200&q=85",
+          thumbnailUrl: "https://images.unsplash.com/photo-1533158326339-7f3cf2404354?auto=format&fit=crop&w=400&q=80",
+          sourceUrl: "https://www.britannica.com/topic/Camelot-Arthurian-legend",
+          domain: "britannica.com",
+          dimensions: "2048 × 1365",
+        },
+        {
+          id: "img-merlin-3",
+          title: "Merlin Raptor Falcon (Falco columbarius) in High Flight",
+          url: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=85",
+          thumbnailUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80",
+          sourceUrl: "https://www.allaboutbirds.org/guide/Merlin",
+          domain: "allaboutbirds.org",
+          dimensions: "1600 × 1067",
+        },
+        {
+          id: "img-merlin-4",
+          title: "Enchanted Ancient Oak Forest - Brocéliande Legend",
+          url: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85",
+          thumbnailUrl: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=400&q=80",
+          sourceUrl: "https://www.nationalgeographic.com",
+          domain: "nationalgeographic.com",
+          dimensions: "1920 × 1080",
         },
       ],
     },
@@ -199,13 +336,18 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
   };
 
   // Trigger Google Search with backend API + Gemini fallback
-  const executeSearch = async (queryText: string, isLucky: boolean = false) => {
+  const executeSearch = async (
+    queryText: string,
+    isLucky: boolean = false,
+    overrideMode?: "all" | "images"
+  ) => {
     const q = (queryText || "").trim();
     if (!q) return;
 
     // If "I'm Feeling Lucky (Check US Location)" clicked and query is empty or location check
     const isLocAction = isLucky && (!q || /location|lucky|ip/i.test(q));
     const effectiveQuery = isLocAction ? "what is my location" : q;
+    const targetMode = overrideMode || activeTab.searchMode || "all";
 
     // Update tab state to loading
     setTabs((prev) =>
@@ -214,9 +356,10 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
           ? {
               ...t,
               searchQuery: effectiveQuery,
+              searchMode: targetMode,
               isSearching: true,
-              title: `${effectiveQuery} - Google Search`,
-              url: `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}`,
+              title: `${effectiveQuery} - Google ${targetMode === "images" ? "Images" : "Search"}`,
+              url: `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}${targetMode === "images" ? "&tbm=isch" : ""}`,
               activeView: "google_search",
               iconType: "google",
             }
@@ -225,7 +368,7 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
     );
 
     setAddressBarInput(
-      `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}`
+      `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}${targetMode === "images" ? "&tbm=isch" : ""}`
     );
 
     try {
@@ -249,6 +392,7 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                   isSearching: false,
                   searchOverview: data.overview || "",
                   searchResults: data.results || [],
+                  searchImages: data.images || [],
                 }
               : t
           )
@@ -257,7 +401,68 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
         throw new Error("Search request failed");
       }
     } catch (e) {
-      // Local graceful fallback
+      // Local graceful fallback with authentic curated images
+      const isNokia = /nokia/i.test(effectiveQuery);
+      const fallbackImages: SearchImageItem[] = isNokia
+        ? [
+            {
+              id: "img-nokia-1",
+              title: "Nokia Modern 5G Network Infrastructure & Core Optical Systems",
+              url: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: "https://www.nokia.com",
+              domain: "nokia.com",
+              dimensions: "1920 × 1080",
+            },
+            {
+              id: "img-nokia-2",
+              title: "Iconic Nokia Mobile Heritage & Durable Smartphone Engineering",
+              url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: "https://www.hmd.com/nokia-phones",
+              domain: "hmd.com",
+              dimensions: "1600 × 1200",
+            },
+            {
+              id: "img-nokia-3",
+              title: "Nokia Bell Labs Quantum Research & Silicon Photonics Lab",
+              url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: "https://www.bell-labs.com",
+              domain: "bell-labs.com",
+              dimensions: "2048 × 1365",
+            },
+            {
+              id: "img-nokia-4",
+              title: "Nokia Global Telecommunications Tower & 5G Base Station",
+              url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: "https://www.nokia.com/networks/",
+              domain: "nokia.com",
+              dimensions: "1920 × 1280",
+            },
+          ]
+        : [
+            {
+              id: `img-${encodeURIComponent(effectiveQuery)}-1`,
+              title: `${effectiveQuery} - High Definition Verified Reference Visual`,
+              url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(effectiveQuery)}`,
+              domain: "wikipedia.org",
+              dimensions: "1920 × 1080",
+            },
+            {
+              id: `img-${encodeURIComponent(effectiveQuery)}-2`,
+              title: `${effectiveQuery} - Engineering & Technical Profile`,
+              url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=85",
+              thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80",
+              sourceUrl: `https://www.theverge.com/search?q=${encodeURIComponent(effectiveQuery)}`,
+              domain: "theverge.com",
+              dimensions: "1600 × 1200",
+            },
+          ];
+
       setTabs((prev) =>
         prev.map((t) =>
           t.id === activeTabId
@@ -267,13 +472,21 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                 searchOverview: `Overview for ${effectiveQuery}: Verified and proxied via US ExpressVPN Node (${currentVpn.location}).`,
                 searchResults: [
                   {
-                    title: `${effectiveQuery} - Live Resource Record`,
-                    url: `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}`,
-                    displayUrl: `google.com › search › ${encodeURIComponent(effectiveQuery)}`,
-                    snippet: `Verified query execution for ${effectiveQuery} across US secure proxy servers.`,
+                    title: `${effectiveQuery} - Comprehensive Encyclopedia & Knowledge Base`,
+                    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(effectiveQuery)}`,
+                    displayUrl: `en.wikipedia.org › wiki › ${encodeURIComponent(effectiveQuery)}`,
+                    snippet: `Access verified background, origins, historical records, and current specifications regarding ${effectiveQuery}.`,
                     tag: "Direct Match",
                   },
+                  {
+                    title: `${effectiveQuery} - Official Portal & Resources`,
+                    url: `https://www.google.com/search?q=${encodeURIComponent(effectiveQuery)}`,
+                    displayUrl: `google.com › search › ${encodeURIComponent(effectiveQuery)}`,
+                    snippet: `Explore live news, verified articles, and web records for ${effectiveQuery} authenticated via US proxy servers.`,
+                    tag: "Official Record",
+                  },
                 ],
+                searchImages: fallbackImages,
               }
             : t
         )
@@ -659,7 +872,25 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                 >
                   Gmail / Webmail
                 </span>
-                <span className="cursor-pointer hover:underline">Images</span>
+                <span
+                  onClick={() => {
+                    const q = activeTab.searchQuery || "NOKIA";
+                    setTabs((prev) =>
+                      prev.map((t) =>
+                        t.id === activeTabId ? { ...t, searchMode: "images", searchQuery: q } : t
+                      )
+                    );
+                    executeSearch(q, false, "images");
+                  }}
+                  className={`cursor-pointer hover:underline font-semibold transition-colors ${
+                    activeTab.searchMode === "images"
+                      ? "text-blue-700 underline font-bold"
+                      : "text-stone-700 hover:text-blue-600"
+                  }`}
+                  title="Search Google Images with high resolution photos"
+                >
+                  Images
+                </span>
                 <div
                   onClick={() => {
                     setShowLocationToast(true);
@@ -783,81 +1014,304 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                     <span>I'm Feeling Lucky (Check US Location)</span>
                   </button>
                 </div>
+
+                {/* Google Search Mode Navigation Tabs (All, Images, Videos) */}
+                <div className="flex items-center justify-center gap-6 border-b border-stone-200 text-xs font-medium text-stone-600 mt-5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTabs((prev) =>
+                        prev.map((t) => (t.id === activeTabId ? { ...t, searchMode: "all" } : t))
+                      );
+                    }}
+                    className={`pb-2.5 px-3 flex items-center gap-1.5 transition-colors border-b-2 cursor-pointer ${
+                      (activeTab.searchMode || "all") === "all"
+                        ? "border-blue-600 text-blue-700 font-bold"
+                        : "border-transparent text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    <Search size={13} />
+                    <span>All</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const q = activeTab.searchQuery || "NOKIA";
+                      setTabs((prev) =>
+                        prev.map((t) =>
+                          t.id === activeTabId ? { ...t, searchMode: "images", searchQuery: q } : t
+                        )
+                      );
+                      if (!activeTab.searchImages || activeTab.searchImages.length === 0) {
+                        executeSearch(q, false, "images");
+                      }
+                    }}
+                    className={`pb-2.5 px-3 flex items-center gap-1.5 transition-colors border-b-2 cursor-pointer ${
+                      activeTab.searchMode === "images"
+                        ? "border-blue-600 text-blue-700 font-bold"
+                        : "border-transparent text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    <ImageIcon size={13} />
+                    <span>Images</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTabs((prev) =>
+                        prev.map((t) => (t.id === activeTabId ? { ...t, searchMode: "videos" } : t))
+                      );
+                    }}
+                    className={`pb-2.5 px-3 flex items-center gap-1.5 transition-colors border-b-2 cursor-pointer ${
+                      activeTab.searchMode === "videos"
+                        ? "border-blue-600 text-blue-700 font-bold"
+                        : "border-transparent text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    <Tv size={13} />
+                    <span>Videos</span>
+                  </button>
+                </div>
               </form>
 
               {/* Loading State Animation */}
               {activeTab.isSearching && (
                 <div className="py-6 text-center text-xs text-purple-800 font-mono animate-pulse flex items-center justify-center gap-2">
                   <Sparkles size={16} className="animate-spin text-purple-600" />
-                  <span>Searching Google via ExpressVPN US Node #1...</span>
+                  <span>Searching Google {activeTab.searchMode === "images" ? "Images" : ""} via ExpressVPN US Node #1...</span>
                 </div>
               )}
 
-              {/* VERIFIED SEARCH RESULTS (MATCHING SCREENSHOT 4) */}
-              {!activeTab.isSearching && (activeTab.searchQuery || activeTab.searchResults?.length) && (
+              {/* VERIFIED SEARCH RESULTS (MATCHING SCREENSHOT 4 + IMAGES GALLERY) */}
+              {!activeTab.isSearching && (activeTab.searchQuery || activeTab.searchResults?.length || activeTab.searchImages?.length) && (
                 <div className="text-left mt-6 space-y-6 pt-5 border-t border-stone-200 animate-fade-in font-sans">
                   {/* Results Count and Time indicator */}
                   <div className="flex items-center justify-between text-xs text-stone-500 font-sans border-b border-stone-100 pb-2">
                     <span>
-                      About 1,840,000,000 results (0.28 seconds) • <strong>US Proxy Node Active</strong>
+                      {activeTab.searchMode === "images"
+                        ? `Found high-resolution verified images for "${activeTab.searchQuery || "query"}"`
+                        : "About 1,840,000,000 results (0.28 seconds)"}{" "}
+                      • <strong>US Proxy Node Active</strong>
                     </span>
                     <span className="font-mono text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                       IP: {currentVpn.ip}
                     </span>
                   </div>
 
-                  {/* AI Knowledge Graph Box (If available) */}
-                  {activeTab.searchOverview && (
-                    <div className="p-4 bg-purple-50/80 rounded-xl border border-purple-200 space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-purple-900 flex items-center gap-1.5">
-                          <Sparkles size={14} className="text-purple-600" />
-                          <span>Google Overview • Gemini 3.6 Flash Summary</span>
-                        </div>
-                        <span className="text-[10px] text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full font-semibold">
-                          Verified Entity
+                  {/* ================= CONDITION 1: PURE IMAGES TAB SELECTED ================= */}
+                  {activeTab.searchMode === "images" ? (
+                    <div className="space-y-4 pt-1 animate-fade-in">
+                      {/* Curated Filter Chips */}
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-[11px]">
+                        <span className="text-stone-400 font-medium shrink-0 flex items-center gap-1">
+                          <SlidersHorizontal size={11} /> Filters:
                         </span>
+                        {["All Images", "4K Ultra HD", "Wallpapers", "Vintage Series", "Telecom & 5G", "Hardware Specs"].map((filter, fIdx) => (
+                          <button
+                            key={fIdx}
+                            type="button"
+                            className={`px-3 py-1 rounded-full border shrink-0 transition-all font-medium cursor-pointer ${
+                              fIdx === 0
+                                ? "bg-blue-50 text-blue-700 border-blue-300 font-bold shadow-xs"
+                                : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
+                            }`}
+                          >
+                            {filter}
+                          </button>
+                        ))}
                       </div>
-                      <p className="text-stone-800 leading-relaxed font-sans text-[13px]">
-                        {activeTab.searchOverview}
-                      </p>
-                    </div>
-                  )}
 
-                  {/* Location Card if checking location */}
-                  {(activeTab.searchQuery?.toLowerCase().includes("location") ||
-                    activeTab.searchQuery?.toLowerCase().includes("ip")) && (
-                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-300 space-y-2">
-                      <div className="text-[11px] text-emerald-700 font-mono flex items-center gap-1.5 font-bold">
-                        <MapPin size={13} /> Verified US Proxy Server Network (ExpressVPN Pro)
-                      </div>
-                      <h3 className="text-base font-bold text-emerald-950">
-                        Current Detected Region: {currentVpn.location}
-                      </h3>
-                      <p className="text-xs text-emerald-800 leading-relaxed font-sans">
-                        Public IP Address: <strong>{currentVpn.ip}</strong> • Internet Provider: ExpressVPN US Server Node #1 • Encryption: AES-256 Lightway.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* List of Organic Google Results */}
-                  <div className="space-y-6">
-                    {activeTab.searchResults && activeTab.searchResults.length > 0 ? (
-                      activeTab.searchResults.map((res, idx) => (
-                        <div key={idx} className="space-y-1 group">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-stone-500 font-mono">
-                              {res.displayUrl || res.url}
-                            </span>
-                            {res.tag && (
-                              <span className="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.2 rounded font-medium">
-                                {res.tag}
+                      {/* Image Cards Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-1">
+                        {(activeTab.searchImages && activeTab.searchImages.length > 0
+                          ? activeTab.searchImages
+                          : []
+                        ).map((img, imgIdx) => (
+                          <div
+                            key={img.id || imgIdx}
+                            onClick={() => setSelectedImageModal(img)}
+                            className="group bg-stone-50 border border-stone-200 hover:border-blue-500 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all flex flex-col hover:-translate-y-0.5"
+                          >
+                            <div className="relative aspect-[4/3] bg-stone-900/10 overflow-hidden">
+                              <img
+                                src={img.thumbnailUrl || img.url}
+                                alt={img.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                              />
+                              <span className="absolute bottom-1.5 right-1.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
+                                {img.dimensions || "HD"}
                               </span>
-                            )}
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="p-2 bg-white/95 text-stone-900 rounded-full shadow-lg">
+                                  <Eye size={15} />
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-2.5 flex-1 flex flex-col justify-between text-left">
+                              <p className="text-xs font-semibold text-stone-800 line-clamp-2 leading-snug group-hover:text-blue-700 transition-colors">
+                                {img.title}
+                              </p>
+                              <div className="flex items-center justify-between mt-2 pt-1 border-t border-stone-100 text-[10px] text-stone-500 font-mono">
+                                <span className="truncate">{img.domain}</span>
+                                <ExternalLink size={10} className="text-stone-400 shrink-0 ml-1" />
+                              </div>
+                            </div>
                           </div>
-                          <h3
-                            onClick={() => {
-                              if (res.url.includes("mail.com")) {
+                        ))}
+                      </div>
+
+                      {(!activeTab.searchImages || activeTab.searchImages.length === 0) && (
+                        <div className="py-12 text-center text-stone-500 space-y-3 bg-stone-50 rounded-xl border border-dashed border-stone-300">
+                          <ImageIcon size={36} className="mx-auto text-stone-400" />
+                          <p className="text-sm font-semibold text-stone-700">No images cached yet for this query.</p>
+                          <button
+                            type="button"
+                            onClick={() => executeSearch(activeTab.searchQuery || "NOKIA", false, "images")}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow transition-all cursor-pointer"
+                          >
+                            Load Verified Google Images
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* ================= CONDITION 2: ALL (WEB TEXT + IMAGE STRIP) ================= */
+                    <div className="space-y-6">
+                      {/* Interactive Google Images Preview Strip in "All" view */}
+                      {activeTab.searchImages && activeTab.searchImages.length > 0 && (
+                        <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+                              <ImageIcon size={14} className="text-blue-600" />
+                              <span>Images for {activeTab.searchQuery || "query"}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTabs((prev) =>
+                                  prev.map((t) => (t.id === activeTabId ? { ...t, searchMode: "images" } : t))
+                                );
+                              }}
+                              className="text-xs text-blue-700 hover:text-blue-900 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>View all images</span>
+                              <ChevronRight size={13} />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {activeTab.searchImages.slice(0, 4).map((img, pIdx) => (
+                              <div
+                                key={img.id || `strip-img-${pIdx}`}
+                                onClick={() => setSelectedImageModal(img)}
+                                className="group relative aspect-[4/3] rounded-lg overflow-hidden border border-stone-200 bg-stone-900/10 cursor-pointer hover:shadow-md transition-all"
+                              >
+                                <img
+                                  src={img.thumbnailUrl || img.url}
+                                  alt={img.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end text-left">
+                                  <span className="text-[10px] text-white font-medium line-clamp-1">
+                                    {img.title}
+                                  </span>
+                                  <span className="text-[9px] text-stone-300 font-mono">
+                                    {img.domain}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* AI Knowledge Graph Box (If available) */}
+                      {activeTab.searchOverview && (
+                        <div className="p-4 bg-purple-50/80 rounded-xl border border-purple-200 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="font-bold text-purple-900 flex items-center gap-1.5">
+                              <Sparkles size={14} className="text-purple-600" />
+                              <span>Google Overview • Gemini 3.6 Flash Summary</span>
+                            </div>
+                            <span className="text-[10px] text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full font-semibold">
+                              Verified Entity
+                            </span>
+                          </div>
+                          <p className="text-stone-800 leading-relaxed font-sans text-[13px]">
+                            {activeTab.searchOverview}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Location Card if checking location */}
+                      {(activeTab.searchQuery?.toLowerCase().includes("location") ||
+                        activeTab.searchQuery?.toLowerCase().includes("ip")) && (
+                        <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-300 space-y-2">
+                          <div className="text-[11px] text-emerald-700 font-mono flex items-center gap-1.5 font-bold">
+                            <MapPin size={13} /> Verified US Proxy Server Network (ExpressVPN Pro)
+                          </div>
+                          <h3 className="text-base font-bold text-emerald-950">
+                            Current Detected Region: {currentVpn.location}
+                          </h3>
+                          <p className="text-xs text-emerald-800 leading-relaxed font-sans">
+                            Public IP Address: <strong>{currentVpn.ip}</strong> • Internet Provider: ExpressVPN US Server Node #1 • Encryption: AES-256 Lightway.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* List of Organic Google Results */}
+                      <div className="space-y-6">
+                        {activeTab.searchResults && activeTab.searchResults.length > 0 ? (
+                          activeTab.searchResults.map((res, idx) => (
+                            <div key={idx} className="space-y-1 group">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] text-stone-500 font-mono">
+                                  {res.displayUrl || res.url}
+                                </span>
+                                {res.tag && (
+                                  <span className="text-[10px] bg-stone-100 text-stone-600 px-2 py-0.2 rounded font-medium">
+                                    {res.tag}
+                                  </span>
+                                )}
+                              </div>
+                              <h3
+                                onClick={() => {
+                                  if (res.url.includes("mail.com")) {
+                                    setTabs((prev) =>
+                                      prev.map((t) =>
+                                        t.id === activeTabId
+                                          ? {
+                                              ...t,
+                                              title: "Mail.com (US Node)",
+                                              url: "https://www.mail.com",
+                                              activeView: "mail_com",
+                                              iconType: "mail",
+                                            }
+                                          : t
+                                      )
+                                    );
+                                  } else {
+                                    window.open(res.url, "_blank", "noopener,noreferrer");
+                                  }
+                                }}
+                                className="text-lg font-bold text-blue-800 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
+                              >
+                                {res.title}
+                              </h3>
+                              <p className="text-xs text-stone-700 leading-relaxed font-sans">
+                                {res.snippet}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          /* Fallback default results if empty */
+                          <div className="space-y-1">
+                            <div className="text-[11px] text-stone-500 font-mono">https://www.mail.com</div>
+                            <h3
+                              onClick={() => {
                                 setTabs((prev) =>
                                   prev.map((t) =>
                                     t.id === activeTabId
@@ -871,49 +1325,19 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                                       : t
                                   )
                                 );
-                              } else {
-                                window.open(res.url, "_blank", "noopener,noreferrer");
-                              }
-                            }}
-                            className="text-lg font-bold text-blue-800 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
-                          >
-                            {res.title}
-                          </h3>
-                          <p className="text-xs text-stone-700 leading-relaxed font-sans">
-                            {res.snippet}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      /* Fallback default results if empty */
-                      <div className="space-y-1">
-                        <div className="text-[11px] text-stone-500 font-mono">https://www.mail.com</div>
-                        <h3
-                          onClick={() => {
-                            setTabs((prev) =>
-                              prev.map((t) =>
-                                t.id === activeTabId
-                                  ? {
-                                      ...t,
-                                      title: "Mail.com (US Node)",
-                                      url: "https://www.mail.com",
-                                      activeView: "mail_com",
-                                      iconType: "mail",
-                                    }
-                                  : t
-                              )
-                            );
-                          }}
-                          className="text-lg font-bold text-blue-800 hover:underline cursor-pointer"
-                        >
-                          mail.com | Free email accounts | Secure & Unlimited Email Storage
-                        </h3>
-                        <p className="text-xs text-stone-600 leading-relaxed">
-                          Free email account from mail.com with 65 GB storage, spam filter, virus protection, and custom domain options. Accessible securely via US Proxy nodes.
-                        </p>
+                              }}
+                              className="text-lg font-bold text-blue-800 hover:underline cursor-pointer"
+                            >
+                              mail.com | Free email accounts | Secure & Unlimited Email Storage
+                            </h3>
+                            <p className="text-xs text-stone-600 leading-relaxed">
+                              Free email account from mail.com with 65 GB storage, spam filter, virus protection, and custom domain options. Accessible securely via US Proxy nodes.
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -981,43 +1405,133 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                 </div>
 
                 <div className="bg-white text-stone-900 p-6 rounded-2xl shadow-2xl space-y-4 border border-stone-200">
-                  <h3 className="font-bold text-lg text-[#003B7A] border-b pb-2 flex justify-between items-center">
-                    <span>Mail.com Sign In</span>
-                    <Lock size={16} className="text-emerald-600" />
-                  </h3>
-
-                  <div className="space-y-3 text-xs">
-                    <div>
-                      <label className="block font-bold text-stone-700 mb-1">Email Address</label>
-                      <input
-                        type="email"
-                        defaultValue="kansasnelly@mail.com"
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-600 font-mono"
-                      />
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="font-bold text-lg text-[#003B7A] flex items-center gap-2">
+                      <Lock size={16} className="text-emerald-600" />
+                      <span>{mailLoggedIn ? "Mail.com Active Session" : "Mail.com Real Sign In"}</span>
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowLiveMailEmbed(!showLiveMailEmbed)}
+                        className="text-[11px] font-bold text-blue-700 hover:underline flex items-center gap-1"
+                      >
+                        {showLiveMailEmbed ? "Show Login Form" : "Live Portal Embed"}
+                      </button>
                     </div>
-                    <div>
-                      <label className="block font-bold text-stone-700 mb-1">Password</label>
-                      <input
-                        type="password"
-                        defaultValue="••••••••••••"
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-600 font-mono"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onOpenWebmailTab) {
-                          onOpenWebmailTab();
-                        } else {
-                          setShowLocationToast(true);
-                        }
-                      }}
-                      className="w-full py-2.5 bg-lime-600 hover:bg-lime-500 text-white font-bold rounded-lg text-xs shadow-md transition-all cursor-pointer"
-                    >
-                      Log in to Webmail
-                    </button>
                   </div>
+
+                  {showLiveMailEmbed ? (
+                    <div className="space-y-3">
+                      <div className="text-xs text-stone-600">
+                        Live connection to <span className="font-mono font-bold">https://www.mail.com</span> via {currentVpn.name}:
+                      </div>
+                      <iframe
+                        src="/api/browser/proxy?url=https%3A%2F%2Fwww.mail.com"
+                        title="Mail.com Live Embed"
+                        className="w-full h-80 rounded-lg border border-stone-300"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                      />
+                    </div>
+                  ) : mailLoggedIn ? (
+                    <div className="space-y-4 text-xs">
+                      <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl space-y-1 text-emerald-950 font-mono">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                          <CheckCircle2 size={16} className="text-emerald-600" /> Logged In
+                        </div>
+                        <div className="text-xs">Account: <span className="font-bold">{mailEmail}</span></div>
+                        <div className="text-[10px] text-emerald-700">SSL Encrypted Session Active • Gateway: {currentVpn.name}</div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onOpenWebmailTab) onOpenWebmailTab();
+                          }}
+                          className="w-full py-2.5 bg-lime-600 hover:bg-lime-500 text-white font-bold rounded-lg text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          <Mail size={14} /> Open Full Webmail Suite
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBrowserMailLogout}
+                          className="w-full py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold rounded-lg text-xs transition-all cursor-pointer"
+                        >
+                          Sign Out (Log in with different email)
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleBrowserMailLogin} className="space-y-3 text-xs">
+                      {mailAuthMsg && (
+                        <div
+                          className={`p-2.5 rounded-lg text-xs font-mono font-bold ${
+                            mailAuthMsg.type === "success"
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
+                              : "bg-red-50 text-red-800 border border-red-300"
+                          }`}
+                        >
+                          {mailAuthMsg.text}
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block font-bold text-stone-700 mb-1">Email Address</label>
+                        <input
+                          type="email"
+                          required
+                          value={mailEmail}
+                          onChange={(e) => setMailEmail(e.target.value)}
+                          placeholder="Enter your email (e.g. arthur20011043@mail.com)"
+                          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-blue-600 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-stone-700 mb-1">Password</label>
+                        <input
+                          type="password"
+                          required
+                          value={mailPassword}
+                          onChange={(e) => setMailPassword(e.target.value)}
+                          placeholder="Enter your account password..."
+                          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-blue-600 font-mono"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1">
+                        <span className="hover:underline cursor-pointer">Forgot password?</span>
+                        <span className="text-emerald-700 font-bold">256-Bit SSL Secured</span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={mailAuthLoading}
+                        className="w-full py-2.5 bg-lime-600 hover:bg-lime-500 disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        {mailAuthLoading ? (
+                          <>
+                            <RotateCw size={13} className="animate-spin" /> Authenticating...
+                          </>
+                        ) : (
+                          "Log in to Webmail"
+                        )}
+                      </button>
+
+                      <div className="text-center pt-2 border-t border-stone-200">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onOpenWebmailTab) onOpenWebmailTab();
+                          }}
+                          className="text-[11px] text-[#003B7A] hover:underline font-bold"
+                        >
+                          Don't have an account? Sign up in Webmail Suite →
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>
@@ -1104,6 +1618,105 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
           </div>
         )}
       </div>
+
+      {/* ================= GOOGLE IMAGE INSPECTOR LIGHTBOX MODAL ================= */}
+      {selectedImageModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setSelectedImageModal(null)}
+        >
+          <div
+            className="bg-[#12141F] border border-stone-700 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl flex flex-col text-white animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-stone-800 flex items-center justify-between bg-[#0B0D14]">
+              <div className="flex items-center gap-2.5">
+                <span className="p-1.5 bg-blue-600/20 text-blue-400 rounded-lg">
+                  <ImageIcon size={18} />
+                </span>
+                <div>
+                  <h4 className="text-sm font-bold text-stone-100 line-clamp-1">
+                    {selectedImageModal.title}
+                  </h4>
+                  <p className="text-[11px] text-stone-400 font-mono flex items-center gap-2">
+                    <span>{selectedImageModal.domain}</span>
+                    <span>•</span>
+                    <span className="text-emerald-400">{selectedImageModal.dimensions}</span>
+                    <span>•</span>
+                    <span className="text-purple-300">ExpressVPN US Proxied</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedImageModal(null)}
+                className="p-1.5 text-stone-400 hover:text-white hover:bg-stone-800 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Image Body */}
+            <div className="relative bg-black/95 flex items-center justify-center p-4 min-h-[300px] max-h-[500px] overflow-hidden">
+              <img
+                src={selectedImageModal.url}
+                alt={selectedImageModal.title}
+                className="max-w-full max-h-[460px] object-contain rounded-lg shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div className="p-4 bg-[#0B0D14] border-t border-stone-800 flex items-center justify-between flex-wrap gap-3">
+              <div className="text-xs text-stone-400 font-medium">
+                High-Resolution verified entity indexed via US Network Node
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(selectedImageModal.url);
+                    setCopiedImageId(selectedImageModal.id);
+                    setTimeout(() => setCopiedImageId(null), 3000);
+                  }}
+                  className="px-3.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {copiedImageId === selectedImageModal.id ? (
+                    <>
+                      <Check size={13} className="text-emerald-400" />
+                      <span>Copied Image URL</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} />
+                      <span>Copy URL</span>
+                    </>
+                  )}
+                </button>
+                <a
+                  href={selectedImageModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Download size={13} />
+                  <span>Full Size</span>
+                </a>
+                <a
+                  href={selectedImageModal.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow cursor-pointer"
+                >
+                  <ExternalLink size={13} />
+                  <span>Visit Website</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

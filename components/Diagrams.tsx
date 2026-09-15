@@ -52,7 +52,7 @@ export const SurfaceCodeDiagram: React.FC = () => {
         Click the grey <strong>Data Qubits</strong> to inject errors. Watch the colored <strong>Stabilizers</strong> light up when they detect an odd number of errors.
       </p>
       
-      <div className="relative w-64 h-64 bg-[#F5F4F0] rounded-lg border border-stone-200 p-4 flex flex-wrap justify-between content-between relative">
+      <div className="relative w-64 h-64 bg-[#F5F4F0] rounded-lg border border-stone-200 p-4 flex flex-wrap justify-between content-between">
          {/* Grid Lines */}
          <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-20">
             <div className="w-2/3 h-2/3 border border-stone-400"></div>
