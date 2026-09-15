@@ -3,7 +3,7 @@ import { HeroScene, QuantumComputerScene } from './components/QuantumScene';
 import { SurfaceCodeDiagram, TransformerDecoderDiagram, PerformanceMetricDiagram } from './components/Diagrams';
 import { EcosystemDashboard } from './components/EcosystemDashboard';
 import { MailStudioSuite } from './components/MailStudioSuite';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X } from 'lucide-react';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -17,6 +17,7 @@ const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: 
 
 const App: React.FC = () => {
   const [activeMainTab, setActiveMainTab] = useState<"revenue" | "mail_ai" | "quantum">("revenue");
+  const [isTabHidden, setIsTabHidden] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -41,15 +42,40 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090A0E] text-stone-100 selection:bg-nobel-gold selection:text-black font-sans">
+    <div className="min-h-screen bg-[#090A0E] text-stone-100 selection:bg-nobel-gold selection:text-black font-sans relative">
       
       {/* EXECUTIVE TOP NAVIGATION HEADER */}
       <header className="sticky top-0 z-50 bg-[#090A0E]/95 backdrop-blur-md border-b border-stone-800 py-3.5 px-6 shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           
-          {/* Brand & Live System Status */}
+          {/* Brand, Hide Tab Control & Live System Status */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-nobel-gold rounded-xl flex items-center justify-center text-stone-950 font-serif font-bold text-2xl shadow-lg">
+            {/* HIDE TAB BUTTON (Positioned exactly as requested in user screenshot to the left of the α emblem) */}
+            <button
+              id="btn-hide-tab-header"
+              type="button"
+              onClick={() => setIsTabHidden(!isTabHidden)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black tracking-wider uppercase transition-all flex items-center gap-1.5 shadow-lg border cursor-pointer shrink-0 ${
+                isTabHidden
+                  ? "bg-emerald-950 text-emerald-300 border-emerald-500 hover:bg-emerald-900 ring-2 ring-emerald-500/40 animate-pulse"
+                  : "bg-red-950/90 text-red-200 border-red-700/80 hover:bg-red-900 hover:text-white"
+              }`}
+              title={isTabHidden ? "Show and restore foreground workspace" : "Hide this interface and view what is at the back"}
+            >
+              {isTabHidden ? (
+                <>
+                  <Eye size={15} className="text-emerald-400" />
+                  <span>SHOW TAB</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff size={15} className="text-red-400" />
+                  <span>HIDE TAB</span>
+                </>
+              )}
+            </button>
+
+            <div className="w-9 h-9 bg-nobel-gold rounded-xl flex items-center justify-center text-stone-950 font-serif font-bold text-2xl shadow-lg shrink-0">
               α
             </div>
             <div>
@@ -66,9 +92,12 @@ const App: React.FC = () => {
           {/* Main Top Navigation Tabs */}
           <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800">
             <button
-              onClick={() => setActiveMainTab("revenue")}
+              onClick={() => {
+                setActiveMainTab("revenue");
+                setIsTabHidden(false);
+              }}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeMainTab === "revenue"
+                activeMainTab === "revenue" && !isTabHidden
                   ? "bg-amber-600 text-white shadow-lg border border-amber-400/50"
                   : "text-stone-400 hover:text-white"
               }`}
@@ -78,9 +107,12 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveMainTab("mail_ai")}
+              onClick={() => {
+                setActiveMainTab("mail_ai");
+                setIsTabHidden(false);
+              }}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeMainTab === "mail_ai"
+                activeMainTab === "mail_ai" && !isTabHidden
                   ? "bg-purple-900 text-purple-100 shadow-lg border border-purple-600"
                   : "text-stone-400 hover:text-white"
               }`}
@@ -91,9 +123,12 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveMainTab("quantum")}
+              onClick={() => {
+                setActiveMainTab("quantum");
+                setIsTabHidden(false);
+              }}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeMainTab === "quantum"
+                activeMainTab === "quantum" && !isTabHidden
                   ? "bg-stone-800 text-stone-100 shadow-lg border border-stone-700"
                   : "text-stone-400 hover:text-white"
               }`}
@@ -109,8 +144,95 @@ const App: React.FC = () => {
       {/* MAIN CONTENT AREA */}
       <main className="max-w-7xl mx-auto px-4 py-6">
         
-        {/* VIEW 1: SHOPIFY + TIDIO + PHANTOM REVENUE ENGINE */}
-        {activeMainTab === "revenue" && (
+        {/* REVEALED BACKGROUND VIEW WHEN USER CLICKS HIDE TAB */}
+        {isTabHidden && (
+          <div className="space-y-8 animate-fade-in">
+            {/* Ambient Background Notification Bar */}
+            <div className="bg-[#0e121d] p-4 rounded-2xl border border-emerald-500/50 shadow-2xl flex justify-between items-center flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-950 border border-emerald-700 flex items-center justify-center text-emerald-400">
+                  <Eye size={18} />
+                </div>
+                <div>
+                  <h2 className="font-serif font-bold text-base text-emerald-300 flex items-center gap-2">
+                    Background Canvas & AlphaQubit Deep Layer Uncovered
+                  </h2>
+                  <p className="text-xs text-stone-300">
+                    The foreground interface is currently hidden. You can now view and interact with the underlying 3D Quantum Engine and architectural models unobstructed.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTabHidden(false)}
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl shadow-lg border border-emerald-400/50 flex items-center gap-2 cursor-pointer transition-all transform hover:scale-105"
+              >
+                <Eye size={16} />
+                <span>RESTORE FOREGROUND INTERFACE</span>
+              </button>
+            </div>
+
+            {/* Full 3D Interactive Quantum Simulation Stage */}
+            <div className="relative w-full h-[480px] rounded-3xl border border-stone-800 overflow-hidden bg-radial from-[#131724] to-[#08090E] shadow-2xl flex items-center justify-center">
+              <HeroScene />
+              <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-stone-700 text-[11px] text-stone-300 font-mono flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>Active 3D Quantum State • Recurrent Surface Code Decoding Grid</span>
+              </div>
+              <div className="absolute bottom-6 text-center z-10 max-w-xl px-4 bg-black/60 backdrop-blur-md py-3 rounded-2xl border border-stone-800">
+                <p className="text-xs text-stone-300 font-serif italic">
+                  "AlphaQubit leverages recurrent transformers to predict syndrome errors with super-classical fidelity."
+                </p>
+                <p className="text-[10px] text-nobel-gold font-mono mt-1">Nature (2024) Quantum AI Architecture</p>
+              </div>
+            </div>
+
+            {/* Quick Switch Cards while in Background View */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-5 bg-[#0D0F17] rounded-2xl border border-stone-800 space-y-3">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                  <ShoppingBag size={16} />
+                  <span>Shopify & Tidio Live Engine (Running in Background)</span>
+                </div>
+                <p className="text-xs text-stone-400">
+                  Revenue splits (80/20) and visitor sessions are streaming in real-time. Unhide the tab anytime to manage payouts and transactions.
+                </p>
+                <button
+                  onClick={() => {
+                    setActiveMainTab("revenue");
+                    setIsTabHidden(false);
+                  }}
+                  className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer"
+                >
+                  Open Revenue Engine →
+                </button>
+              </div>
+
+              <div className="p-5 bg-[#0D0F17] rounded-2xl border border-stone-800 space-y-3">
+                <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
+                  <Mail size={16} />
+                  <span>Mail.com & Multi Sreymara AI (Ready)</span>
+                </div>
+                <p className="text-xs text-stone-400">
+                  Google Gemini 3.6 Flash conversational engine is synchronized. Your chat session is safely preserved.
+                </p>
+                <button
+                  onClick={() => {
+                    setActiveMainTab("mail_ai");
+                    setIsTabHidden(false);
+                  }}
+                  className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
+                >
+                  Open Multi Sreymara AI →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 1: SHOPIFY + TIDIO + PHANTOM REVENUE ENGINE (Rendered when not hidden) */}
+        {!isTabHidden && activeMainTab === "revenue" && (
           <div className="space-y-6 animate-fade-in">
             <div className="bg-[#0C0E14] p-4 rounded-xl border border-stone-800 flex justify-between items-center flex-wrap gap-4">
               <div>
@@ -134,15 +256,18 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 2: MAIL.COM & MULTI SREYMARA AI STUDIO */}
-        {activeMainTab === "mail_ai" && (
+        {/* VIEW 2: MAIL.COM & MULTI SREYMARA AI STUDIO (Rendered when not hidden) */}
+        {!isTabHidden && activeMainTab === "mail_ai" && (
           <div className="space-y-6 animate-fade-in">
-            <MailStudioSuite onClose={() => setActiveMainTab("revenue")} />
+            <MailStudioSuite 
+              onClose={() => setActiveMainTab("revenue")} 
+              onHideTab={() => setIsTabHidden(true)}
+            />
           </div>
         )}
 
-        {/* VIEW 3: ALPHAQUBIT QUANTUM RESEARCH PAPER */}
-        {activeMainTab === "quantum" && (
+        {/* VIEW 3: ALPHAQUBIT QUANTUM RESEARCH PAPER (Rendered when not hidden) */}
+        {!isTabHidden && activeMainTab === "quantum" && (
           <div className="space-y-16 animate-fade-in pt-4">
             
             {/* Paper Navigation Links & Close Button (Screenshot 6 Fix) */}

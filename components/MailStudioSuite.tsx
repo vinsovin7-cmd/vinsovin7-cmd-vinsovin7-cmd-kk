@@ -37,11 +37,20 @@ import {
   LogOut,
   Maximize2,
   Brain,
-  Printer
+  Printer,
+  Volume2,
+  VolumeX,
+  CheckCircle2,
+  ThumbsUp,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface MailStudioSuiteProps {
   onClose?: () => void;
+  onHideTab?: () => void;
 }
 
 interface ChatMessage {
@@ -59,19 +68,156 @@ interface ChatMessage {
   timestamp: string;
 }
 
-export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => {
+/**
+ * Turning Gemini / Emblem Ball Component
+ * Inspired by Google Gemini and Emblem iridescent orbs.
+ * Turns continuously while AI is processing/generating, and stops turning when done.
+ */
+export const TurningGeminiBall: React.FC<{
+  isTurning: boolean;
+  size?: "sm" | "md" | "lg";
+  showLabel?: boolean;
+  onClick?: () => void;
+}> = ({ isTurning, size = "md", showLabel = true, onClick }) => {
+  const containerDim = size === "sm" ? "w-7 h-7" : size === "lg" ? "w-11 h-11" : "w-9 h-9";
+  const orbDim = size === "sm" ? "w-4.5 h-4.5" : size === "lg" ? "w-7 h-7" : "w-5.5 h-5.5";
+
+  return (
+    <div
+      onClick={onClick}
+      role="status"
+      aria-label={isTurning ? "AI is actively thinking" : "AI Emblem ready"}
+      className={`inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border transition-all duration-500 select-none ${
+        isTurning
+          ? "bg-purple-950/70 border-purple-500/90 shadow-[0_0_22px_rgba(168,85,247,0.55)] ring-1 ring-cyan-400/50"
+          : "bg-[#10131B] border-stone-800 hover:border-purple-800/80 text-stone-300"
+      }`}
+    >
+      {/* 3D Celestial Emblem Orb */}
+      <div className={`relative ${containerDim} flex items-center justify-center`}>
+        {/* Ambient Glow Aura */}
+        <div
+          className={`absolute inset-0 rounded-full transition-all duration-700 blur-sm pointer-events-none ${
+            isTurning
+              ? "bg-gradient-to-tr from-purple-600/70 via-cyan-500/60 to-amber-400/50 scale-125 opacity-100 animate-pulse"
+              : "bg-purple-900/30 scale-90 opacity-40"
+          }`}
+        />
+
+        {/* Outer Orbital Ring 1 - Turns clockwise with orbital bead */}
+        <div
+          className={`absolute inset-0 rounded-full border border-dashed border-cyan-400/70 pointer-events-none ${
+            isTurning ? "animate-[spin_1.3s_linear_infinite]" : "opacity-35"
+          }`}
+          style={{ transform: "rotateX(62deg)" }}
+        >
+          <span
+            className={`absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
+              isTurning
+                ? "bg-cyan-300 shadow-[0_0_10px_#38bdf8] scale-125"
+                : "bg-cyan-700 opacity-60"
+            }`}
+          />
+        </div>
+
+        {/* Outer Orbital Ring 2 - Turns counter-clockwise with orbital bead */}
+        <div
+          className={`absolute inset-0 rounded-full border border-purple-400/60 pointer-events-none ${
+            isTurning ? "animate-[spin_2.1s_linear_infinite_reverse]" : "opacity-30"
+          }`}
+          style={{ transform: "rotateY(62deg)" }}
+        >
+          <span
+            className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
+              isTurning
+                ? "bg-purple-300 shadow-[0_0_10px_#c084fc] scale-125"
+                : "bg-purple-700 opacity-50"
+            }`}
+          />
+        </div>
+
+        {/* Central Core Ball (Turning around continuously when isTurning is true, stationary when false) */}
+        <div
+          className={`relative ${orbDim} rounded-full overflow-hidden transition-transform duration-500 ${
+            isTurning
+              ? "turning-ball-active turning-ball-gradient-spinning shadow-[0_0_20px_rgba(192,132,252,0.95)]"
+              : "turning-ball-gradient shadow-[0_0_10px_rgba(147,51,234,0.4)]"
+          }`}
+        >
+          {/* 3D Specular Sun Glint */}
+          <div className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full bg-white/95 blur-[0.4px] pointer-events-none" />
+
+          {/* Gemini Emblem Center Sparkle */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+              isTurning ? "opacity-100 animate-[spin_1.2s_linear_infinite]" : "opacity-80"
+            }`}
+          >
+            <Sparkles
+              size={size === "sm" ? 11 : size === "lg" ? 16 : 13}
+              className={isTurning ? "text-amber-200 drop-shadow-[0_0_6px_#fde047]" : "text-amber-300/80"}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Descriptive Status */}
+      {showLabel && (
+        <div className="flex flex-col text-left">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+            {isTurning ? (
+              <span className="text-purple-300 flex items-center gap-1.5 font-semibold">
+                <span>Turning & Processing</span>
+                <span className="flex gap-0.5 items-center">
+                  <span className="w-1 h-1 rounded-full bg-purple-400 animate-bounce" />
+                  <span className="w-1 h-1 rounded-full bg-cyan-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-bounce [animation-delay:300ms]" />
+                </span>
+              </span>
+            ) : (
+              <span className="text-stone-300 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_6px_#34d399]"></span>
+                <span className="text-stone-300">Emblem Settled</span>
+              </span>
+            )}
+          </div>
+          <span className="text-[9px] text-stone-400 font-sans">
+            {isTurning ? "Neural Gemini synthesis active" : "Multi Sreymara AI v4 (Ready)"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose, onHideTab }) => {
   const [activeTab, setActiveTab] = useState<"ai_chat" | "mail_webmail" | "browser" | "videogram" | "truthfinder">("ai_chat");
 
   // AI Chat & Memory State
   const [selectedModel, setSelectedModel] = useState("Multi Sreymara AI v4 (Executive)");
   const [selectedTone, setSelectedTone] = useState("Executive");
-  const [targetRecipient, setTargetRecipient] = useState("investor@venture-fund.com");
+  const [targetRecipient, setTargetRecipient] = useState("");
   const [chatPrompt, setChatPrompt] = useState("");
   const [attachedImages, setAttachedImages] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLearningMode, setIsLearningMode] = useState(true);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const scrollToChatBottom = (behavior: ScrollBehavior = "smooth") => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior, block: "end" });
+    } else if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
 
   // Persistent Conversation Memory
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
@@ -83,6 +229,65 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
       timestamp: "Today 08:15 AM"
     }
   ]);
+
+  useEffect(() => {
+    scrollToChatBottom("smooth");
+  }, [chatHistory, isGenerating]);
+
+  const checkScrollState = () => {
+    if (tabsScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsScrollRef.current;
+      setCanScrollLeft(scrollLeft > 8);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 8);
+    }
+  };
+
+  const scrollTabs = (direction: "left" | "right") => {
+    if (tabsScrollRef.current) {
+      const offset = 260;
+      tabsScrollRef.current.scrollBy({
+        left: direction === "left" ? -offset : offset,
+        behavior: "smooth"
+      });
+      setTimeout(checkScrollState, 320);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollState();
+    const el = tabsScrollRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScrollState, { passive: true });
+    }
+    window.addEventListener("resize", checkScrollState);
+    return () => {
+      if (el) el.removeEventListener("scroll", checkScrollState);
+      window.removeEventListener("resize", checkScrollState);
+    };
+  }, []);
+
+  const handleCopyText = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMsgId(id);
+    setTimeout(() => setCopiedMsgId(null), 2500);
+  };
+
+  const handleToggleSpeak = (id: string, text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (speakingMsgId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+    } else {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#•]/g, " "));
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onend = () => setSpeakingMsgId(null);
+      utterance.onerror = () => setSpeakingMsgId(null);
+      setSpeakingMsgId(id);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   // Mail.com Webmail Dashboard State (Matching Screenshots 5, 6, 7)
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -173,17 +378,61 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
     }
   };
 
+  // Helper to append image base64 strings
+  const appendImageBase64 = (base64String: string) => {
+    setAttachedImages((prev) => {
+      if (prev.length >= 30) return prev;
+      return [...prev, base64String];
+    });
+  };
+
+  // Dedicated Clipboard Paste Handler for Textarea and Chat Container
+  const handlePasteImages = (e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = Array.from(clipboardData.items || []);
+    const imageItems = items.filter((item) => item.type.startsWith("image/"));
+
+    if (imageItems.length > 0) {
+      imageItems.forEach((item) => {
+        const file = item.getAsFile();
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (uploadEvent) => {
+            if (uploadEvent.target?.result) {
+              appendImageBase64(uploadEvent.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    } else if (clipboardData.files && clipboardData.files.length > 0) {
+      const files = Array.from(clipboardData.files);
+      files.forEach((file) => {
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (uploadEvent) => {
+            if (uploadEvent.target?.result) {
+              appendImageBase64(uploadEvent.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  };
+
   // Image Upload Handler (Supports up to 30 images)
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     
     files.forEach((file) => {
-      if (attachedImages.length >= 30) return;
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
         if (uploadEvent.target?.result) {
-          setAttachedImages((prev) => [...prev, uploadEvent.target!.result as string]);
+          appendImageBase64(uploadEvent.target.result as string);
         }
       };
       reader.readAsDataURL(file);
@@ -211,6 +460,7 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
     };
 
     setChatHistory((prev) => [...prev, userMsg]);
+    setTimeout(() => scrollToChatBottom("smooth"), 30);
 
     try {
       const res = await fetch("/api/ai/chat", {
@@ -220,7 +470,9 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
           prompt: userText,
           model: selectedModel,
           tone: selectedTone,
-          recipientEmail: targetRecipient,
+          recipientEmail: targetRecipient.trim() || undefined,
+          history: chatHistory.slice(-6).map((m) => ({ sender: m.sender, text: m.text })),
+          images: imgs,
         }),
       });
 
@@ -236,6 +488,7 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
         };
 
         setChatHistory((prev) => [...prev, aiMsg]);
+        setTimeout(() => scrollToChatBottom("smooth"), 40);
 
         if (data.emailDraft) {
           setMailTo(data.emailDraft.recipient);
@@ -502,34 +755,84 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
   return (
     <div className="w-full bg-[#0C0E14] text-stone-200 border border-stone-800 rounded-2xl shadow-2xl overflow-hidden my-4">
       
-      {/* TOP INTEGRATED TAB BAR */}
-      <div className="bg-[#08090D] px-6 py-3.5 border-b border-stone-800 flex justify-between items-center flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#003B7A] flex items-center justify-center text-white font-bold text-lg shadow-md">
-            ✉
+      {/* TOP INTEGRATED HEADER & HORIZONTAL SCROLLABLE TABS */}
+      <div className="bg-[#08090D] px-4 sm:px-6 py-3.5 border-b border-stone-800 space-y-3">
+        {/* Row 1: Title Info & Close Button */}
+        <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#003B7A] flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
+              ✉
+            </div>
+            <div>
+              <h2 className="font-serif text-sm sm:text-base font-bold text-white flex items-center gap-2 flex-wrap">
+                <span>Mail.com Webmail & Multi Sreymara AI Studio</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  🟢 US PROXY ACTIVE
+                </span>
+              </h2>
+              <p className="text-xs text-stone-400">
+                Interactive AI Chat memory engine, speech-to-text, Web Browser, Telegram, and TruthFinder Email & Public Records intelligence.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-serif text-base font-bold text-white flex items-center gap-2">
-              Mail.com Webmail & Multi Sreymara AI Studio
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">
-                🟢 US PROXY ACTIVE
-              </span>
-            </h2>
-            <p className="text-xs text-stone-400">
-              Interactive AI Chat memory engine, speech-to-text transcribing, multi-image upload, and authentic Mail.com Webmail portal.
-            </p>
+
+          {/* Header Action Buttons (Hide Tab & Close) */}
+          <div className="flex items-center gap-2">
+            {onHideTab && (
+              <button
+                type="button"
+                onClick={onHideTab}
+                className="px-3.5 py-2 bg-red-950/80 hover:bg-red-800 text-red-200 hover:text-white rounded-xl text-xs font-bold border border-red-700/60 shadow-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Hide this interface and view what is at the back"
+              >
+                <EyeOff size={15} className="text-red-400" />
+                <span>HIDE TAB</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+              }}
+              className="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded-xl text-xs font-bold border border-stone-700 shadow-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Close Mail.com & Multi Sreymara AI Section"
+            >
+              <X size={15} className="text-stone-400" />
+              <span>CLOSE</span>
+            </button>
           </div>
         </div>
 
-        {/* 3 Main Switch Tabs & Close Button */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#12151E] p-1 rounded-xl border border-stone-800">
+        {/* Row 2: Horizontal Scrollable Navigation Slider with Left / Right Controls */}
+        <div className="relative flex items-center gap-2 bg-[#12151E] p-1.5 rounded-2xl border border-stone-800 shadow-inner">
+          {/* Slide Left Button */}
+          <button
+            type="button"
+            onClick={() => scrollTabs("left")}
+            disabled={!canScrollLeft}
+            className={`p-2 rounded-xl border transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer ${
+              canScrollLeft
+                ? "bg-purple-950/80 hover:bg-purple-800 text-purple-200 border-purple-700"
+                : "bg-stone-900/60 text-stone-600 border-stone-800/80 cursor-default opacity-50"
+            }`}
+            title="Slide left to view previous tabs"
+            aria-label="Slide tabs left"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          {/* Scrollable Tabs Track */}
+          <div
+            ref={tabsScrollRef}
+            className="flex items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1 scrollbar-thin scrollbar-thumb-purple-700/70 scrollbar-track-stone-950 w-full select-none"
+            style={{ scrollbarWidth: "thin" }}
+          >
             <button
               onClick={() => setActiveTab("ai_chat")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer ${
                 activeTab === "ai_chat"
                   ? "bg-purple-900 text-purple-100 border border-purple-700 shadow-md"
-                  : "text-stone-400 hover:text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800/60"
               }`}
             >
               <Bot size={14} className="text-purple-400" /> Multi Sreymara AI Chat
@@ -537,10 +840,10 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
 
             <button
               onClick={() => setActiveTab("mail_webmail")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer ${
                 activeTab === "mail_webmail"
                   ? "bg-[#003B7A] text-white border border-blue-500 shadow-md"
-                  : "text-stone-400 hover:text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800/60"
               }`}
             >
               <Mail size={14} className="text-blue-300" /> Mail.com Webmail (Real App)
@@ -548,10 +851,10 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
 
             <button
               onClick={() => setActiveTab("browser")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer ${
                 activeTab === "browser"
                   ? "bg-stone-800 text-stone-200 border border-stone-700 shadow-md"
-                  : "text-stone-400 hover:text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800/60"
               }`}
             >
               <Globe size={14} className="text-emerald-400" /> Web Browser
@@ -559,10 +862,10 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
 
             <button
               onClick={() => setActiveTab("videogram")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer ${
                 activeTab === "videogram"
                   ? "bg-cyan-950 text-cyan-200 border border-cyan-700 shadow-md font-black"
-                  : "text-stone-400 hover:text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800/60"
               }`}
             >
               <Send size={14} className="text-cyan-400" /> Sreymara Videogram & Telegram
@@ -570,26 +873,30 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
 
             <button
               onClick={() => setActiveTab("truthfinder")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer ${
                 activeTab === "truthfinder"
                   ? "bg-teal-900 text-teal-100 border border-teal-500 shadow-md font-black"
-                  : "text-stone-400 hover:text-white"
+                  : "text-stone-400 hover:text-white hover:bg-stone-800/60"
               }`}
             >
-              <Search size={14} className="text-teal-300" /> TruthFinder Public Records
+              <Search size={14} className="text-teal-300" /> TruthFinder Public Records & Emails
             </button>
           </div>
 
-          {/* Close Section Button (Matching Screenshot 5 Arrow) */}
+          {/* Slide Right Button */}
           <button
-            onClick={() => {
-              if (onClose) onClose();
-            }}
-            className="px-3.5 py-2 bg-red-950/80 hover:bg-red-800 text-red-200 hover:text-white rounded-xl text-xs font-bold border border-red-700/60 shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Close Mail.com & Multi Sreymara AI Section"
+            type="button"
+            onClick={() => scrollTabs("right")}
+            disabled={!canScrollRight}
+            className={`p-2 rounded-xl border transition-all shadow-md shrink-0 flex items-center justify-center cursor-pointer ${
+              canScrollRight
+                ? "bg-purple-950/80 hover:bg-purple-800 text-purple-200 border-purple-700"
+                : "bg-stone-900/60 text-stone-600 border-stone-800/80 cursor-default opacity-50"
+            }`}
+            title="Slide right to view next tabs"
+            aria-label="Slide tabs right"
           >
-            <X size={15} className="text-red-400" />
-            <span>CLOSE</span>
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -631,33 +938,94 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
               </div>
 
               <div>
-                <label className="block text-cyan-300 font-bold mb-1 uppercase tracking-wider text-[10px]">TARGET DISPATCH RECIPIENT</label>
+                <label className="block text-cyan-300 font-bold mb-1 uppercase tracking-wider text-[10px]">RECIPIENT (ONLY USED IF DRAFTING EMAIL)</label>
                 <input
                   type="email"
                   value={targetRecipient}
                   onChange={(e) => setTargetRecipient(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-950 border border-stone-800 rounded-lg text-white font-mono focus:outline-none focus:border-cyan-500"
+                  placeholder="Leave empty or enter recipient for drafted emails..."
+                  className="w-full px-3 py-2 bg-stone-950 border border-stone-800 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-cyan-500 placeholder:text-stone-600"
                 />
               </div>
             </div>
 
+            {/* Conversational AI Mode Banner */}
+            <div className="flex items-center justify-between px-3 py-2 bg-purple-950/30 border border-purple-800/50 rounded-lg text-xs text-purple-200">
+              <span className="flex items-center gap-2">
+                <Sparkles size={14} className="text-purple-400 shrink-0" />
+                <span><strong>Conversational Intelligence:</strong> Multi Sreymara AI chats naturally like Gemini. It answers questions directly and only drafts an email when you explicitly command it to.</span>
+              </span>
+              <span className="text-[10px] font-mono bg-purple-900/60 px-2 py-0.5 rounded text-purple-300 shrink-0">
+                NO AUTO-DRAFTING
+              </span>
+            </div>
+
             {/* AI Conversation Thread */}
-            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-2">
+            <div
+              ref={chatContainerRef}
+              onPaste={handlePasteImages}
+              className="space-y-4 max-h-[460px] overflow-y-auto pr-2 scroll-smooth focus:outline-none"
+              tabIndex={0}
+            >
               {chatHistory.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`p-4 rounded-xl text-xs space-y-2 border leading-relaxed ${
+                  className={`p-4 rounded-xl text-xs space-y-2.5 border leading-relaxed transition-all ${
                     msg.sender === "user"
                       ? "bg-purple-950/40 border-purple-800/80 text-purple-100 ml-12"
-                      : "bg-[#10131B] border-stone-800 text-stone-200 mr-12"
+                      : "bg-[#10131B] border-stone-800 text-stone-200 mr-8 shadow-sm hover:border-stone-700/80"
                   }`}
                 >
-                  <div className="flex justify-between items-center text-[10px] font-bold text-stone-400 border-b border-stone-800/80 pb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <Bot size={14} className={msg.sender === "user" ? "text-purple-400" : "text-amber-400"} />
-                      {msg.sender === "user" ? "Kansas Nelly (User)" : msg.model}
+                  <div className="flex justify-between items-center text-[10px] font-bold text-stone-400 border-b border-stone-800/80 pb-2">
+                    <span className="flex items-center gap-2">
+                      {msg.sender === "user" ? (
+                        <div className="w-5 h-5 rounded-full bg-purple-700 flex items-center justify-center text-white text-[10px] font-bold">
+                          KN
+                        </div>
+                      ) : (
+                        <TurningGeminiBall isTurning={false} size="sm" showLabel={false} />
+                      )}
+                      <span className={msg.sender === "user" ? "text-purple-300 font-semibold" : "text-amber-300 font-semibold"}>
+                        {msg.sender === "user" ? "Kansas Nelly (User)" : msg.model}
+                      </span>
                     </span>
-                    <span className="font-mono text-stone-500">{msg.timestamp}</span>
+
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-stone-500 text-[10px]">{msg.timestamp}</span>
+
+                      {/* Gemini-Style Message Actions */}
+                      {msg.sender === "ai" && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(msg.id, msg.text)}
+                            title="Copy response"
+                            className="p-1 hover:bg-stone-800 text-stone-400 hover:text-stone-200 rounded transition-colors"
+                          >
+                            {copiedMsgId === msg.id ? (
+                              <span className="flex items-center gap-0.5 text-emerald-400 font-mono text-[9px]">
+                                <Check size={12} /> Copied
+                              </span>
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSpeak(msg.id, msg.text)}
+                            title={speakingMsgId === msg.id ? "Stop readout" : "Read aloud"}
+                            className={`p-1 rounded transition-colors ${
+                              speakingMsgId === msg.id
+                                ? "bg-purple-900/60 text-purple-300"
+                                : "hover:bg-stone-800 text-stone-400 hover:text-stone-200"
+                            }`}
+                          >
+                            {speakingMsgId === msg.id ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Render Uploaded Images if any */}
@@ -669,11 +1037,18 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
                     </div>
                   )}
 
-                  <p className="whitespace-pre-wrap font-sans text-sm">{msg.text}</p>
+                  {/* Message Body with clean paragraphs and bold highlights */}
+                  <div className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-stone-200 space-y-1">
+                    {msg.text.split("\n\n").map((para, pIdx) => (
+                      <p key={pIdx} className="leading-relaxed">
+                        {para}
+                      </p>
+                    ))}
+                  </div>
 
                   {/* Render Email Generation Card (Matching Screenshot 4) */}
                   {msg.emailDraft && (
-                    <div className="mt-3 p-4 bg-stone-950 rounded-xl border border-purple-800/80 space-y-3">
+                    <div className="mt-3 p-4 bg-stone-950 rounded-xl border border-purple-800/80 space-y-3 shadow-inner">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="px-2.5 py-0.5 rounded bg-purple-900 text-purple-200 font-mono text-[10px] font-bold border border-purple-700">
                           GENERATED BY MULTI SREYMARA AI V4 (EXECUTIVE)
@@ -726,48 +1101,130 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
                 </div>
               ))}
 
+              {/* Turning Ball Active Generation Indicator */}
               {isGenerating && (
-                <div className="p-3 bg-stone-900 rounded-xl border border-purple-800/80 text-purple-300 font-mono text-xs flex items-center gap-2 animate-pulse">
-                  <Sparkles size={16} className="animate-spin" /> Multi Sreymara AI is generating response and syncing memory state...
+                <div className="p-4 bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-stone-900/40 rounded-xl border border-purple-800/80 text-purple-200 text-xs flex items-center gap-3.5 shadow-lg animate-pulse">
+                  <TurningGeminiBall isTurning={true} size="md" showLabel={false} />
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-purple-200 flex items-center gap-2 text-xs">
+                      <span>Multi Sreymara AI is thinking and formulating response...</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    </div>
+                    <p className="text-[11px] text-stone-400 font-sans">
+                      Synthesizing AlphaQubit neural decoders, live revenue telemetry, and context memory.
+                    </p>
+                  </div>
                 </div>
               )}
+
+              {/* Scroll Anchor */}
+              <div ref={chatEndRef} className="h-1" />
             </div>
 
-            {/* Prompt Input Deck matching Screenshot 1 & 4 instructions */}
-            <form onSubmit={handleSendPrompt} className="p-4 bg-[#10131B] rounded-xl border border-stone-800 space-y-3">
+            {/* Prompt Input Deck with Paste (Ctrl+V) & Drag-Drop Support */}
+            <form
+              onSubmit={handleSendPrompt}
+              onPaste={handlePasteImages}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (e.dataTransfer?.files) {
+                  Array.from(e.dataTransfer.files).forEach((file) => {
+                    if (file.type.startsWith("image/")) {
+                      const reader = new FileReader();
+                      reader.onload = (uploadEvent) => {
+                        if (uploadEvent.target?.result) {
+                          appendImageBase64(uploadEvent.target.result as string);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  });
+                }
+              }}
+              className="p-4 bg-[#10131B] rounded-xl border border-stone-800 space-y-3 transition-colors"
+            >
               
               {/* Attached Thumbnail Preview Bar (Up to 30 images) */}
               {attachedImages.length > 0 && (
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800">
-                  <span className="text-[10px] font-mono text-stone-400 font-bold">{attachedImages.length}/30 Attached:</span>
+                  <div className="flex items-center gap-1.5 shrink-0 bg-purple-950/60 border border-purple-800/80 px-2 py-1 rounded text-[10px] font-mono text-purple-200">
+                    <Sparkles size={11} className="text-purple-400" />
+                    <span>{attachedImages.length}/30 Pasted / Attached:</span>
+                  </div>
                   {attachedImages.map((img, idx) => (
                     <div key={idx} className="relative group shrink-0">
-                      <img src={img} alt="Attachment thumbnail" className="w-12 h-12 object-cover rounded-lg border border-purple-600" />
+                      <img src={img} alt="Attachment thumbnail" className="w-12 h-12 object-cover rounded-lg border border-purple-600 shadow-sm" />
                       <button
                         type="button"
                         onClick={() => setAttachedImages((prev) => prev.filter((_, i) => i !== idx))}
-                        className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 text-[10px]"
+                        className="absolute -top-1 -right-1 bg-red-600 hover:bg-red-500 text-white rounded-full p-0.5 text-[10px] shadow"
                       >
                         <X size={10} />
                       </button>
                     </div>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => setAttachedImages([])}
+                    className="text-[10px] text-stone-400 hover:text-stone-200 underline font-mono ml-2 shrink-0 cursor-pointer"
+                  >
+                    Clear all
+                  </button>
                 </div>
               )}
+
+              {/* Quick Prompt Suggestions */}
+              <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                <span className="text-stone-400 font-mono text-[10px]">Quick Prompts:</span>
+                <button
+                  type="button"
+                  onClick={() => setChatPrompt("how are you doing today?")}
+                  className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-stone-300 rounded-lg border border-stone-800 transition-colors"
+                >
+                  💬 How are you?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChatPrompt("good i will be back so we can work okay")}
+                  className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-stone-300 rounded-lg border border-stone-800 transition-colors"
+                >
+                  ⏳ Good I will be back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChatPrompt("Please draft an executive proposal email to our venture investor")}
+                  className="px-2.5 py-1 bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 rounded-lg border border-purple-800 transition-colors font-medium"
+                >
+                  ✉️ Draft Email Proposal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChatPrompt("Generate official approval fee permit invoice for Bobby Myers")}
+                  className="px-2.5 py-1 bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-200 rounded-lg border border-cyan-800 transition-colors font-medium"
+                >
+                  📄 Bobby Myers Permit
+                </button>
+              </div>
 
               <div className="relative">
                 <textarea
                   rows={3}
                   value={chatPrompt}
                   onChange={(e) => setChatPrompt(e.target.value)}
-                  placeholder="Ask Multi Sreymara AI to draft proposals, analyze files, sync Mail.com, or manage memory..."
+                  onPaste={handlePasteImages}
+                  placeholder={
+                    attachedImages.length > 0
+                      ? `${attachedImages.length} image(s) ready! Ask Multi Sreymara AI to inspect, fix code, or analyze, then click Send...`
+                      : "Chat with Multi Sreymara AI, paste images directly (Ctrl+V), drag & drop screenshots, or ask questions..."
+                  }
                   className="w-full px-3 py-2.5 bg-stone-950 border border-stone-800 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 leading-relaxed"
                 />
               </div>
 
               {/* Action Tools Row: Mic transcribing, Image paste trigger, Send button */}
               <div className="flex justify-between items-center flex-wrap gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -784,6 +1241,11 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
                     <ImageIcon size={14} className="text-purple-400" /> Add Images (Up to 30)
                   </button>
 
+                  <div className="flex items-center gap-1 px-2.5 py-1 bg-purple-950/40 border border-purple-800/60 rounded-lg text-[11px] text-purple-300 font-mono">
+                    <span>📋</span>
+                    <span>Paste image <strong>Ctrl+V</strong> anywhere</span>
+                  </div>
+
                   <button
                     type="button"
                     onClick={toggleVoiceRecording}
@@ -798,13 +1260,20 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
                   </button>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isGenerating}
-                  className="px-6 py-2 bg-gradient-to-r from-purple-700 to-indigo-800 hover:from-purple-600 hover:to-indigo-700 text-white font-bold rounded-lg text-xs shadow-md cursor-pointer transition-all flex items-center gap-2"
-                >
-                  <Send size={14} /> Send Command
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={isGenerating}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-700 to-indigo-800 hover:from-purple-600 hover:to-indigo-700 text-white font-bold rounded-lg text-xs shadow-md cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Send size={14} /> Send Command
+                  </button>
+
+                  {/* Turning Ball (Gemini / Emblem style) - Exactly where user marked in screenshot */}
+                  <div className="flex items-center">
+                    <TurningGeminiBall isTurning={isGenerating} size="md" />
+                  </div>
+                </div>
               </div>
             </form>
 
@@ -1101,7 +1570,10 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
         {/* ==================== TAB 3: IN-APP WEB BROWSER WITH EXPRESSVPN PRO & MULTI-TABS ==================== */}
         {activeTab === "browser" && (
           <div className="animate-fade-in">
-            <ExpressVpnWebBrowser onAskGeminiClick={() => setActiveTab("ai_chat")} />
+            <ExpressVpnWebBrowser
+              onAskGeminiClick={() => setActiveTab("ai_chat")}
+              onOpenWebmailTab={() => setActiveTab("mail_webmail")}
+            />
           </div>
         )}
 
@@ -1115,7 +1587,13 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose }) => 
         {/* ==================== TAB 5: TRUTHFINDER PUBLIC RECORDS SEARCH ==================== */}
         {activeTab === "truthfinder" && (
           <div className="animate-fade-in">
-            <TruthFinderSuite />
+            <TruthFinderSuite
+              onComposeWithEmail={(email) => {
+                setMailTo(email);
+                setShowComposer(true);
+                setActiveTab("mail_webmail");
+              }}
+            />
           </div>
         )}
 

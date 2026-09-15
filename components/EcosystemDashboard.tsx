@@ -40,7 +40,11 @@ import {
   Presentation,
   PlusCircle,
   Radio,
-  Film
+  Film,
+  Maximize2,
+  Minimize2,
+  Search,
+  X
 } from "lucide-react";
 
 interface Session {
@@ -136,14 +140,33 @@ interface StatsData {
   activeChannelIndex: number;
 }
 
-export const EcosystemDashboard: React.FC = () => {
+export type EcosystemTab = "matrix" | "telemetry" | "cinema" | "artist" | "phantom" | "telegram" | "urls" | "cli" | "paradise";
+
+interface EcosystemDashboardProps {
+  initialTab?: EcosystemTab;
+  embedded?: boolean;
+}
+
+export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
+  initialTab = "matrix",
+  embedded = true
+}) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    "matrix" | "cinema" | "artist" | "phantom" | "telegram" | "urls" | "cli" | "paradise"
-  >("matrix");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab, setActiveTab] = useState<EcosystemTab>(initialTab);
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  const handleTabSelect = (tab: EcosystemTab) => {
+    setActiveTab(tab);
+    // Smooth scroll content area into view so user immediately sees the build
+    if (contentRef.current) {
+      contentRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  };
   
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [telemetryData, setTelemetryData] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Cinema State
@@ -177,31 +200,43 @@ export const EcosystemDashboard: React.FC = () => {
   // Phantom Custom Link Address Input
   const [customPhantomAddr, setCustomPhantomAddr] = useState("");
   
-  // CLI State
+  // CLI State & Multimodal Image Paste
   const [cliInput, setCliInput] = useState("");
+  const [cliImage, setCliImage] = useState<string | null>(null);
   const [cliLogs, setCliLogs] = useState<Array<{ type: "cmd" | "out" | "err"; text: string }>>([
     { 
       type: "out", 
-      text: "[ECOSYSTEM HEAVENLY PARADISE CLI v3.8]\nConnected to Shopify Client ID: 5144661590b6f29869cd1cdae3248074\nPhantom Master Wallet: 5uYJ...5DRL (Solana SPL Connected)\nTelegram Dispatcher: Active (@wallet / 30-min interval)\nType 'help' for command list." 
+      text: "[ECOSYSTEM HEAVENLY PARADISE CLI v3.8 - MULTIMODAL READY]\nConnected to Shopify Client ID: 5144661590b6f29869cd1cdae3248074\nPhantom Master Wallet: 5uYJ...5DRL (Solana SPL Connected)\nTelegram Dispatcher: Active (@wallet / 30-min interval)\nTip: You can type commands or PASTE AN IMAGE (Ctrl+V) directly into this CLI for Gemini vision diagnosis!\nType 'help' or 'telemetry' for live ecosystem telemetry." 
     }
   ]);
 
   // Notifications Alert Banner State
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Fetch stats from backend
+  // Fetch stats and telemetry from backend
   const fetchStats = async () => {
     try {
-      const res = await fetch("/api/ecosystem/stats");
-      if (res.ok) {
-        const data = await res.json();
+      const [statsRes, telemRes] = await Promise.allSettled([
+        fetch("/api/ecosystem/stats"),
+        fetch("/api/ecosystem/telemetry")
+      ]);
+
+      if (statsRes.status === "fulfilled" && statsRes.value.ok) {
+        const data = await statsRes.value.json();
         setStats(data);
         if (!withdrawDest && data.phantomWallet?.address) {
           setWithdrawDest(data.phantomWallet.address);
         }
       }
+
+      if (telemRes.status === "fulfilled" && telemRes.value.ok) {
+        const tData = await telemRes.value.json();
+        if (tData.telemetry) {
+          setTelemetryData(tData.telemetry);
+        }
+      }
     } catch (err) {
-      console.log("Error fetching ecosystem stats:", err);
+      console.log("Error fetching ecosystem stats/telemetry:", err);
     }
   };
 
@@ -510,19 +545,25 @@ export const EcosystemDashboard: React.FC = () => {
     }
   };
 
-  // CLI Execute
-  const executeCliCommand = async (commandToRun?: string) => {
+  // CLI Execute (with Multimodal Image Support)
+  const executeCliCommand = async (commandToRun?: string, imageToSend?: string | null) => {
     const cmd = commandToRun !== undefined ? commandToRun : cliInput;
-    if (!cmd.trim()) return;
+    const img = imageToSend !== undefined ? imageToSend : cliImage;
+    if (!cmd.trim() && !img) return;
 
-    setCliLogs(prev => [...prev, { type: "cmd", text: `$ ${cmd}` }]);
+    const displayCmd = cmd.trim() ? cmd : (img ? "diagnose-image" : "status");
+    setCliLogs(prev => [
+      ...prev,
+      { type: "cmd", text: `$ ${displayCmd}${img ? " [Image Attached]" : ""}` }
+    ]);
     setCliInput("");
+    setCliImage(null);
 
     try {
       const res = await fetch("/api/cli/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: cmd }),
+        body: JSON.stringify({ command: displayCmd, image: img }),
       });
       const data = await res.json();
       setCliLogs(prev => [...prev, { type: "out", text: data.output }]);
@@ -532,9 +573,39 @@ export const EcosystemDashboard: React.FC = () => {
     }
   };
 
-  // Precomputed values
+  // Clipboard Paste Handler for CLI Terminal & Input
+  const handleCliPaste = (e: React.ClipboardEvent) => {
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    const items = Array.from(clipboardData.items || []);
+    const imageItem = items.find((item) => item.type.startsWith("image/"));
+    if (imageItem) {
+      const file = imageItem.getAsFile();
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          if (uploadEvent.target?.result) {
+            const base64 = uploadEvent.target.result as string;
+            setCliImage(base64);
+            setCliLogs(prev => [
+              ...prev,
+              {
+                type: "out",
+                text: `[IMAGE PASTED INTO CLI] Captured image from clipboard (~${Math.round((base64.length * 0.75) / 1024)} KB). Click EXECUTE or press Enter to analyze with Gemini 3.8 Flash Vision!`
+              }
+            ]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  // Precomputed values & Dynamic URL Re-binding
   const shopifyClientId = stats?.clientId || "5144661590b6f29869cd1cdae3248074";
   const shopDomain = stats?.shopDomain || "earnings.ink";
+  const activeDeploymentUrl = telemetryData?.activeDeploymentUrl || "https://ais-dev-yri2x2xif26llxnhpuguzk-152195627325.asia-east1.run.app";
   const phantomAddr = stats?.phantomWallet?.address || "5uYJ7kP9xM8v3Q1n2L5s4A6b8C9d0e1F2G3h4i5j6k7L";
   const totalRev = stats?.totalRevenueRecorded || 845.50;
   const currentCh = stats?.cinemaChannels?.[currentChannelIdx] || {
@@ -547,13 +618,87 @@ export const EcosystemDashboard: React.FC = () => {
     sponsorAd: { title: "Solana High-Yield Vaults", sponsor: "Solana Labs", payoutUsd: 12.50 }
   };
 
-  const trackingUrl = `https://${shopDomain}/?shopify_client_id=${shopifyClientId}&tidio_signal=active&monetize=session`;
-  const oauthUrl = `https://${shopDomain}/admin/oauth/authorize?client_id=${shopifyClientId}&scope=read_orders,write_orders,read_customers&redirect_uri=https://${shopDomain}/api/shopify/callback&state=tidio_earnings_active`;
+  const trackingUrl = `${activeDeploymentUrl}/?shopify_client_id=${shopifyClientId}&tidio_signal=active&monetize=session`;
+  const oauthUrl = `https://${shopDomain}/admin/oauth/authorize?client_id=${shopifyClientId}&scope=read_orders,write_orders,read_customers&redirect_uri=${encodeURIComponent(`${activeDeploymentUrl}/api/shopify/callback`)}&state=tidio_earnings_active`;
   const tidioScriptTag = `<script src="//code.tidio.co/${shopifyClientId.slice(0, 16)}.js" async></script>`;
 
   // Telegram countdown helper
   const tgCountdownMins = Math.floor((stats?.telegramConfig?.nextDispatchSeconds || 720) / 60);
   const tgCountdownSecs = (stats?.telegramConfig?.nextDispatchSeconds || 720) % 60;
+
+  const TABS: Array<{
+    id: EcosystemTab;
+    label: string;
+    icon: React.ReactNode;
+    title: string;
+    subtitle: string;
+  }> = [
+    {
+      id: "matrix",
+      label: "Live Revenue & Visitor Tracker",
+      icon: <Activity size={15} />,
+      title: "⚡ Live Revenue & Visitor Tracker",
+      subtitle: "Real-time Shopify & earnings.ink visitor yields, live durations & event simulations"
+    },
+    {
+      id: "telemetry",
+      label: "4-Quadrant Live Telemetry",
+      icon: <Radio size={15} />,
+      title: "📡 4-Quadrant Live Ecosystem Telemetry & Sync",
+      subtitle: "AlphaQubit Quantum operations, 80/20 yields, Web3 Treasury & Mail/TruthFinder status"
+    },
+    {
+      id: "cinema",
+      label: "Sreymara Cinema (20 Channels) & Ads",
+      icon: <Tv size={15} />,
+      title: "📺 Sreymara Cinema (20 Channels) & High-Definition Broadcast",
+      subtitle: "20 HD live streams, sponsor ad rewards, 80/20 platform/user revenue split & AI tools"
+    },
+    {
+      id: "artist",
+      label: "Artist Studio & YouTube Upload",
+      icon: <Music size={15} />,
+      title: "🎵 Musician & Artist Live Broadcast Studio",
+      subtitle: "Upload audio tracks and link YouTube live videos directly to Cinema Channel #1"
+    },
+    {
+      id: "phantom",
+      label: "Phantom Wallet & Withdrawal",
+      icon: <Wallet size={15} />,
+      title: "💼 Phantom Master Wallet & On-Chain Withdrawal Portal",
+      subtitle: "USDT and Solana gas reserves, custom address linking, and instant on-chain payouts"
+    },
+    {
+      id: "telegram",
+      label: "Telegram 30-Min Alert",
+      icon: <Send size={15} />,
+      title: "✈️ Telegram 30-Min Automated Earnings Dispatcher & Videogram",
+      subtitle: "Automated 30-minute earnings alerts dispatched to @wallet and interactive Videogram suite"
+    },
+    {
+      id: "urls",
+      label: "Integration URLs & New Endpoint",
+      icon: <Globe size={15} />,
+      title: "🌐 Re-bound Integration URLs & Dynamic Deployment Endpoint",
+      subtitle: "Ready-to-copy tracking links, Shopify OAuth URLs, and embeddable live chat tags"
+    },
+    {
+      id: "cli",
+      label: "CLI Console (Vision Paste)",
+      icon: <Terminal size={15} />,
+      title: "💻 Interactive Ecosystem Cloud Terminal & Vision Diagnostics",
+      subtitle: "Direct CLI execution for status, test sales, on-chain withdrawals, and pasted image diagnosis"
+    },
+    {
+      id: "paradise",
+      label: "Paradise Status",
+      icon: <ShieldCheck size={15} />,
+      title: "🛡️ Paradise Status & Architecture Verification",
+      subtitle: "Guaranteed video layout integrity and AlphaQubit quantum paper preservation"
+    }
+  ];
+
+  const currentTabMeta = TABS.find(t => t.id === activeTab) || TABS[0];
 
   return (
     <>
@@ -567,8 +712,12 @@ export const EcosystemDashboard: React.FC = () => {
         )}
 
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            setIsFullscreen(true);
+          }}
           className="group flex items-center gap-3 bg-stone-900/95 hover:bg-stone-900 text-stone-100 border border-nobel-gold/50 hover:border-nobel-gold px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer"
+          title="Open Fullscreen Ecosystem Matrix"
         >
           <div className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -586,19 +735,40 @@ export const EcosystemDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Full-Featured Dashboard Modal */}
+      {/* Minimized Banner if user closed it */}
+      {!isOpen && (
+        <div className="w-full bg-stone-900 border border-stone-800 rounded-2xl p-4 flex justify-between items-center flex-wrap gap-4 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-950 text-nobel-gold border border-amber-800/60 flex items-center justify-center shadow">
+              <Zap size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white">Sreymara Heavenly Ecosystem & Live Revenue Matrix (Minimized)</h3>
+              <p className="text-xs text-stone-400">Shopify Client ID: {shopifyClientId} • Active signals running in background</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsOpen(true)}
+            className="px-4 py-2 bg-nobel-gold hover:bg-amber-500 text-stone-950 font-bold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-2"
+          >
+            <Sliders size={14} /> Restore Ecosystem Dashboard
+          </button>
+        </div>
+      )}
+
+      {/* Main Full-Featured Dashboard */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 animate-fade-in">
-          <div className="bg-stone-900 text-stone-100 w-full max-w-6xl rounded-2xl border border-nobel-gold/30 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div className={isFullscreen ? "fixed inset-0 z-50 bg-stone-950/85 backdrop-blur-md flex flex-col p-2 md:p-6 overflow-y-auto animate-fade-in" : "w-full animate-fade-in"}>
+          <div className={`bg-stone-900 text-stone-100 w-full rounded-2xl border border-nobel-gold/30 shadow-2xl overflow-hidden flex flex-col ${isFullscreen ? "max-w-6xl mx-auto my-auto h-[92vh] max-h-[92vh]" : ""}`}>
             
             {/* Header */}
             <div className="px-6 py-4 bg-stone-950 border-b border-stone-800 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-nobel-gold via-amber-600 to-amber-800 flex items-center justify-center text-stone-950 shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-nobel-gold via-amber-600 to-amber-800 flex items-center justify-center text-stone-950 shadow-lg shrink-0">
                   <Zap size={22} className="fill-current" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="font-serif text-xl font-bold text-white tracking-wide">
                       Sreymara Heavenly Ecosystem & Live Revenue Matrix
                     </h2>
@@ -607,10 +777,10 @@ export const EcosystemDashboard: React.FC = () => {
                       ON-CHAIN LIVE
                     </span>
                   </div>
-                  <p className="text-xs text-stone-400 flex flex-wrap items-center gap-3 mt-0.5">
-                    <span>Shopify: <strong className="text-nobel-gold font-mono">{shopifyClientId}</strong></span>
-                    <span>Phantom: <strong className="text-cyan-300 font-mono">{phantomAddr.slice(0, 6)}...{phantomAddr.slice(-4)}</strong></span>
-                    <span>Telegram: <strong className="text-emerald-400 font-mono">@wallet (30m Auto)</strong></span>
+                  <p className="text-xs text-stone-400 flex flex-wrap items-center gap-3 mt-0.5 font-mono">
+                    <span>Shopify: <strong className="text-nobel-gold">{shopifyClientId}</strong></span>
+                    <span>Phantom: <strong className="text-cyan-300">{phantomAddr.slice(0, 6)}...{phantomAddr.slice(-4)}</strong></span>
+                    <span>Telegram: <strong className="text-emerald-400">@wallet (30m Auto)</strong></span>
                   </p>
                 </div>
               </div>
@@ -624,109 +794,79 @@ export const EcosystemDashboard: React.FC = () => {
                   <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                 </button>
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-2 text-stone-400 hover:text-white bg-stone-800 hover:bg-stone-700 rounded-lg transition-colors cursor-pointer"
+                  title={isFullscreen ? "Exit Fullscreen Modal" : "Expand to Fullscreen Modal"}
+                >
+                  {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+                <button
+                  onClick={() => {
+                    if (isFullscreen) {
+                      setIsFullscreen(false);
+                    } else {
+                      setIsOpen(false);
+                    }
+                  }}
                   className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                 >
-                  CLOSE
+                  {isFullscreen ? "MINIMIZE" : "HIDE"}
                 </button>
               </div>
             </div>
 
-            {/* Navigation Tabs Container - Wrap Responsive & High Visibility */}
-            <div className="bg-stone-950/90 border-b border-stone-800 p-3 px-6">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-                <button
-                  onClick={() => setActiveTab("matrix")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "matrix"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Activity size={15} /> Live Revenue & Visitor Tracker
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("cinema")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "cinema"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Tv size={15} /> Sreymara Cinema (20 Channels) & Ads
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("artist")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "artist"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Music size={15} className={activeTab === "artist" ? "text-stone-950" : "text-amber-400"} /> Artist Studio & YouTube Upload
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("phantom")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "phantom"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Wallet size={15} /> Phantom Wallet & Withdrawal
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("telegram")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "telegram"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Send size={15} /> Telegram 30-Min Alert
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("urls")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "urls"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Globe size={15} /> Integration URLs
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("cli")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "cli"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <Terminal size={15} /> CLI Console
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("paradise")}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all duration-200 ${
-                    activeTab === "paradise"
-                      ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02]"
-                      : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800"
-                  }`}
-                >
-                  <ShieldCheck size={15} /> Paradise Status
-                </button>
+            {/* Navigation Tabs Container - High Visibility with Active Indicator */}
+            <div className="bg-stone-950/95 border-b border-stone-800 p-2.5 px-4 md:px-6">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {TABS.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      id={`tab-btn-${tab.id}`}
+                      onClick={() => handleTabSelect(tab.id)}
+                      className={`px-3.5 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-pointer transition-all duration-200 shrink-0 ${
+                        isActive
+                          ? "bg-nobel-gold text-stone-950 font-black shadow-lg border border-amber-400 scale-[1.02] ring-2 ring-amber-400/30"
+                          : "bg-stone-900/90 text-stone-200 hover:bg-stone-800 hover:text-white border border-stone-800 hover:border-stone-700"
+                      }`}
+                      title={`Open ${tab.label} build`}
+                    >
+                      <span className={isActive ? "text-stone-950" : "text-nobel-gold"}>
+                        {tab.icon}
+                      </span>
+                      <span>{tab.label}</span>
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-stone-950 animate-ping"></span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Modal Scrollable Body */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+            {/* Active Section Header Bar */}
+            <div className="bg-stone-950/80 border-b border-stone-800/80 px-4 md:px-6 py-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                <span className="text-stone-400 text-[11px] uppercase tracking-wider font-semibold">Active Build:</span>
+                <span className="text-nobel-gold font-bold text-sm flex items-center gap-1.5">
+                  {currentTabMeta.title}
+                </span>
+                <span className="text-stone-400 text-[11px] hidden md:inline">• {currentTabMeta.subtitle}</span>
+              </div>
+              <div className="text-[11px] text-stone-400 font-mono flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-stone-900 border border-stone-800 text-stone-300">
+                  Build {TABS.findIndex(t => t.id === activeTab) + 1} of {TABS.length} Active & Interactive
+                </span>
+              </div>
+            </div>
+
+            {/* Build Body */}
+            <div
+              ref={contentRef}
+              className={`p-4 md:p-6 space-y-6 ${isFullscreen ? "overflow-y-auto flex-1 min-h-0" : "overflow-visible"}`}
+            >
               
               {/* TAB 1: LIVE REVENUE & VISITOR TRACKER */}
               {activeTab === "matrix" && (
@@ -1637,24 +1777,246 @@ export const EcosystemDashboard: React.FC = () => {
                 </div>
               )}
 
+              {/* TAB: 4-QUADRANT LIVE TELEMETRY & SYNC */}
+              {activeTab === "telemetry" && (
+                <div className="space-y-6 animate-fade-in">
+                  
+                  {/* Re-bound Endpoint Notification Banner */}
+                  <div className="p-4 bg-gradient-to-r from-purple-950/80 via-indigo-950/70 to-stone-950 rounded-xl border border-purple-800 flex flex-wrap justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-900/60 border border-purple-700 flex items-center justify-center text-purple-300">
+                        <Radio size={20} className="animate-pulse" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-sm text-white">Live Re-bound Deployment Endpoint</h3>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">
+                            ONLINE & ACTIVE
+                          </span>
+                        </div>
+                        <p className="text-xs text-purple-200/80 font-mono mt-0.5 select-all">
+                          {activeDeploymentUrl}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => copyToClipboard(activeDeploymentUrl, "endpointUrl")}
+                        className="px-3.5 py-1.5 bg-purple-900/80 hover:bg-purple-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-purple-700 transition-all"
+                      >
+                        {copiedKey === "endpointUrl" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        {copiedKey === "endpointUrl" ? "COPIED" : "COPY ENDPOINT"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4-Quadrant Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    {/* Quadrant 1: AlphaQubit Quantum Operations */}
+                    <div className="p-5 bg-stone-950 rounded-2xl border border-nobel-gold/40 space-y-3 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={16} className="text-nobel-gold" />
+                          <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                            1. AlphaQubit Quantum Operations
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-950 text-nobel-gold rounded border border-amber-800">
+                          Nature 2024 Verified
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-stone-400">
+                        Live surface code syndrome decoding & Nature 2024 error-threshold metrics.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Threshold Margin</span>
+                          <span className="text-sm font-bold text-nobel-gold">
+                            {telemetryData?.alphaQubit?.nature2024ThresholdMargin || "12.4% Below"}
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Syndrome Latency</span>
+                          <span className="text-sm font-bold text-cyan-300">
+                            {telemetryData?.alphaQubit?.syndromeDecodingLatencyMs || 0.84} ms
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Code Distance</span>
+                          <span className="text-xs font-bold text-white">d=7 (127 Physical Qubits)</span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Decoding State</span>
+                          <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                            Continuous Sync
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quadrant 2: Commerce & Yield Splits */}
+                    <div className="p-5 bg-stone-950 rounded-2xl border border-emerald-800/50 space-y-3 relative overflow-hidden">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Zap size={16} className="text-emerald-400" />
+                          <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                            2. Commerce & Yield Splits (80/20)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 bg-emerald-950 text-emerald-300 rounded border border-emerald-800">
+                          Shopify + Tidio Live
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-stone-400">
+                        Live signal feed displaying the 80% Platform / 20% Direct User Yield distribution.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">80% Platform Reserve</span>
+                          <span className="text-sm font-bold text-purple-300">
+                            ${(platformReserveAccumulated || (totalRev * 0.8)).toFixed(2)} USD
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">20% Direct User Yield</span>
+                          <span className="text-sm font-bold text-emerald-400">
+                            ${(userShareAccumulated || (totalRev * 0.2)).toFixed(2)} USD
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Total Revenue Recorded</span>
+                          <span className="text-xs font-bold text-nobel-gold">${totalRev.toFixed(2)} USD</span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Tidio Signal Status</span>
+                          <span className="text-xs font-bold text-cyan-300">ACTIVE ($0.05/sec)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quadrant 3: Web3 Treasury */}
+                    <div className="p-5 bg-stone-950 rounded-2xl border border-purple-800/50 space-y-3 relative overflow-hidden">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Wallet size={16} className="text-purple-400" />
+                          <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                            3. Web3 Treasury (Phantom SPL-USDT)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 bg-purple-950 text-purple-300 rounded border border-purple-800">
+                          Solana SPL Linked
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-stone-400">
+                        Live Phantom SPL-USDT wallet balances and transaction verification logs.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Phantom Address</span>
+                          <span className="text-xs font-bold text-nobel-gold truncate block">
+                            {phantomAddr.slice(0, 6)}...{phantomAddr.slice(-4)}
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Available USDT</span>
+                          <span className="text-sm font-bold text-emerald-400">
+                            ${(stats?.phantomWallet?.usdtBalance || 845.50).toFixed(2)} USDT
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Solana Gas Balance</span>
+                          <span className="text-xs font-bold text-cyan-300">
+                            {stats?.phantomWallet?.solBalance || 2.45} SOL
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">On-Chain Withdrawals</span>
+                          <span className="text-xs font-bold text-white">
+                            {stats?.phantomWallet?.withdrawals?.length || 1} Verified
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quadrant 4: Infrastructure & Intelligence */}
+                    <div className="p-5 bg-stone-950 rounded-2xl border border-cyan-800/50 space-y-3 relative overflow-hidden">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Search size={16} className="text-cyan-400" />
+                          <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                            4. Infrastructure & Intelligence
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 bg-cyan-950 text-cyan-300 rounded border border-cyan-800">
+                          Mail.com + TruthFinder
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-stone-400">
+                        Mail.com US proxy route health status and active TruthFinder intelligence feeds.
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">Mail.com US Proxy</span>
+                          <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            us-east-1.mail.com (14ms)
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">TruthFinder Feeds</span>
+                          <span className="text-xs font-bold text-cyan-300">
+                            Active (Entity Registry & Emails)
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">SSL Latency</span>
+                          <span className="text-xs font-bold text-white">12 ms (Verified Optimal)</span>
+                        </div>
+                        <div className="p-2.5 bg-stone-900/90 rounded-lg border border-stone-800">
+                          <span className="text-[10px] text-stone-500 block">VPN Route</span>
+                          <span className="text-xs font-bold text-emerald-400">US East (Lightway UDP)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
               {/* TAB 5: URL & INTEGRATION GUIDE */}
               {activeTab === "urls" && (
                 <div className="space-y-6 animate-fade-in text-stone-300 text-xs leading-relaxed">
                   
-                  <div className="p-4 bg-amber-950/30 border border-amber-800/50 rounded-xl text-amber-200">
+                  <div className="p-4 bg-purple-950/30 border border-purple-800/50 rounded-xl text-purple-200">
                     <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
-                      <Globe size={16} className="text-amber-400" />
-                      What URL parameters to add for http://earnings.ink & Shopify Connection
+                      <Globe size={16} className="text-purple-400" />
+                      Re-bound Deployment URL & Shopify Storefront Parameters
                     </h3>
-                    <p className="text-xs text-amber-300/80">
-                      To enable real-time visitor tracking, active online monetization counters, and Tidio instant signals, append these exact URL parameters to your site link or Shopify storefront redirect settings:
+                    <p className="text-xs text-purple-300/80">
+                      The legacy URL build has been deprecated. All dashboard routes, webhooks, and visitor trackers are re-bound to our new cloud deployment endpoint:
+                    </p>
+                    <p className="font-mono text-xs text-white bg-purple-950/80 p-2.5 rounded border border-purple-700/80 mt-2 select-all">
+                      {activeDeploymentUrl}
                     </p>
                   </div>
 
                   {/* 1. Recommended Tracking URL */}
                   <div className="space-y-2">
                     <label className="font-bold text-stone-200 uppercase tracking-wider text-[11px] block">
-                      1. Recommended Visitor Tracking & Monetization URL
+                      1. Re-bound Visitor Tracking & Monetization URL
                     </label>
                     <div className="flex items-center gap-2 bg-stone-950 p-3 rounded-lg border border-stone-800 font-mono text-nobel-gold overflow-x-auto">
                       <span className="flex-1 select-all">{trackingUrl}</span>
@@ -1709,22 +2071,25 @@ export const EcosystemDashboard: React.FC = () => {
                       <p className="font-mono text-sm text-nobel-gold">{shopifyClientId}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-stone-500 uppercase font-bold">Connected Domain</span>
-                      <p className="font-mono text-sm text-stone-300">{shopDomain}</p>
+                      <span className="text-[10px] text-stone-500 uppercase font-bold">Active Deployment Endpoint</span>
+                      <p className="font-mono text-xs text-stone-300 break-all">{activeDeploymentUrl}</p>
                     </div>
                   </div>
 
                 </div>
               )}
 
-              {/* TAB 6: CLI CONSOLE */}
+              {/* TAB 6: CLI CONSOLE (WITH MULTIMODAL IMAGE PASTE) */}
               {activeTab === "cli" && (
-                <div className="space-y-4 animate-fade-in">
-                  <div className="flex items-center justify-between text-xs text-stone-400">
+                <div className="space-y-4 animate-fade-in" onPaste={handleCliPaste}>
+                  <div className="flex items-center justify-between text-xs text-stone-400 flex-wrap gap-2">
                     <span className="font-mono flex items-center gap-2">
-                      <Terminal size={14} className="text-nobel-gold" /> ECOSYSTEM CLI & WEBHOOK TESTER
+                      <Terminal size={14} className="text-nobel-gold" /> ECOSYSTEM CLI & MULTIMODAL VISION TESTER
                     </span>
-                    <span>Type <code className="text-nobel-gold">help</code> for command index</span>
+                    <span className="flex items-center gap-2 font-mono text-[11px] text-purple-300">
+                      <span>📋 Paste an image (Ctrl+V) anywhere</span>
+                      <span>• Type <code className="text-nobel-gold">help</code> or <code className="text-nobel-gold">telemetry</code></span>
+                    </span>
                   </div>
 
                   {/* Quick Action CLI Buttons */}
@@ -1734,6 +2099,12 @@ export const EcosystemDashboard: React.FC = () => {
                       className="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded font-mono cursor-pointer"
                     >
                       $ status
+                    </button>
+                    <button
+                      onClick={() => executeCliCommand("telemetry")}
+                      className="px-3 py-1 bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-800 rounded font-mono cursor-pointer"
+                    >
+                      $ telemetry
                     </button>
                     <button
                       onClick={() => executeCliCommand("withdraw 250 USDT")}
@@ -1770,18 +2141,55 @@ export const EcosystemDashboard: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Input form */}
+                  {/* Pasted Image Preview in CLI */}
+                  {cliImage && (
+                    <div className="p-3 bg-purple-950/40 border border-purple-800/80 rounded-xl flex items-center justify-between gap-3 text-xs text-purple-200">
+                      <div className="flex items-center gap-3">
+                        <img src={cliImage} alt="CLI Pasted Artifact" className="w-14 h-14 object-cover rounded-lg border border-purple-600 shadow" />
+                        <div>
+                          <span className="font-bold block text-white">Attached Visual Artifact</span>
+                          <span className="text-[10px] text-purple-300 font-mono">
+                            Ready for Gemini 3.8 Flash Multimodal Vision Diagnosis.
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => executeCliCommand("diagnose-image", cliImage)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-purple-700 to-indigo-700 text-white font-bold rounded-lg text-xs flex items-center gap-1 cursor-pointer"
+                        >
+                          <Sparkles size={12} /> Run Vision Diagnosis
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCliImage(null)}
+                          className="p-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg cursor-pointer"
+                          title="Discard pasted image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Input form with onPaste */}
                   <form onSubmit={(e) => { e.preventDefault(); executeCliCommand(); }} className="flex gap-2">
                     <input
                       type="text"
                       value={cliInput}
                       onChange={(e) => setCliInput(e.target.value)}
-                      placeholder="Type CLI command (e.g., status, withdraw 100 USDT, trigger-telegram, play-ad)..."
+                      onPaste={handleCliPaste}
+                      placeholder={
+                        cliImage
+                          ? "Image attached! Press Enter or EXECUTE to analyze, or type specific diagnostic instruction..."
+                          : "Type CLI command (or paste screenshot Ctrl+V directly)..."
+                      }
                       className="flex-1 bg-stone-950 border border-stone-800 rounded-lg px-4 py-2 font-mono text-xs text-white focus:outline-none focus:border-nobel-gold"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-nobel-gold hover:bg-amber-600 text-stone-950 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                      className="px-4 py-2 bg-nobel-gold hover:bg-amber-600 text-stone-950 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer transition-all"
                     >
                       <Play size={12} /> EXECUTE
                     </button>

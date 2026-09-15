@@ -5,7 +5,7 @@
 
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, MeshDistortMaterial, Sphere, Torus, Cylinder, Stars, Environment, Box } from '@react-three/drei';
+import { Float, MeshDistortMaterial, Sphere, Torus, Cylinder, Stars, Box } from '@react-three/drei';
 import * as THREE from 'three';
 
 const QuantumParticle = ({ position, color, scale = 1 }: { position: [number, number, number]; color: string; scale?: number }) => {
@@ -69,7 +69,9 @@ export const HeroScene: React.FC = () => {
            <QuantumParticle position={[3, -1, -3]} color="#C5A059" scale={0.6} />
         </Float>
 
-        <Environment preset="city" />
+        {/* Rich self-contained lighting */}
+        <directionalLight position={[5, 10, 7]} intensity={1.5} color="#ffffff" />
+        <directionalLight position={[-5, -5, -5]} intensity={0.8} color="#C5A059" />
         <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={1} />
       </Canvas>
     </div>
@@ -80,10 +82,10 @@ export const QuantumComputerScene: React.FC = () => {
   return (
     <div className="w-full h-full absolute inset-0">
       <Canvas camera={{ position: [0, 0, 4.5], fov: 45 }}>
-        <ambientLight intensity={1} />
-        <spotLight position={[5, 5, 5]} angle={0.3} penumbra={1} intensity={2} color="#C5A059" />
-        <pointLight position={[-5, -5, -5]} intensity={0.5} />
-        <Environment preset="studio" />
+        <ambientLight intensity={1.2} />
+        <spotLight position={[5, 5, 5]} angle={0.3} penumbra={1} intensity={2.5} color="#C5A059" />
+        <pointLight position={[-5, -5, -5]} intensity={1} color="#38bdf8" />
+        <directionalLight position={[0, 5, 5]} intensity={1} color="#ffffff" />
         
         <Float rotationIntensity={0.4} floatIntensity={0.2} speed={1}>
           <group rotation={[0, 0, 0]} position={[0, 0.5, 0]}>
