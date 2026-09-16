@@ -44,6 +44,9 @@ import {
   Maximize2,
   Minimize2,
   Search,
+  RotateCcw,
+  PlayCircle,
+  ArrowRight,
   X
 } from "lucide-react";
 
@@ -180,6 +183,13 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
   const [platformReserveAccumulated, setPlatformReserveAccumulated] = useState(676.40);
   const [totalSecondsWatched, setTotalSecondsWatched] = useState(3382);
 
+  // Sequenced Next Video Player State (Track 1: Rick Astley -> Track 2: BBC Merlin)
+  const [isRickAstleyFinished, setIsRickAstleyFinished] = useState<boolean>(true); // default true because Rick Astley has reached 3:33 in user session
+  const [rickAstleyProgressSeconds, setRickAstleyProgressSeconds] = useState<number>(213); // 3m 33s = 213s
+  const [isMerlinPlaying, setIsMerlinPlaying] = useState<boolean>(true);
+  const [autoAdvanceEnabled, setAutoAdvanceEnabled] = useState<boolean>(true);
+  const [merlinYieldAccrued, setMerlinYieldAccrued] = useState<number>(84.60);
+
   // AI PowerUp Tools State
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiResult, setAiResult] = useState<{ toolType: string; result: any; revenueCredited: number } | null>(null);
@@ -269,6 +279,58 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
     }, 2000);
     return () => clearInterval(videoTicker);
   }, [activeTab]);
+
+  // Sequencer auto-advance timer & Merlin yield ticker
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!isRickAstleyFinished) {
+      timer = setInterval(() => {
+        setRickAstleyProgressSeconds(prev => {
+          if (prev >= 213) {
+            setIsRickAstleyFinished(true);
+            if (autoAdvanceEnabled) {
+              setIsMerlinPlaying(true);
+              triggerNotification("[AUTO-ADVANCE QUEUE] Rick Astley (3:33) concluded! BBC Merlin is now broadcasting inside the ecosystem.");
+            }
+            return 213;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } else if (isMerlinPlaying && activeTab === "cinema") {
+      timer = setInterval(() => {
+        setMerlinYieldAccrued(prev => +(prev + 0.05).toFixed(2));
+      }, 2000);
+    }
+    return () => clearInterval(timer);
+  }, [isRickAstleyFinished, isMerlinPlaying, autoAdvanceEnabled, activeTab]);
+
+  // Reset sequence to replay Rick Astley from 0:00
+  const handleReplayRickAstley = () => {
+    setIsRickAstleyFinished(false);
+    setRickAstleyProgressSeconds(0);
+    setIsMerlinPlaying(false);
+    triggerNotification("Reset sequence: Replaying Rick Astley (3:33). Merlin will auto-play upon conclusion.");
+  };
+
+  // Fast-advance Rick Astley to completed
+  const handleFastAdvanceRickAstley = () => {
+    setIsRickAstleyFinished(true);
+    setRickAstleyProgressSeconds(213);
+    setIsMerlinPlaying(true);
+    triggerNotification("Rick Astley finished (3:33)! BBC Merlin auto-advanced and is now playing inside the ecosystem.");
+  };
+
+  // Switch primary cinema screen to Merlin
+  const handlePromoteMerlinToMainStage = () => {
+    const merlinIdx = stats?.cinemaChannels?.findIndex(c => c.id === 21);
+    if (merlinIdx !== undefined && merlinIdx >= 0) {
+      setCurrentChannelIdx(merlinIdx);
+    } else {
+      setCurrentChannelIdx(0);
+    }
+    triggerNotification("Promoted BBC Merlin to primary Sreymara Cinema display.");
+  };
 
   // AI PowerUp Generator Handler
   const handleRunAiPowerUp = async (toolType: string) => {
@@ -1196,6 +1258,205 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                         <span className="text-[10px] px-2.5 py-1 bg-stone-800 text-stone-300 rounded-md font-mono">
                           {totalSecondsWatched}s Streamed
                         </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SEQUENTIAL VIDEO PLAYER SECTION (UP NEXT IN QUEUE: BBC MERLIN) */}
+                  <div className="p-6 bg-stone-950 rounded-2xl border border-amber-500/40 shadow-2xl space-y-5 relative">
+                    
+                    {/* Header Banner */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-800 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                            <Film size={18} />
+                          </div>
+                          <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+                            Sequenced Broadcast Player • BBC Merlin
+                          </h3>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700/80">
+                            UP NEXT IN QUEUE
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/80 flex items-center gap-1">
+                            <ShieldCheck size={11} /> IN-ECOSYSTEM SANDBOX
+                          </span>
+                        </div>
+                        <p className="text-xs text-stone-400 mt-1.5 max-w-2xl">
+                          Consecutive playback engine: Synchronized to start playing BBC Merlin automatically inside this screen once Rick Astley's playback finishes (3:33 duration). Fully sandboxed — streams 100% inside this application without opening external tabs or window popups.
+                        </p>
+                      </div>
+
+                      {/* Controls Bar */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setIsMerlinPlaying(!isMerlinPlaying)}
+                          className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-md ${
+                            isMerlinPlaying
+                              ? "bg-amber-500 hover:bg-amber-400 text-stone-950 font-black"
+                              : "bg-stone-800 hover:bg-stone-700 text-white"
+                          }`}
+                        >
+                          {isMerlinPlaying ? (
+                            <>
+                              <Pause size={13} />
+                              <span>Pause Merlin</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play size={13} />
+                              <span>Play Merlin Now</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleReplayRickAstley}
+                          className="px-3 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+                          title="Replays Rick Astley (3:33) from the beginning to test automatic queue advance"
+                        >
+                          <RotateCcw size={13} className="text-amber-400" />
+                          <span>Replay Rick (3:33)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleFastAdvanceRickAstley}
+                          className="px-3 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+                          title="Instantly marks Rick Astley completed and transitions to Merlin"
+                        >
+                          <SkipForward size={13} className="text-cyan-400" />
+                          <span>Fast-Advance ➔ Merlin</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handlePromoteMerlinToMainStage}
+                          className="px-3 py-2 bg-[#003B7A] hover:bg-blue-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                          title="Displays BBC Merlin on the primary Cinema stage above as well"
+                        >
+                          <Tv size={13} />
+                          <span>Promote to Main Cinema</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sequential Playlist Progress Bar */}
+                    <div className="p-3.5 bg-stone-900/90 rounded-xl border border-stone-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {/* Video 1 Indicator */}
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-stone-800 text-stone-300 text-[10px] font-mono font-bold flex items-center justify-center">
+                            1
+                          </span>
+                          <div>
+                            <div className="font-bold text-stone-200">Rick Astley - Never Gonna Give You Up</div>
+                            <div className="text-[10px] font-mono text-stone-400 flex items-center gap-1.5">
+                              <span>Duration: 3:33</span>
+                              <span>&bull;</span>
+                              {isRickAstleyFinished ? (
+                                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                  <CheckCircle2 size={11} /> Finished (3:33 / 3:33)
+                                </span>
+                              ) : (
+                                <span className="text-amber-400 font-bold flex items-center gap-1">
+                                  <Clock size={11} /> Playing ({Math.floor(rickAstleyProgressSeconds / 60)}:{(rickAstleyProgressSeconds % 60).toString().padStart(2, '0')} / 3:33)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Transition Arrow */}
+                        <div className="text-amber-400 flex items-center px-1">
+                          <ArrowRight size={16} className="animate-pulse" />
+                        </div>
+
+                        {/* Video 2 Indicator */}
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-amber-500 text-stone-950 text-[10px] font-mono font-bold flex items-center justify-center">
+                            2
+                          </span>
+                          <div>
+                            <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                              <span>BBC Merlin (The Dragon's Call)</span>
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            </div>
+                            <div className="text-[10px] font-mono text-stone-400 flex items-center gap-1.5">
+                              <span>Series Premiere</span>
+                              <span>&bull;</span>
+                              <span className="text-cyan-300 font-bold">
+                                {isMerlinPlaying ? "Streaming in Ecosystem" : "Ready / Queued"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Auto-Advance Toggle */}
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-stone-300 font-medium">
+                          <input
+                            type="checkbox"
+                            checked={autoAdvanceEnabled}
+                            onChange={(e) => setAutoAdvanceEnabled(e.target.checked)}
+                            className="rounded border-stone-700 text-amber-500 focus:ring-0 cursor-pointer"
+                          />
+                          <span>Auto-Play Merlin when Rick Astley finishes</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* NEW VIDEO PLAYER FRAME WITH USER EMBED */}
+                    <div className="relative rounded-2xl overflow-hidden border border-stone-800 bg-black aspect-video max-h-[520px] shadow-2xl flex items-center justify-center">
+                      <iframe
+                        id="merlin-ecosystem-player"
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube-nocookie.com/embed/pDSv-H75pxI?si=Ku0_MV2nvgIN_i5w${isMerlinPlaying ? '&autoplay=1' : ''}&enablejsapi=1&rel=0`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    </div>
+
+                    {/* Real-time In-Ecosystem Streaming Telemetry & Containment Notice */}
+                    <div className="p-4 bg-stone-900/80 rounded-xl border border-stone-800/90 grid grid-cols-1 md:grid-cols-4 gap-4 items-center text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">SERIES & EPISODE</span>
+                        <h5 className="font-serif font-bold text-white truncate">BBC Merlin (Season 1, Ep 1)</h5>
+                        <p className="text-[11px] text-amber-400">The Dragon's Call &bull; HD 1080p</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">IN-ECOSYSTEM CONTAINMENT</span>
+                        <div className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-1.5 mt-0.5">
+                          <ShieldCheck size={14} className="text-emerald-400" />
+                          <span>100% Sandboxed</span>
+                        </div>
+                        <p className="text-[10px] text-stone-400 mt-0.5">youtube-nocookie &bull; zero tab breaks</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">MERLIN STREAM YIELD</span>
+                        <div className="text-base font-mono font-bold text-emerald-400 mt-0.5">
+                          +${merlinYieldAccrued.toFixed(2)} USD
+                        </div>
+                        <p className="text-[10px] text-stone-500">+$0.05/sec active viewing split</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-stone-500 uppercase font-bold tracking-wider block">LIVE VIEWERS TUNED IN</span>
+                        <div className="text-xs font-mono text-stone-200 font-bold flex items-center gap-1.5 mt-0.5">
+                          <Radio size={13} className="text-cyan-400 animate-pulse" />
+                          <span className="text-white">2,940 Viewers</span>
+                        </div>
+                        <p className="text-[10px] text-stone-500 mt-0.5">Global Relay Node us-east-1</p>
                       </div>
                     </div>
                   </div>

@@ -109,35 +109,7 @@
       })();
     </script>
 
-    <!-- Telegram Web App SDK (Required by RichAds) -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- RichAds Telegram Mini App Monetization JS Tag -->
-    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-    <script>
-      (function() {
-        function initTelegramAds() {
-          try {
-            if (typeof TelegramAdsController !== 'undefined') {
-              window.TelegramAdsController = new TelegramAdsController();
-              window.TelegramAdsController.initialize({
-                pubId: "1018890",
-                appId: "8887",
-              });
-              window.TelegramAdsControllerInitialized = true;
-            }
-          } catch (e) {
-            // Silently handled in non-Telegram browser environments
-          }
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initTelegramAds);
-        } else {
-          initTelegramAds();
-        }
-      })();
-    </script>
-    
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
