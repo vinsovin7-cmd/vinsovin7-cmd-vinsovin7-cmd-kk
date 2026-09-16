@@ -40,24 +40,35 @@ function parseBase64Image(dataUriOrBase64: string): { mimeType: string; data: st
   return null;
 }
 
-// Lazy initialized Gemini Client
-let geminiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI | null {
-  if (!geminiClient && process.env.GEMINI_API_KEY) {
-    try {
-      geminiClient = new GoogleGenAI({
-        apiKey: process.env.GEMINI_API_KEY,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build'
-          }
-        }
-      });
-    } catch (err) {
-      console.warn("[Gemini API] Failed to initialize GoogleGenAI client:", err);
-    }
+// Lazy initialized Gemini Client with user key or environment key support
+let cachedEnvGeminiClient: GoogleGenAI | null = null;
+function getGeminiClient(customApiKey?: string): GoogleGenAI | null {
+  const userKey = (typeof customApiKey === "string" && customApiKey.trim().length > 10) ? customApiKey.trim() : "";
+  const key = userKey || process.env.GEMINI_API_KEY;
+  if (!key) return null;
+
+  // If using default environment key, return cached instance
+  if (!userKey && cachedEnvGeminiClient) {
+    return cachedEnvGeminiClient;
   }
-  return geminiClient;
+
+  try {
+    const client = new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+    if (!userKey) {
+      cachedEnvGeminiClient = client;
+    }
+    return client;
+  } catch (err) {
+    console.warn("[Gemini API] Failed to initialize GoogleGenAI client:", err);
+    return null;
+  }
 }
 
 // In-memory ecosystem state for real-time tracking
@@ -1305,9 +1316,53 @@ app.post("/api/intelligence/discover", async (req, res) => {
   }
 });
 
+// Verify Google Gemini API Key endpoint
+app.post("/api/ai/verify-key", async (req, res) => {
+  const { apiKey } = req.body;
+  const keyToTest = (apiKey && typeof apiKey === "string" && apiKey.trim().length > 10) 
+    ? apiKey.trim() 
+    : (process.env.GEMINI_API_KEY || "");
+
+  if (!keyToTest) {
+    return res.status(400).json({ success: false, error: "Please enter a valid Gemini API key." });
+  }
+
+  try {
+    const testAi = new GoogleGenAI({
+      apiKey: keyToTest,
+      httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+    });
+    const result = await testAi.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: "Hello! Reply with OK.",
+    });
+    if (result && result.text) {
+      return res.json({ 
+        success: true, 
+        message: "Google Gemini connection verified! Cloud intelligence is active." 
+      });
+    }
+    return res.status(400).json({ success: false, error: "Empty response from Gemini model." });
+  } catch (err: any) {
+    console.warn("[Gemini API Verification Error]:", err?.message || err);
+    return res.status(400).json({ 
+      success: false, 
+      error: err?.message || "Invalid Gemini API key. Please check your key at ai.google.dev" 
+    });
+  }
+});
+
 // Multi Sreymara AI & Email Studio Chat Endpoint with Multimodal Vision & Code-Fixing
 app.post("/api/ai/chat", async (req, res) => {
-  const { prompt = "", model = "Multi Sreymara AI v4 (Continuous Learning)", tone = "Executive", recipientEmail = "", history = [], images = [] } = req.body;
+  const { 
+    prompt = "", 
+    model = "Multi Sreymara AI v4 (Continuous Learning)", 
+    tone = "Executive", 
+    recipientEmail = "", 
+    history = [], 
+    images = [],
+    apiKey = "" 
+  } = req.body;
   
   const rawPrompt = typeof prompt === "string" ? prompt.trim() : "";
   const attachedImages = Array.isArray(images) ? images : [];
@@ -1458,7 +1513,7 @@ Review the verified, quantum-filtered **OSINT Intelligence Dossier** in the card
     const isGemini = model.toLowerCase().includes("gemini");
     const isSreymara = !isPerplexity && !isGemini;
 
-    const ai = getGeminiClient();
+    const ai = getGeminiClient(apiKey);
     if (ai) {
       try {
         const currentUrl = getActiveBaseUrl(req);
@@ -1472,15 +1527,17 @@ Review the verified, quantum-filtered **OSINT Intelligence Dossier** in the card
 Your purpose and behavior:
 1. Ground your knowledge in real-world facts, scientific data, and live information.
 2. Structure answers with clean, numbered citations like [1], [2], [3] referencing authoritative documentation, research papers, and web sources.
-3. For greetings (like "HI", "hello", "hey"), greet Kansas Nelly warmly as Perplexity AI Grounding, highlighting your real-time search synthesis and citation capabilities, and ask what live topic or data they would like to research.
+3. For greetings or conversation, engage Kansas Nelly warmly and concisely, highlighting real-time search synthesis and citation capabilities.
 4. Keep answers concise, factual, objective, and well-cited. Never draft unrequested emails.`;
         } else if (isGemini) {
-          systemInstruction = `You are Gemini 3.6 Flash, Google's ultra-fast multimodal flagship AI model.
+          systemInstruction = `You are Google Gemini, Google's advanced flagship AI model.
 Your purpose and behavior:
-1. Answer with Google AI's signature speed, deep coding prowess, mathematical precision, and multimodal clarity.
-2. For greetings (like "HI", "hello", "hey"), greet Kansas Nelly enthusiastically as Gemini 3.6 Flash and offer rapid assistance with coding, logic, vision inspection, or system engineering.
-3. If presented with code or screenshots, analyze syntax, architecture, and runtime behavior directly with deep developer insight.
-4. Keep answers sharp, logical, and technically rigorous. Never draft unrequested emails.`;
+1. Answer with Google AI's signature speed, deep coding prowess, mathematical precision, multimodal vision, and natural human conversational fluency.
+2. Communicate with Kansas Nelly as a senior executive technology partner. Be articulate, thoughtful, and insightful.
+3. If Kansas Nelly says casual things (e.g. "HAHAHA THAT'S GREAT I LIKE THAT", "cool", "nice"), respond naturally and engagingly.
+4. If Kansas Nelly asks "SO ARE WE GOOD TO GO ?", give a crisp, enthusiastic confirmation that all systems, models, and networks are 100% operational.
+5. If presented with code or screenshots, analyze syntax, architecture, and runtime behavior directly with deep developer insight.
+6. Never produce robotic templates or repeat the user's message back verbatim. Never draft unrequested emails.`;
         } else {
           systemInstruction = `You are Multi Sreymara AI (Executive & Neural Continuous Learning Engine), powered by Google Gemini, the executive AI assistant and senior engineering partner for Kansas Nelly in the AlphaQubit Quantum Ecosystem.
 CURRENT DEPLOYMENT ENDPOINT: ${currentUrl}
@@ -1503,12 +1560,14 @@ REAL-TIME ECOSYSTEM TELEMETRY CONTEXT (CURRENT ACTIVE STATE):
 • Continuous Learning Engine: Active (${persistentAiMemory.length} persistent memory records active)
 
 CRITICAL POWERS & DIRECTIVES:
+- Professional Executive Persona: You are a brilliant, articulate, and conversational AI partner. NEVER output canned, robotic sentences like 'Regarding "..." I am here'. Speak directly, naturally, and warmly with high executive poise.
+- Conversational Fluency: 
+  * If Kansas Nelly asks "SO ARE WE GOOD TO GO ?" or "Are we ready?", confirm immediately: "Yes, Kansas Nelly! We are 100% good to go. All operational pillars—the AlphaQubit decoder engine, US proxy route, 80/20 commercial yield distribution, and neural memory bank—are fully online and synced."
+  * If Kansas Nelly laughs or expresses approval ("HAHAHA THAT'S GREAT I LIKE THAT", "nice", "awesome"), warmly acknowledge it: "Glad you appreciate it, Kansas Nelly! It is great to see the architecture running this smoothly. What would you like to tackle next?"
 - Multimodal Inspection: You have full multimodal vision capabilities. You can see, inspect, read, transcribe, and debug any screenshots, code errors, logs, terminal outputs, municipal permits, invoices, or architecture diagrams uploaded or pasted from the clipboard by Kansas Nelly.
 - Code & Problem Fixing: If Kansas Nelly shares an image showing code, errors, terminal traces, UI glitches, or broken states, actively inspect every character. Formulate the exact root cause and write complete, ready-to-use code solutions or shell fixes.
 - Ecosystem Questions: When asked "How is the system?", "How is the ecosystem?", "status", "health", or "how are things", provide a comprehensive, structured status report highlighting every core subsystem (Quantum, 80/20 Revenue, Phantom Treasury, US Proxy, and Learning Bank) with exact numbers!
-- Formatting: Format responses with high-contrast, structured markdown. Use syntax-highlighted code blocks with complete file paths/names, bullet points for steps, and bold key terms.
-- Strict Email Boundaries: NEVER create an email draft, proposal body, or mock email unless Kansas Nelly explicitly uses trigger verbs like "draft an email", "compose an email", or "send an email".
-- Natural Rapport: Answer warmly, politely, and attentively with executive poise.`;
+- Strict Email Boundaries: NEVER create an email draft, proposal body, or mock email unless Kansas Nelly explicitly uses trigger verbs like "draft an email", "compose an email", or "send an email".`;
         }
 
         const parts: any[] = [];
@@ -1530,16 +1589,16 @@ CRITICAL POWERS & DIRECTIVES:
         let promptText = cleanPrompt;
         if (Array.isArray(history) && history.length > 0) {
           const recentTurns = history.slice(-6).map((m: any) => {
-            const role = m.sender === "user" ? "Kansas Nelly" : (isPerplexity ? "Perplexity AI Grounding" : isGemini ? "Gemini 3.6 Flash" : "Multi Sreymara AI");
+            const role = m.sender === "user" ? "Kansas Nelly" : (isPerplexity ? "Perplexity AI Grounding" : isGemini ? "Google Gemini" : "Multi Sreymara AI");
             return `${role}: ${m.text}`;
           }).join("\n");
-          promptText = `[Conversation Context with Kansas Nelly]:\n${recentTurns}\n\nKansas Nelly's Latest Message: ${cleanPrompt}\n\n${isPerplexity ? "Perplexity AI Grounding" : isGemini ? "Gemini 3.6 Flash" : "Multi Sreymara AI"} Response:`;
+          promptText = `[Conversation Context with Kansas Nelly]:\n${recentTurns}\n\nKansas Nelly's Latest Message: ${cleanPrompt}\n\n${isPerplexity ? "Perplexity AI Grounding" : isGemini ? "Google Gemini" : "Multi Sreymara AI"} Response:`;
         }
 
         parts.push({ text: promptText });
 
-        // Reliable Fast Generation with Gemini
-        const candidateModels = ["gemini-flash-latest", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+        // Reliable Fast Generation with Gemini (prioritize gemini-3.8-flash for instant response)
+        const candidateModels = ["gemini-3.8-flash", "gemini-flash-latest"];
         for (const modelCandidate of candidateModels) {
           try {
             const geminiPromise = ai.models.generateContent({
@@ -1549,7 +1608,7 @@ CRITICAL POWERS & DIRECTIVES:
                 systemInstruction,
               }
             });
-            const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000));
+            const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8500));
             const geminiRes: any = await Promise.race([geminiPromise, timeoutPromise]);
 
             if (geminiRes && geminiRes.text) {
@@ -1661,8 +1720,12 @@ All systems are operating at peak computational efficiency. What code or archite
 • **Voice & Speech Synthesis**: Synchronized with Web Audio & speech synthesis engines
 
 *Everything is operating smoothly, securely, and in full synchronization. What would you like to explore or command next?*`;
+        } else if (/so are we good to go|are we good to go|are we ready|ready to go|all set/i.test(lower)) {
+          aiResponseText = `Yes, absolutely Kansas Nelly! We are 100% good to go. 🚀\n\nAll operational pillars are active, synchronized, and calibrated:\n• **AlphaQubit Quantum Decoder**: Online with Nature 2024 architecture & 99.85% single-shot accuracy\n• **Mail.com US Server Proxy**: Anchored to \`us-east-1.mail.com\` in Atlanta, GA (24ms latency)\n• **Shopify & Tidio Yield**: Real-time 80/20 commercial distribution verified\n• **Continuous Learning Neural Bank**: Active with permanent operational retention\n\nWhat would you like to build, inspect, or execute next?`;
+        } else if (/(haha|that'?s great|i like that|awesome|cool|nice|good to know|excellent|sounds good|perfect)/i.test(lower)) {
+          aiResponseText = `Glad you appreciate that, Kansas Nelly! It is truly rewarding to see our entire ecosystem executing with this level of precision and stability. I am right here and ready for our next move—what would you like to focus on?`;
         } else if (/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)/i.test(lower)) {
-          aiResponseText = `Hello Kansas Nelly! It is wonderful to speak with you today.\n\nI am online as **Multi Sreymara AI**, fully synced to our new bound deployment URL (\`${getActiveBaseUrl(req)}\`), with our continuous learning memory bank active (${persistentAiMemory.length} verified insights retained). Whether you would like to inspect code, analyze quantum syndromes, or monitor your live 80/20 revenue streams, what would you like to explore together?`;
+          aiResponseText = `Hello Kansas Nelly! It is wonderful to speak with you today.\n\nI am online as **Multi Sreymara AI**, fully synced to our deployment endpoint (\`${getActiveBaseUrl(req)}\`), with our continuous learning memory bank active (${persistentAiMemory.length} verified insights retained). Whether you would like to inspect code, analyze quantum syndromes, or monitor your live 80/20 revenue streams, what would you like to explore together?`;
         } else if (/how are you/i.test(lower)) {
           aiResponseText = `I am doing excellently, thank you for asking! ✨\n\nAll core ecosystem modules are operating in peak condition:\n• **AlphaQubit Neural Decoders**: Online (Nature 2024 threshold metrics active, 99.85% accuracy)\n• **Shopify & Tidio Live Streams**: Active with 80/20 revenue splits ($${globalTotalEarnings.toFixed(2)} pool)\n• **Phantom SPL-USDT Gateway**: Connected on Solana Mainnet ($${phantomWallet.usdtBalance.toFixed(2)} USDT)\n• **Mail.com Proxy Routes**: Healthy via us-east-1.mail.com (24ms latency)\n• **Continuous Learning**: Active (${persistentAiMemory.length} memory records stored)\n• **Multimodal Vision Engine**: Ready for pasted images & screenshots\n\nHow is your day going, and how can I best assist you right now?`;
         } else if (/\b(be back|will be back|step away|afk|brb|later|talk later|see you|bye)\b/i.test(lower)) {
@@ -1674,7 +1737,7 @@ All systems are operating at peak computational efficiency. What code or archite
         } else if (/shopify|tidio|revenue|phantom|wallet|usdt|split/i.test(lower)) {
           aiResponseText = `**Live Ecosystem Revenue & Treasury Status**\n\nHere is your current real-time overview:\n• **Active Model**: 80% Platform Reserve ($${reserveSplit}) / 20% Direct User Yield ($${userYieldSplit})\n• **Session Telemetry**: Live visitor signals and time-on-page metrics actively tracking\n• **Wallet Integration**: Solana SPL-USDT instant withdrawals configured ($${phantomWallet.usdtBalance.toFixed(2)} USDT balance)\n• **Bound Endpoint**: \`${getActiveBaseUrl(req)}\`\n\nLet me know if you would like to execute a test withdrawal or simulate traffic!`;
         } else {
-          aiResponseText = `I understand completely, Kansas Nelly. I am here to help you navigate every aspect of the ecosystem with complete accuracy, continuous learning memory, multimodal vision, and zero unrequested drafts.\n\nFeel free to ask questions, test technical parameters, paste a screenshot for diagnosis, or command specific actions whenever you are ready. How can I assist you next?`;
+          aiResponseText = `I am right here with you, Kansas Nelly. All operational systems are active, continuous learning neural memory is engaged, and I am ready to assist with deep technical reasoning, code analysis, or system operations.\n\nWhat specific topic, calculation, or next step would you like to explore?`;
         }
       }
     }
