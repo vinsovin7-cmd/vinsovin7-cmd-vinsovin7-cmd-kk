@@ -1,3 +1,7 @@
+/**
+ * AlphaQubit Quantum Research & Live Ecosystem Server
+ * Express v5 + Google GenAI + Vite Middleware
+ */
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -2956,7 +2960,7 @@ async function start() {
         }
       }
     }));
-    app.get("*", (req, res) => {
+    app.get("*all", (req, res) => {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
