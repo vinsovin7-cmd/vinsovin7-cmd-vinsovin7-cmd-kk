@@ -3,7 +3,11 @@ import { HeroScene, QuantumComputerScene } from './components/QuantumScene';
 import { SurfaceCodeDiagram, TransformerDecoderDiagram, PerformanceMetricDiagram } from './components/Diagrams';
 import { EcosystemDashboard } from './components/EcosystemDashboard';
 import { MailStudioSuite } from './components/MailStudioSuite';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff } from 'lucide-react';
+import { ScoMonetizationSuite } from './components/ScoMonetizationSuite';
+import { SolscanSuite } from './components/SolscanSuite';
+import { OfficialTelegramSuite, OFFICIAL_TELEGRAM_APK_URL } from './components/OfficialTelegramSuite';
+import { ExternalTransactionIntegration } from './components/ExternalTransactionIntegration';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2 } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -16,15 +20,91 @@ const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: 
 };
 
 const App: React.FC = () => {
-  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "mail_ai" | "quantum">("revenue");
-  const [isTabHidden, setIsTabHidden] = useState<boolean>(false);
+  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "quantum">(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") return "ton_wallet";
+      if (hash === "external_api" || hash === "api" || hash === "external") return "external_api";
+      if (hash === "telegram_auth" || hash === "telegram" || hash === "tg_auth") return "telegram_auth";
+      if (hash === "solscan" || hash === "solana") return "solscan";
+      if (hash === "sco_monetization" || hash === "sco" || hash === "blockchain" || hash === "github_app") return "sco_monetization";
+      if (hash === "mail_ai" || hash === "mail" || hash === "ai") return "mail_ai";
+      if (hash === "revenue" || hash === "dashboard") return "revenue";
+      if (hash === "quantum") return "quantum";
+      const saved = localStorage.getItem("alphaqubit_active_main_tab");
+      if (saved === "ton_wallet" || saved === "external_api" || saved === "telegram_auth" || saved === "solscan" || saved === "sco_monetization" || saved === "mail_ai" || saved === "revenue" || saved === "quantum") {
+        return saved as "revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "quantum";
+      }
+    }
+    return "revenue";
+  });
+  const [isTabHidden, setIsTabHidden] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("alphaqubit_is_tab_hidden") === "true";
+    }
+    return false;
+  });
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("alphaqubit_active_main_tab", activeMainTab);
+    if (window.location.hash !== `#${activeMainTab}`) {
+      window.history.replaceState(null, "", `#${activeMainTab}`);
+    }
+  }, [activeMainTab]);
+
+  useEffect(() => {
+    localStorage.setItem("alphaqubit_is_tab_hidden", String(isTabHidden));
+  }, [isTabHidden]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") setActiveMainTab("ton_wallet");
+      else if (hash === "external_api" || hash === "api" || hash === "external") setActiveMainTab("external_api");
+      else if (hash === "telegram_auth" || hash === "telegram" || hash === "tg_auth") setActiveMainTab("telegram_auth");
+      else if (hash === "solscan" || hash === "solana") setActiveMainTab("solscan");
+      else if (hash === "mail_ai" || hash === "mail" || hash === "ai") setActiveMainTab("mail_ai");
+      else if (hash === "revenue" || hash === "dashboard") setActiveMainTab("revenue");
+      else if (hash === "quantum") setActiveMainTab("quantum");
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleAppFullscreen = () => {
+    try {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn("Fullscreen request failed:", err);
+          setIsFullscreen(true);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen API not available:", e);
+      setIsFullscreen(!isFullscreen);
+    }
+  };
 
   const scrollToSection = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -90,20 +170,134 @@ const App: React.FC = () => {
           </div>
 
           {/* Main Top Navigation Tabs */}
-          <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800">
+          <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800 flex-wrap">
             <button
               onClick={() => {
                 setActiveMainTab("revenue");
                 setIsTabHidden(false);
               }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeMainTab === "revenue" && !isTabHidden
                   ? "bg-amber-600 text-white shadow-lg border border-amber-400/50"
                   : "text-stone-400 hover:text-white"
               }`}
             >
-              <ShoppingBag size={15} className="text-amber-300" />
-              <span>Shopify + Tidio Revenue Engine</span>
+              <ShoppingBag size={14} className="text-amber-300" />
+              <span>Shopify + Tidio</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("ton_wallet");
+                setIsTabHidden(false);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === "ton_wallet" && !isTabHidden
+                  ? "bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 text-white font-black shadow-lg border border-cyan-400"
+                  : "text-stone-400 hover:text-cyan-300"
+              }`}
+            >
+              <Wallet size={14} className="text-cyan-400" />
+              <span>Telegram @Wallet</span>
+              <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">USDT</span>
+            </button>
+
+            {/* Dedicated External Systems Transaction Integration Button */}
+            <button
+              id="btn-nav-external-api"
+              onClick={() => {
+                setActiveMainTab("external_api");
+                setIsTabHidden(false);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === "external_api" && !isTabHidden
+                  ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-stone-950 font-black shadow-lg border border-emerald-400"
+                  : "text-stone-400 hover:text-emerald-300"
+              }`}
+              title="External Systems Transaction API Gateway (Authenticated with Key 5dd2...ecb2)"
+            >
+              <Share2 size={14} className="text-emerald-400" />
+              <span>External API</span>
+              <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">5dd2</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("telegram_auth");
+                setIsTabHidden(false);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === "telegram_auth" && !isTabHidden
+                  ? "bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 text-white font-black shadow-lg border border-sky-400"
+                  : "text-stone-400 hover:text-sky-300"
+              }`}
+            >
+              <Send size={14} className="text-sky-400" />
+              <span>Telegram Ecosystem</span>
+              <span className="px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded text-[9px] font-mono border border-sky-700 font-bold">CLIENT</span>
+            </button>
+
+            {/* Dedicated "Launch Telegram Web" Quick-Access Button with Live Status Indicator */}
+            <a
+              id="btn-launch-telegram-web"
+              href="https://web.telegram.org/k/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-sky-950/70 hover:bg-sky-900/90 text-sky-300 hover:text-white border border-sky-700/80 shadow-sm whitespace-nowrap"
+              title="Launch Official Telegram Web (Secure Browser Tab)"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+              </span>
+              <span>Launch Telegram Web</span>
+              <ExternalLink size={12} className="text-sky-400" />
+            </a>
+
+            {/* Quick Access: Direct Telegram Android APK Download */}
+            <a
+              id="btn-nav-download-telegram-apk"
+              href={OFFICIAL_TELEGRAM_APK_URL}
+              download="Telegram.apk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-500 text-stone-950 shadow-sm border border-amber-400 whitespace-nowrap"
+              title="Download Official Telegram Android APK (Direct CDN4 Node)"
+            >
+              <Download size={13} />
+              <span>Telegram APK</span>
+              <span className="px-1.5 py-0.2 bg-black/30 text-stone-100 rounded text-[9px] font-mono">72 MB</span>
+            </a>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("solscan");
+                setIsTabHidden(false);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === "solscan" && !isTabHidden
+                  ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-[#00FFA3] text-black font-black shadow-lg border border-[#00FFA3]"
+                  : "text-stone-400 hover:text-[#00FFA3]"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-[#00FFA3] animate-pulse"></span>
+              <span className="font-mono font-bold tracking-tight">Solscan.io</span>
+              <span className="px-1.5 py-0.5 bg-black/80 text-[#00FFA3] rounded text-[9px] font-mono border border-[#00FFA3]/40 font-bold">FAST RELAY</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("sco_monetization");
+                setIsTabHidden(false);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeMainTab === "sco_monetization" && !isTabHidden
+                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-stone-950 font-black shadow-lg border border-amber-300"
+                  : "text-stone-400 hover:text-white"
+              }`}
+            >
+              <Coins size={14} className="text-amber-400" />
+              <span>SCO Monetization & Blockchain</span>
             </button>
 
             <button
@@ -111,14 +305,14 @@ const App: React.FC = () => {
                 setActiveMainTab("mail_ai");
                 setIsTabHidden(false);
               }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeMainTab === "mail_ai" && !isTabHidden
                   ? "bg-purple-900 text-purple-100 shadow-lg border border-purple-600"
                   : "text-stone-400 hover:text-white"
               }`}
             >
-              <Mail size={15} className="text-purple-300" />
-              <Sparkles size={12} className="text-amber-400" />
+              <Mail size={14} className="text-purple-300" />
+              <Sparkles size={11} className="text-amber-400" />
               <span>Mail.com & Multi Sreymara AI</span>
             </button>
 
@@ -127,14 +321,39 @@ const App: React.FC = () => {
                 setActiveMainTab("quantum");
                 setIsTabHidden(false);
               }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeMainTab === "quantum" && !isTabHidden
                   ? "bg-stone-800 text-stone-100 shadow-lg border border-stone-700"
                   : "text-stone-400 hover:text-white"
               }`}
             >
-              <BookOpen size={15} className="text-sky-400" />
-              <span>AlphaQubit Research Paper</span>
+              <BookOpen size={14} className="text-sky-400" />
+              <span>AlphaQubit Paper</span>
+            </button>
+
+            {/* Interactive Full Screen Mode Toggle */}
+            <button
+              id="btn-toggle-fullscreen"
+              type="button"
+              onClick={toggleAppFullscreen}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                isFullscreen
+                  ? "bg-purple-900/90 text-purple-200 border-purple-500 shadow-md"
+                  : "bg-stone-900/90 text-stone-400 hover:text-white border-stone-800 hover:border-purple-600/50"
+              }`}
+              title={isFullscreen ? "Exit Full Screen" : "Enter Interactive Full Screen"}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 size={14} className="text-purple-300" />
+                  <span className="hidden sm:inline">Exit Full Screen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 size={14} className="text-purple-300" />
+                  <span className="hidden sm:inline">Full Screen</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -243,16 +462,59 @@ const App: React.FC = () => {
                   Track real-time visitor signals, active session durations, yield accruals, Phantom USDT withdrawals, and 80/20 cinema video shares.
                 </p>
               </div>
-              <button
-                onClick={() => setActiveMainTab("mail_ai")}
-                className="px-4 py-2 bg-purple-900/80 hover:bg-purple-800 text-purple-200 text-xs font-bold rounded-lg border border-purple-700 flex items-center gap-2 cursor-pointer"
-              >
-                <Mail size={14} /> Open Mail.com & Multi Sreymara AI Engine
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActiveMainTab("sco_monetization")}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-stone-950 text-xs font-bold rounded-lg border border-amber-400 flex items-center gap-2 cursor-pointer transition-all shadow"
+                >
+                  <Coins size={14} /> SCO Worldwide Monetization & Blockchain
+                </button>
+                <button
+                  onClick={() => setActiveMainTab("mail_ai")}
+                  className="px-4 py-2 bg-purple-900/80 hover:bg-purple-800 text-purple-200 text-xs font-bold rounded-lg border border-purple-700 flex items-center gap-2 cursor-pointer"
+                >
+                  <Mail size={14} /> Open Mail.com & Multi Sreymara AI Engine
+                </button>
+              </div>
             </div>
 
             {/* Embedded Live Ecosystem Dashboard */}
             <EcosystemDashboard />
+          </div>
+        )}
+
+        {/* VIEW: TELEGRAM @WALLET & TON JETTON SUITE */}
+        {!isTabHidden && activeMainTab === "ton_wallet" && (
+          <div className="space-y-6 animate-fade-in">
+            <EcosystemDashboard initialTab="ton_wallet" />
+          </div>
+        )}
+
+        {/* VIEW: EXTERNAL SYSTEMS TRANSACTION INTEGRATION GATEWAY */}
+        {!isTabHidden && activeMainTab === "external_api" && (
+          <div className="space-y-6 animate-fade-in">
+            <ExternalTransactionIntegration />
+          </div>
+        )}
+
+        {/* VIEW: OFFICIAL TELEGRAM AUTH & CLIENT GATEWAY (OFFICIAL SPEC) */}
+        {!isTabHidden && activeMainTab === "telegram_auth" && (
+          <div className="space-y-6 animate-fade-in">
+            <OfficialTelegramSuite onClose={() => setActiveMainTab("ton_wallet")} />
+          </div>
+        )}
+
+        {/* VIEW: SOLSCAN.IO PRO EXPLORER & REAL-TIME TRANSACTION PUSHER */}
+        {!isTabHidden && activeMainTab === "solscan" && (
+          <div className="space-y-6 animate-fade-in">
+            <SolscanSuite />
+          </div>
+        )}
+
+        {/* VIEW: SCO MONETIZATION & REAL BLOCKCHAIN ENGINE */}
+        {!isTabHidden && activeMainTab === "sco_monetization" && (
+          <div className="space-y-6 animate-fade-in">
+            <ScoMonetizationSuite />
           </div>
         )}
 
