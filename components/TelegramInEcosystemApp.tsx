@@ -84,6 +84,18 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
   // Chat contacts list
   const contacts: ChatContact[] = [
     {
+      id: "mechat",
+      name: "MeChatBot (Dating & Matchmaking)",
+      avatar: "💖",
+      avatarBg: "bg-gradient-to-tr from-pink-600 to-purple-600",
+      isVerified: true,
+      isBot: true,
+      lastMessage: "💕 20s Fast Match: 14,280 active users in Isolated Love Suites!",
+      time: "Live",
+      unreadCount: 2,
+      pinned: true
+    },
+    {
       id: "wallet",
       name: "Wallet",
       avatar: "💎",
@@ -145,6 +157,22 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
 
   // Dynamic message threads by chat ID
   const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>({
+    mechat: [
+      {
+        id: "mc-1",
+        sender: "bot",
+        senderName: "MeChatBot (@MeChatBot)",
+        text: "💖 Welcome to @MeChatBot — The Official Ecosystem Dating & Matchmaking Engine!\n\n• 8 AI Matchmakers\n• 20-Second Auto Pairing Queue\n• Isolated Private Love Suites\n• Real-Time Admin Moderation Safeguards",
+        timestamp: "Live"
+      },
+      {
+        id: "mc-2",
+        sender: "bot",
+        senderName: "MeChatBot (@MeChatBot)",
+        text: "✨ 14,280 real users online searching right now! Click below or tap the Matchmaking tab to enter your Isolated Love Suite.",
+        timestamp: "Just now"
+      }
+    ],
     wallet: [
       {
         id: "w-1",

@@ -55,7 +55,8 @@ import {
   ArrowRight,
   X,
   Coins,
-  GitBranch
+  GitBranch,
+  Heart
 } from "lucide-react";
 
 interface Session {
@@ -1024,6 +1025,15 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                         <Share2 size={14} />
                         <span>External Systems API</span>
                         <span className="px-1.5 py-0.5 bg-black/20 text-stone-950 rounded text-[9px] font-mono font-bold">KEY 5dd2</span>
+                      </button>
+                      <button
+                        onClick={() => setShowOfficialTgAuth(true)}
+                        className="px-3.5 py-2 bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-lg cursor-pointer border border-pink-400/40"
+                        title="Launch @MeChatBot 20s Fast Matchmaking & Isolated Love Suites"
+                      >
+                        <Heart size={14} className="text-pink-200 fill-pink-300/30" />
+                        <span>@MeChatBot Matchmaking</span>
+                        <span className="px-1.5 py-0.5 bg-pink-950 text-pink-200 rounded text-[9px] font-mono border border-pink-700 font-bold">LOVE SUITE</span>
                       </button>
                       <button
                         onClick={() => setShowOfficialTgAuth(!showOfficialTgAuth)}

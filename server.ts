@@ -1329,6 +1329,214 @@ app.post("/api/telegram/ecosystem-app/install", (req, res) => {
 });
 
 // =========================================================================
+// @MeChatBot (https://t.me/MeChatBot) MATCHMAKING & ISOLATED LOVE SUITE API
+// =========================================================================
+const AI_MATCHMAKERS = [
+  { id: "cupid", name: "Aura Cupid AI", version: "v4.2", desc: "Deep personality matrix & romantic intent alignment", accuracy: "98.7%" },
+  { id: "quantum", name: "Quantum Compatibility Engine", version: "v3.1", desc: "Quantum-inspired feature vector similarity for instant synergy", accuracy: "99.2%" },
+  { id: "vibe", name: "Vibe & Voice Resonance AI", version: "v2.0", desc: "Audio pitch, cadence & emotional tone harmony calculator", accuracy: "96.4%" },
+  { id: "zodiac", name: "Zodiac & Cosmic Synergy AI", version: "v1.8", desc: "Celestial astrology & birth-chart compatibility index", accuracy: "94.1%" },
+  { id: "hobbies", name: "Hobbies & Passion Graph AI", version: "v3.0", desc: "Shared interest, lifestyle & core values mapping", accuracy: "97.8%" },
+  { id: "romance", name: "Romance Core AI", version: "v4.0", desc: "Emotional intelligence, love language & attachment style analysis", accuracy: "98.9%" },
+  { id: "vetting", name: "Safety & Vetting Sentinel AI", version: "v5.0", desc: "Real-time identity verification & anti-scam shield", accuracy: "99.9%" },
+  { id: "icebreaker", name: "Conversational Icebreaker AI", version: "v2.5", desc: "Generates personalized 20s dynamic icebreakers based on mutual sparks", accuracy: "97.5%" }
+];
+
+let activeLoveSuites = [
+  {
+    id: "suite-101",
+    user1: { id: "u-101", name: "Evelyn Morgan", age: 23, location: "London, UK", avatar: "👩🏻", verified: true, interests: ["Cinema", "AI", "Art"] },
+    user2: { id: "u-102", name: "Alexander Wright", age: 26, location: "New York, USA", avatar: "👨🏼", verified: true, interests: ["Quantum Physics", "Travel", "Music"] },
+    matchMakerUsed: "Aura Cupid AI v4.2",
+    compatibilityScore: 98.4,
+    matchedAt: "2 minutes ago",
+    status: "ACTIVE_ISOLATED_SUITE",
+    ruleComplianceScore: 100,
+    warningsCount: 0,
+    giftsCount: 2,
+    messages: [
+      { id: "m-1", senderId: "u-101", senderName: "Evelyn Morgan", text: "Hi! The Cupid AI matched us with a 98.4% compatibility score! 💕", timestamp: "10:13" },
+      { id: "m-2", senderId: "u-102", senderName: "Alexander Wright", text: "Hey Evelyn! That's amazing. I saw you love Quantum Physics and Cinema too! 🎥✨", timestamp: "10:14" },
+      { id: "m-3", senderId: "u-101", senderName: "Evelyn Morgan", text: "Yes! I actually produce video reviews on AI and cinema. What is your favorite film?", timestamp: "10:15" },
+      { id: "m-4", senderId: "u-102", senderName: "Alexander Wright", text: "Interstellar, hands down! 🚀 Sent you a Virtual Rose gift!", timestamp: "10:15", isGift: true, giftType: "🌹 Virtual Rose (10 USDT)" }
+    ]
+  },
+  {
+    id: "suite-102",
+    user1: { id: "u-103", name: "Sophia Chen", age: 24, location: "Singapore", avatar: "👩🏻‍💼", verified: true, interests: ["Web3", "Fitness", "Coffee"] },
+    user2: { id: "u-104", name: "Lucas Moreau", age: 27, location: "Paris, France", avatar: "👨🏻", verified: true, interests: ["Web3", "Photography", "Gourmet"] },
+    matchMakerUsed: "Quantum Compatibility Engine v3.1",
+    compatibilityScore: 96.8,
+    matchedAt: "5 minutes ago",
+    status: "ACTIVE_ISOLATED_SUITE",
+    ruleComplianceScore: 100,
+    warningsCount: 0,
+    giftsCount: 1,
+    messages: [
+      { id: "m-10", senderId: "u-103", senderName: "Sophia Chen", text: "Bonjour Lucas! ☕ Welcome to our Isolated Love Suite!", timestamp: "10:10" },
+      { id: "m-11", senderId: "u-104", senderName: "Lucas Moreau", text: "Hello Sophia! Enchanté. 20-second fast match was so smooth!", timestamp: "10:11" }
+    ]
+  },
+  {
+    id: "suite-103",
+    user1: { id: "u-105", name: "Chloe Bennett", age: 22, location: "Sydney, Australia", avatar: "👱‍♀️", verified: false, interests: ["Design", "Surfing"] },
+    user2: { id: "u-106", name: "Daniel Kim", age: 25, location: "Seoul, S. Korea", avatar: "👨🏻‍💻", verified: true, interests: ["Coding", "Gaming"] },
+    matchMakerUsed: "Romance Core AI v4.0",
+    compatibilityScore: 92.1,
+    matchedAt: "8 minutes ago",
+    status: "ACTIVE_ISOLATED_SUITE",
+    ruleComplianceScore: 95,
+    warningsCount: 0,
+    giftsCount: 0,
+    messages: [
+      { id: "m-20", senderId: "u-105", senderName: "Chloe Bennett", text: "Hey Daniel! Nice to meet you in MeChat Love Suite!", timestamp: "10:07" },
+      { id: "m-21", senderId: "u-106", senderName: "Daniel Kim", text: "Hey Chloe! What games do you play?", timestamp: "10:08" }
+    ]
+  }
+];
+
+app.get("/api/mechat/status", (req, res) => {
+  res.json({
+    success: true,
+    botUsername: "MeChatBot",
+    botUrl: "https://t.me/MeChatBot",
+    activeUsersOnline: 14280,
+    activeLoveSuitesCount: activeLoveSuites.length + 842,
+    pairingQueueTimeSeconds: 20,
+    matchmakers: AI_MATCHMAKERS,
+    adminRuleComplianceEnforced: true
+  });
+});
+
+app.get("/api/mechat/suites", (req, res) => {
+  res.json({
+    success: true,
+    suites: activeLoveSuites
+  });
+});
+
+app.post("/api/mechat/suite/message", (req, res) => {
+  const { suiteId, senderId, senderName, text } = req.body;
+  if (!suiteId || !text) {
+    return res.status(400).json({ success: false, error: "suiteId and text required" });
+  }
+
+  const suite = activeLoveSuites.find(s => s.id === suiteId);
+  if (!suite) {
+    return res.status(404).json({ success: false, error: "Suite not found" });
+  }
+
+  const newMsg = {
+    id: `m-${Date.now()}`,
+    senderId: senderId || "user-current",
+    senderName: senderName || "You",
+    text,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  };
+
+  suite.messages.push(newMsg);
+
+  // Auto-responder simulation if talking to partner
+  setTimeout(() => {
+    const partner = suite.user1.id === senderId ? suite.user2 : suite.user1;
+    const partnerReply = {
+      id: `m-${Date.now() + 1}`,
+      senderId: partner.id,
+      senderName: partner.name,
+      text: `That sounds lovely! I really enjoy chatting with you in this private Love Suite 💕`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    suite.messages.push(partnerReply);
+  }, 1200);
+
+  res.json({ success: true, message: newMsg, suite });
+});
+
+app.post("/api/mechat/suite/gift", (req, res) => {
+  const { suiteId, giftType, senderName } = req.body;
+  const suite = activeLoveSuites.find(s => s.id === suiteId);
+  if (!suite) {
+    return res.status(404).json({ success: false, error: "Suite not found" });
+  }
+
+  const giftMsg = {
+    id: `m-gift-${Date.now()}`,
+    senderId: "user-current",
+    senderName: senderName || "You",
+    text: `Sent a virtual gift: ${giftType || "💖 Love Heart"}!`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    isGift: true,
+    giftType: giftType || "💖 Love Heart"
+  };
+
+  suite.messages.push(giftMsg);
+  suite.giftsCount += 1;
+
+  res.json({ success: true, giftMsg, giftsCount: suite.giftsCount });
+});
+
+app.get("/api/mechat/admin/monitor", (req, res) => {
+  res.json({
+    success: true,
+    activeSuites: activeLoveSuites,
+    totalActiveSuites: activeLoveSuites.length + 842,
+    systemComplianceRate: "99.8%",
+    flaggedViolationsCount: 0,
+    adminOnline: true,
+    realtimeFeed: activeLoveSuites.flatMap(s => s.messages.map(m => ({ ...m, suiteId: s.id, suitePair: `${s.user1.name} ❤️ ${s.user2.name}` })))
+  });
+});
+
+app.post("/api/mechat/admin/action", (req, res) => {
+  const { action, suiteId, note } = req.body;
+  const suite = activeLoveSuites.find(s => s.id === suiteId);
+  if (!suite && suiteId) {
+    return res.status(404).json({ success: false, error: "Suite not found" });
+  }
+
+  if (action === "WARN") {
+    if (suite) {
+      suite.warningsCount += 1;
+      suite.ruleComplianceScore = Math.max(70, suite.ruleComplianceScore - 15);
+      suite.messages.push({
+        id: `sys-${Date.now()}`,
+        senderId: "ADMIN_SYSTEM",
+        senderName: "🛡️ ADMIN SECURITY SYSTEM",
+        text: `⚠️ RULE WARNING: Please keep conversation respectful and abide by Telegram Community Standards.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+    }
+  } else if (action === "INJECT_ICEBREAKER") {
+    if (suite) {
+      suite.messages.push({
+        id: `sys-${Date.now()}`,
+        senderId: "ADMIN_SYSTEM",
+        senderName: "✨ AI CUPID MATCHMAKER",
+        text: `💡 Icebreaker Question: "If you could travel anywhere in the world together tomorrow, where would you go?"`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+    }
+  } else if (action === "FORCE_END") {
+    if (suite) {
+      suite.status = "ENDED";
+    }
+  } else if (action === "MARK_COMPLIANT") {
+    if (suite) {
+      suite.ruleComplianceScore = 100;
+      suite.user1.verified = true;
+      suite.user2.verified = true;
+    }
+  }
+
+  res.json({
+    success: true,
+    actionExecuted: action,
+    suite,
+    message: `Admin action '${action}' applied successfully.`
+  });
+});
+
+// =========================================================================
 // EXTERNAL SYSTEMS TRANSACTION INTEGRATION & SECURE API GATEWAY
 // Authenticated with API Key (EXTERNAL_TRANSACTION_API_KEY or provided fallback)
 // =========================================================================

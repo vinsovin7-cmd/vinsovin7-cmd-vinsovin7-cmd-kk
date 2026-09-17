@@ -24,10 +24,12 @@ import {
   Phone,
   Maximize2,
   Minimize2,
-  RotateCw
+  RotateCw,
+  Heart
 } from "lucide-react";
 import { TelegramVerifiedUser } from "../types";
 import { TelegramInEcosystemApp } from "./TelegramInEcosystemApp";
+import { MeChatBotSuite } from "./MeChatBotSuite";
 
 export const OFFICIAL_TELEGRAM_APK_URL =
   "https://cdn4.telesco.pe/file/Telegram.apk?token=gEnmJNxGQrv-yiklNPJK0uxcr5mDhLC_jgBnE-t3wO2H6U-3wkY3YSMowhx-JhSv53Tbd-Bg_zgOj_wHNGqTzXNMIqyQB6dA2h7R0EyP2Z6d9f40Qwhb96AolB4izMY-3ocLS1pAOatJUaDrwsp2OZw5_5niR8Sqvy5gBHfw_QTU60Ti_Fq8fwLWD95CRCAG0o-VWsX2MOGpS_cRzrU5zQ3NB2AHKbtYKjrnvkmL-G1MmCdlWuby5pYcTZyhCx2pl9F_-2ROqeyZr-EiZ3AkifV-PnGXUSB2med9Phx3q5EKdR4MWOmTU0_ZoY83pXj-FAdHTfaCiveawQ7jn04Adg9aq_GUd5fxLGkAEeH9I5SJO_9PLKw6GzMP-7cCNnehO9gYLZ0LRHM3nW6RoWO5B4RJz9DJV2I7iKFVMu8BQ7v_WtH6lwn5MJqhaXhE32LaJBvBPtHZIaaOQUF05YJTA-6pkMj_LznaqvNQGJxkDqAUDDiUDL_Q8AJRoCfeZbDUjLQBOKJ9eCWYzUMu-IAg0rhjaJiXYgFZLl7cCjkANPlEkldZ_SEq6FIBG9Zzq2P5dRurQ716E1Wr38BySY0pBHUMwMomTnOqnj69z_vmbEb3yUklf9j1HGlzv8kCDh0VCB1Tzvp0bvSZrX-W1Y3AjcxM7ZsBc0cRgqHKBSDY9XuaudahtYcoCElWfwFA8QqPMB1GSVHvEbGmGg4Ru685DaXWkvQqqzllShcdL1_8fXLhpLuECWgbCV70FtjtRvZrxCPO1hGoX3o0oq-GTCohq13D1c-aEsqgoEXNDnrIwu0k28e3qkT05bK24EULO_xliuz7gNXonBM20nrxtlgtbZuGwNSs3TgUbhVZNK8s48fCjY8O07PnRsP8rcWRRbkeS0Bb91R9Ju5pttZ7PqSIForbPFrb5keveB5X1IMtu4FIhp-Wrt35aeyYllI2aXGzvgwQMtFlvNKagQ6Rnf2HUbKiHHqCzY87NYZJ1nLjZqj62dYsgw529blUUMM-jlKUPodJj6raoJa_qxoHMJXvsi1W7MKWnJTKHIGvTZFMsT4KGMqCdi_BMppwSfnbgD3aMxce9HgclbEG2Xo2h1bJRLQSdL9fsXSZhcTYbX9ypNs2tCF5uIWbhf4-jug74JMlwTGGtKDT_9lztBeHfLt8qHcHhmq3YtjLJ8f935XYtVmYXr3weLdtxV34O9q-Tzjg2CzWBIET6fxYteicbWhuN577Fam472AEjcSw6UKBJ9jTUI7RugQ09ZXp_p1bvR_K1AXE4CH8p161DV99777ICkcslOBok31DSHXOe7dKQlDzcqYU5FUf0g2F0mbO7TG1cmz54G8yDw-Ku4LaClRrFQ";
@@ -39,8 +41,8 @@ interface OfficialTelegramSuiteProps {
 
 export const OfficialTelegramSuite: React.FC<OfficialTelegramSuiteProps> = ({ onClose, onOpenTonWallet }) => {
   const [activeSubTab, setActiveSubTab] = useState<
-    "embedded_client" | "apk_hub" | "phone_auth" | "auth" | "clients" | "qr_guide" | "bot_config"
-  >("embedded_client");
+    "embedded_client" | "mechat" | "apk_hub" | "phone_auth" | "auth" | "clients" | "qr_guide" | "bot_config"
+  >("mechat");
   const [botUsername, setBotUsername] = useState<string>("AlphaQubitBot");
   const [customBotInput, setCustomBotInput] = useState<string>("");
   const [verifiedUser, setVerifiedUser] = useState<TelegramVerifiedUser | null>(null);
@@ -428,6 +430,21 @@ export const OfficialTelegramSuite: React.FC<OfficialTelegramSuiteProps> = ({ on
       {/* Sub-Navigation Tabs without browser scrollbar */}
       <div className="flex items-center gap-2 px-6 pt-4 border-b border-stone-800/80 bg-[#0a0e14] overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <button
+          onClick={() => setActiveSubTab("mechat")}
+          className={`px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border-b-2 whitespace-nowrap ${
+            activeSubTab === "mechat"
+              ? "bg-[#130826] text-pink-400 border-pink-500 font-black"
+              : "text-stone-400 hover:text-stone-200 border-transparent"
+          }`}
+        >
+          <Heart size={14} className="text-pink-400" />
+          <span>@MeChatBot Matchmaking & Love Suite</span>
+          <span className="px-1.5 py-0.2 bg-pink-950 text-pink-300 rounded text-[9px] font-mono border border-pink-700 font-bold">
+            8 AI ENGINES
+          </span>
+        </button>
+
+        <button
           onClick={() => setActiveSubTab("embedded_client")}
           className={`px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border-b-2 whitespace-nowrap ${
             activeSubTab === "embedded_client"
@@ -539,6 +556,13 @@ export const OfficialTelegramSuite: React.FC<OfficialTelegramSuiteProps> = ({ on
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* SUBTAB 0: @MeChatBot MATCHMAKING & ISOLATED LOVE SUITE */}
+      {activeSubTab === "mechat" && (
+        <div className="p-6 space-y-4 animate-fade-in">
+          <MeChatBotSuite />
         </div>
       )}
 
