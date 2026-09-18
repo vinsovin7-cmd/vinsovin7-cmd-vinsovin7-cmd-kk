@@ -955,7 +955,7 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
     }
   ];
 
-  const [mailFolder, setMailFolder] = useState<"inbox" | "unread" | "sent" | "drafts" | "trash" | "spam">("inbox");
+  const [mailFolder, setMailFolder] = useState<"inbox" | "unread" | "sent" | "drafts" | "trash" | "spam" | "outbox">("inbox");
   const [showComposer, setShowComposer] = useState<boolean>(false);
   const [isMailFullScreen, setIsMailFullScreen] = useState<boolean>(false);
   const [mailSearchTerm, setMailSearchTerm] = useState<string>("");

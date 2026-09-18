@@ -135,7 +135,77 @@ export const MeChatBotSuite: React.FC<MeChatBotSuiteProps> = ({ onClose }) => {
   useEffect(() => {
     fetchBotConfig();
     fetchMonetizationStats();
+    checkIncomingInviteParams();
   }, []);
+
+  const checkIncomingInviteParams = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash || "";
+      const phoneParam = searchParams.get("phone") || (hash.includes("phone=") ? hash.split("phone=")[1]?.split("&")[0] : null);
+      const userParam = searchParams.get("user") || (hash.includes("user=") ? decodeURIComponent(hash.split("user=")[1]?.split("&")[0]) : null);
+
+      if (phoneParam || userParam || searchParams.get("invite") || hash.includes("invite=")) {
+        const cleanDigits = phoneParam ? phoneParam.replace(/[^0-9]/g, "") : "85510371231";
+        const isKansas = cleanDigits.includes("85510371231") || (userParam && userParam.toLowerCase().includes("kansas"));
+        const invitedName = userParam || (isKansas ? "Kansas Nelly" : `WhatsApp User (+${cleanDigits})`);
+        const formattedPhone = `+${cleanDigits}`;
+
+        const inviteSuite: LoveSuite = {
+          id: `invite-suite-${Date.now()}`,
+          user1: {
+            id: "u-invited",
+            name: `${invitedName}`,
+            age: 24,
+            location: "Phnom Penh, Cambodia 🇰🇭",
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+            verified: true,
+            interests: ["Matchmaking", "Lovesuite", "WhatsApp VIP"]
+          },
+          user2: {
+            id: "u-cupid",
+            name: "Sreymara (Royal Match)",
+            age: 23,
+            location: "Phnom Penh (0.3 km away)",
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+            verified: true,
+            interests: ["Cambodia", "Love", "Chatting"]
+          },
+          matchMakerUsed: "24/7 AI WhatsApp Matchmaker",
+          compatibilityScore: 99.8,
+          matchedAt: "Just now",
+          status: "ACTIVE_ISOLATED_SUITE",
+          ruleComplianceScore: 100,
+          warningsCount: 0,
+          giftsCount: 1,
+          messages: [
+            {
+              id: "m-inv-1",
+              senderId: "SYSTEM",
+              senderName: "🤖 24/7 AI MATCHMAKING WELCOME BOT",
+              text: `🎉 WELCOME TO THE CHATTING LOVESUITE ECOSYSTEM! Welcome ${invitedName} (${formattedPhone})! Your WhatsApp invite link is active. The 24/7 AI Matchmaker is online to welcome you and introduce love matches!`,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              isIcebreaker: true
+            },
+            {
+              id: "m-inv-2",
+              senderId: "u-cupid",
+              senderName: "Sreymara",
+              text: `Hello ${invitedName}! 💕 Welcome inside the Chatting Lovesuite ecosystem! I'm so glad you accepted the WhatsApp invite link. How are you doing today?`,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            }
+          ]
+        };
+
+        setLoveSuites((prev) => [inviteSuite, ...prev]);
+        setSelectedSuiteId(inviteSuite.id);
+        setActiveTab("love_suite");
+      }
+    } catch (err) {
+      console.warn("Failed to parse invite URL params", err);
+    }
+  };
 
   const fetchBotConfig = async () => {
     try {

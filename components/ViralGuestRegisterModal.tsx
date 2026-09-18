@@ -20,21 +20,23 @@ import {
 export const MONETAG_DIRECT_LINK = "https://omg10.com/4/11528175";
 
 interface ViralGuestRegisterModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
-  onRegisterSuccess: (userData: {
+  onRegisterSuccess?: (userData: {
     name: string;
     phone: string;
     email: string;
     avatar: string;
     location: string;
   }) => void;
+  onRegistered?: (userData?: any) => void;
 }
 
 export const ViralGuestRegisterModal: React.FC<ViralGuestRegisterModalProps> = ({
-  isOpen,
+  isOpen = true,
   onClose,
-  onRegisterSuccess
+  onRegisterSuccess,
+  onRegistered
 }) => {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -91,13 +93,20 @@ export const ViralGuestRegisterModal: React.FC<ViralGuestRegisterModalProps> = (
         console.warn(err);
       }
 
-      onRegisterSuccess({
+      const userData = {
         name: fullName.trim(),
         phone: phoneNumber.trim(),
         email: emailAddress.trim().toLowerCase(),
         avatar: finalAvatar,
         location: "Verified Global Member"
-      });
+      };
+
+      if (onRegisterSuccess) {
+        onRegisterSuccess(userData);
+      }
+      if (onRegistered) {
+        onRegistered(userData);
+      }
     }, 1000);
   };
 
