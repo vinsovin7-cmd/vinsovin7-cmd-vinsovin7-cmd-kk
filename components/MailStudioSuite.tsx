@@ -57,7 +57,9 @@ import {
   ReplyAll,
   Forward,
   SlidersHorizontal,
-  ChevronUp
+  ChevronUp,
+  Folder,
+  UserPlus
 } from "lucide-react";
 
 interface MailStudioSuiteProps {
@@ -964,7 +966,82 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
   const [folderSent, setFolderSent] = useState<any[]>([]);
   const [selectedFolderMessage, setSelectedFolderMessage] = useState<any | null>(AUTHENTIC_MAIL_MESSAGES[0]);
 
-  // Mail Composer Form State
+  // Mail Settings Modal State (Custom Sender Name, Reply-To, Signature & Proxy)
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [settingsSenderName, setSettingsSenderName] = useState<string>(() => {
+    return localStorage.getItem("mail_active_user_name") || "Arthur";
+  });
+  const [settingsSenderEmail, setSettingsSenderEmail] = useState<string>(() => {
+    return localStorage.getItem("mail_active_user_email") || "arthur20011043@mail.com";
+  });
+  const [settingsReplyTo, setSettingsReplyTo] = useState<string>(() => {
+    return localStorage.getItem("mail_active_user_email") || "arthur20011043@mail.com";
+  });
+  const [settingsSignature, setSettingsSignature] = useState<string>("Sent via Mail.com US Proxy SSL Gateway (us-east-1.mail.com)");
+  const [settingsProxyNode, setSettingsProxyNode] = useState<string>("us-east-1.mail.com (Atlanta, GA - 14ms SSL TLS 1.3)");
+  const [settingsFeedback, setSettingsFeedback] = useState<string | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState<boolean>(false);
+
+  // Custom Folders & Interactive Auxiliary Modals State
+  const [customFolders, setCustomFolders] = useState<string[]>(["Project Alpha", "Invoices & Billing"]);
+  const [showAddFolderModal, setShowAddFolderModal] = useState<boolean>(false);
+  const [newFolderNameInput, setNewFolderNameInput] = useState<string>("");
+
+  const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
+  const [newAccountEmailInput, setNewAccountEmailInput] = useState<string>("");
+  const [newAccountNameInput, setNewAccountNameInput] = useState<string>("");
+
+  const [showFilesModal, setShowFilesModal] = useState<boolean>(false);
+  const [showServicesModal, setShowServicesModal] = useState<boolean>(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
+
+  const handleSaveSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingSettings(true);
+    setSettingsFeedback(null);
+
+    const newName = settingsSenderName.trim() || activeUserFullName || "Arthur";
+    const newEmail = settingsSenderEmail.trim().toLowerCase() || activeUserEmail;
+
+    try {
+      const res = await fetch("/api/mail/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newEmail,
+          fullName: newName,
+          replyTo: settingsReplyTo,
+          signature: settingsSignature,
+          proxyNode: settingsProxyNode,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setActiveUserFullName(newName);
+        setActiveUserEmail(newEmail);
+        localStorage.setItem("mail_active_user_name", newName);
+        localStorage.setItem("mail_active_user_email", newEmail);
+
+        setSettingsFeedback(`Settings saved! Sender name set to "${newName}" (${newEmail}).`);
+        setTimeout(() => {
+          setShowSettingsModal(false);
+          setSettingsFeedback(null);
+        }, 1200);
+      }
+    } catch (err) {
+      setActiveUserFullName(newName);
+      setActiveUserEmail(newEmail);
+      localStorage.setItem("mail_active_user_name", newName);
+      localStorage.setItem("mail_active_user_email", newEmail);
+      setSettingsFeedback(`Settings saved locally! Sender name set to "${newName}".`);
+      setTimeout(() => {
+        setShowSettingsModal(false);
+        setSettingsFeedback(null);
+      }, 1200);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
   const [mailTo, setMailTo] = useState("property.rep@savannahga.gov");
   const [mailCc, setMailCc] = useState("");
   const [mailBcc, setMailBcc] = useState("");
@@ -2969,6 +3046,386 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
               </div>
             )}
 
+            {/* Mail.com Settings & Sender Profile Customization Modal */}
+            {showSettingsModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-xl mx-auto bg-white p-6 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <div className="flex items-center gap-2 text-[#003B7A] font-bold text-sm">
+                      <SlidersHorizontal size={18} className="text-amber-600" />
+                      <span>Mail.com Account & Sender Settings</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSettingsModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {settingsFeedback && (
+                    <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-mono font-bold flex items-center gap-2">
+                      <Check size={16} />
+                      <span>{settingsFeedback}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">
+                        Sender Display Name (Shows on Outgoing Emails):
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={settingsSenderName}
+                        onChange={(e) => setSettingsSenderName(e.target.value)}
+                        placeholder="e.g. Arthur Kingsley, Kansas Nelly, or JCB Roofing Admin"
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50 font-medium"
+                      />
+                      <span className="text-[10px] text-stone-500 block mt-1">
+                        Customize your sender display name anytime. This name appears as the sender on recipient inboxes.
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold mb-1 text-stone-700">
+                          Sender Email Address:
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={settingsSenderEmail}
+                          onChange={(e) => setSettingsSenderEmail(e.target.value)}
+                          placeholder="e.g. arthur20011043@mail.com"
+                          className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] font-mono bg-stone-50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-1 text-stone-700">
+                          Reply-To Email Address:
+                        </label>
+                        <input
+                          type="email"
+                          value={settingsReplyTo}
+                          onChange={(e) => setSettingsReplyTo(e.target.value)}
+                          placeholder="e.g. arthur20011043@mail.com"
+                          className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] font-mono bg-stone-50"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">
+                        US Mail Proxy Server Node:
+                      </label>
+                      <select
+                        value={settingsProxyNode}
+                        onChange={(e) => setSettingsProxyNode(e.target.value)}
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50 font-mono"
+                      >
+                        <option value="us-east-1.mail.com (Atlanta, GA - 14ms SSL TLS 1.3)">us-east-1.mail.com (Atlanta, GA - 14ms SSL TLS 1.3)</option>
+                        <option value="us-east-2.mail.com (Ashburn, VA - 18ms SSL TLS 1.3)">us-east-2.mail.com (Ashburn, VA - 18ms SSL TLS 1.3)</option>
+                        <option value="us-west-1.mail.com (San Jose, CA - 22ms SSL TLS 1.3)">us-west-1.mail.com (San Jose, CA - 22ms SSL TLS 1.3)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">
+                        Email Signature:
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={settingsSignature}
+                        onChange={(e) => setSettingsSignature(e.target.value)}
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setShowSettingsModal(false)}
+                        className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold rounded text-xs transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingSettings}
+                        className="px-6 py-2 bg-[#003B7A] hover:bg-blue-900 disabled:opacity-50 text-white font-bold rounded text-xs transition-all shadow cursor-pointer flex items-center gap-1.5"
+                      >
+                        {isSavingSettings && <RefreshCw size={12} className="animate-spin" />}
+                        <span>Save Settings</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Add Custom Folder Modal */}
+            {showAddFolderModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-md mx-auto bg-white p-5 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <div className="flex items-center gap-2 text-[#003B7A] font-bold text-sm">
+                      <FolderPlus size={18} className="text-amber-600" />
+                      <span>Create New Mail.com Custom Folder</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddFolderModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newFolderNameInput.trim()) {
+                        setCustomFolders((prev) => [...prev, newFolderNameInput.trim()]);
+                        setNewFolderNameInput("");
+                        setShowAddFolderModal(false);
+                      }
+                    }}
+                    className="space-y-3 text-xs"
+                  >
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">Folder Name:</label>
+                      <input
+                        type="text"
+                        required
+                        value={newFolderNameInput}
+                        onChange={(e) => setNewFolderNameInput(e.target.value)}
+                        placeholder="e.g. Work Orders, Receipts, VIP Leads"
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddFolderModal(false)}
+                        className="px-4 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold rounded text-xs cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-1.5 bg-[#003B7A] hover:bg-blue-900 text-white font-bold rounded text-xs cursor-pointer"
+                      >
+                        Create Folder
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Add Secondary Account Alias Modal */}
+            {showAddAccountModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-md mx-auto bg-white p-5 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <div className="flex items-center gap-2 text-[#003B7A] font-bold text-sm">
+                      <UserPlus size={18} className="text-emerald-600" />
+                      <span>Add Secondary Mail.com Account / Alias</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddAccountModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newAccountEmailInput.trim()) {
+                        setActiveUserEmail(newAccountEmailInput.trim().toLowerCase());
+                        if (newAccountNameInput.trim()) setActiveUserFullName(newAccountNameInput.trim());
+                        setShowAddAccountModal(false);
+                        setNewAccountEmailInput("");
+                        setNewAccountNameInput("");
+                      }
+                    }}
+                    className="space-y-3 text-xs"
+                  >
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">Display Name:</label>
+                      <input
+                        type="text"
+                        value={newAccountNameInput}
+                        onChange={(e) => setNewAccountNameInput(e.target.value)}
+                        placeholder="e.g. Kansas Nelly"
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1 text-stone-700">New Mail.com Email Address:</label>
+                      <input
+                        type="email"
+                        required
+                        value={newAccountEmailInput}
+                        onChange={(e) => setNewAccountEmailInput(e.target.value)}
+                        placeholder="e.g. kansas.nelly@mail.com"
+                        className="w-full px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-[#003B7A] bg-stone-50 font-mono"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddAccountModal(false)}
+                        className="px-4 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold rounded text-xs cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs cursor-pointer"
+                      >
+                        Add Account Alias
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Photos & Files Modal */}
+            {showFilesModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <div className="flex items-center gap-2 text-[#003B7A] font-bold text-base">
+                      <ImageIcon size={20} className="text-sky-600" />
+                      <span>Mail.com Photos & Cloud Storage Files</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFilesModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="p-3 bg-stone-50 rounded-lg border border-stone-200 space-y-2 text-center">
+                      <div className="w-10 h-10 mx-auto bg-blue-100 text-[#003B7A] rounded-full flex items-center justify-center font-bold">
+                        PDF
+                      </div>
+                      <div className="text-xs font-bold truncate">official_notice_permit.pdf</div>
+                      <div className="text-[10px] text-stone-500">83.2 KB • Today</div>
+                      <button type="button" className="px-2 py-1 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-[10px] font-bold w-full">Download</button>
+                    </div>
+                    <div className="p-3 bg-stone-50 rounded-lg border border-stone-200 space-y-2 text-center">
+                      <div className="w-10 h-10 mx-auto bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center font-bold">
+                        PNG
+                      </div>
+                      <div className="text-xs font-bold truncate">site_plan_diagram.png</div>
+                      <div className="text-[10px] text-stone-500">1.4 MB • Yesterday</div>
+                      <button type="button" className="px-2 py-1 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-[10px] font-bold w-full">Download</button>
+                    </div>
+                    <div className="p-3 bg-stone-50 rounded-lg border border-stone-200 space-y-2 text-center">
+                      <div className="w-10 h-10 mx-auto bg-amber-100 text-amber-800 rounded-full flex items-center justify-center font-bold">
+                        DOC
+                      </div>
+                      <div className="text-xs font-bold truncate">agreement_contract.docx</div>
+                      <div className="text-[10px] text-stone-500">240 KB • Sep 15</div>
+                      <button type="button" className="px-2 py-1 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-[10px] font-bold w-full">Download</button>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t flex justify-between items-center text-xs text-stone-600">
+                    <span>Free Cloud Storage Used: 2.1 MB / 65 GB</span>
+                    <button type="button" onClick={() => setShowFilesModal(false)} className="px-4 py-1.5 bg-[#003B7A] text-white rounded font-bold cursor-pointer">Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Services Dropdown Modal */}
+            {showServicesModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-xl mx-auto bg-white p-6 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <div className="flex items-center gap-2 text-[#003B7A] font-bold text-base">
+                      <Globe size={20} className="text-blue-600" />
+                      <span>Mail.com US Services & Cloud Ecosystem</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowServicesModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 bg-blue-50/60 rounded-lg border border-blue-200 space-y-1">
+                      <div className="font-bold text-[#003B7A] flex items-center gap-1.5"><ShieldCheck size={14} /> Express VPN Relay</div>
+                      <p className="text-stone-600 text-[11px]">256-bit TLS 1.3 encrypted proxy routing through Atlanta & Ashburn nodes.</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50/60 rounded-lg border border-emerald-200 space-y-1">
+                      <div className="font-bold text-emerald-800 flex items-center gap-1.5"><FileText size={14} /> Online Office Suite</div>
+                      <p className="text-stone-600 text-[11px]">Edit documents, spreadsheets, and presentations directly in webmail.</p>
+                    </div>
+                    <div className="p-3 bg-purple-50/60 rounded-lg border border-purple-200 space-y-1">
+                      <div className="font-bold text-purple-900 flex items-center gap-1.5"><Bot size={14} /> Gemini 3.6 AI Assistant</div>
+                      <p className="text-stone-600 text-[11px]">Auto-summarize emails, translate messages, and draft replies instantly.</p>
+                    </div>
+                    <div className="p-3 bg-amber-50/60 rounded-lg border border-amber-200 space-y-1">
+                      <div className="font-bold text-amber-900 flex items-center gap-1.5"><Crown size={14} /> Premium Custom Domain</div>
+                      <p className="text-stone-600 text-[11px]">Get @email.com, @usmail.com or your custom domain setup.</p>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t flex justify-end">
+                    <button type="button" onClick={() => setShowServicesModal(false)} className="px-5 py-1.5 bg-[#003B7A] text-white rounded font-bold text-xs cursor-pointer">Done</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Upgrade Modal */}
+            {showUpgradeModal && (
+              <div className="p-6 bg-stone-100 border-b border-stone-300 animate-fade-in text-stone-900">
+                <div className="max-w-xl mx-auto bg-white p-6 rounded-xl border border-stone-300 shadow-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <div className="flex items-center gap-2 text-amber-700 font-bold text-base">
+                      <Crown size={22} className="text-amber-500" />
+                      <span>Upgrade to Mail.com Premium PRO</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowUpgradeModal(false)}
+                      className="text-stone-400 hover:text-black p-1 cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="space-y-3 text-xs text-stone-700">
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-300 space-y-2">
+                      <h4 className="font-bold text-amber-900 text-sm">Included in Mail.com Premium PRO ($3.99/mo)</h4>
+                      <ul className="space-y-1 text-stone-700 list-disc pl-5">
+                        <li>Unlimited Cloud Attachment Storage (up to 100 GB)</li>
+                        <li>Zero Advertising & Ad-Free Workspace</li>
+                        <li>Dedicated US IP Address & SSL Tunneling</li>
+                        <li>Priority Telephone & SSL Live Support</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t flex justify-between items-center">
+                    <span className="text-xs text-stone-500 font-mono">Status: Standard Free Tier Active</span>
+                    <button type="button" onClick={() => setShowUpgradeModal(false)} className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-xs shadow cursor-pointer">Activate 30-Day Free Trial</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* REAL MAIL.COM NAVIGATOR LXA TOP BAR (MATCHING USER SCREENSHOT 1) */}
             <div className="bg-[#003B7A] text-white px-4 py-2.5 flex justify-between items-center select-none shadow-sm">
               <div className="flex items-center gap-6">
@@ -2990,12 +3447,14 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
                   </button>
                   <button
                     type="button"
+                    onClick={() => setShowFilesModal(true)}
                     className="px-3 py-1.5 text-sky-100 hover:text-white hover:bg-blue-900/60 rounded cursor-pointer"
                   >
                     Photos & Files
                   </button>
                   <button
                     type="button"
+                    onClick={() => setShowServicesModal(true)}
                     className="px-3 py-1.5 text-sky-100 hover:text-white hover:bg-blue-900/60 rounded cursor-pointer flex items-center gap-1"
                   >
                     <span>Services</span>
@@ -3008,20 +3467,29 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
               <div className="flex items-center gap-3 text-xs">
                 <button
                   type="button"
+                  onClick={() => setShowUpgradeModal(true)}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-transparent hover:bg-blue-900/60 border border-sky-300/60 text-white rounded-full font-bold transition-colors cursor-pointer"
                 >
                   <Crown size={13} className="text-amber-300" />
                   <span>Upgrade</span>
                 </button>
 
+                {/* Settings & Profile Customization Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsModal(!showSettingsModal)}
+                  className="px-2.5 py-1 bg-blue-900 hover:bg-blue-800 text-sky-100 font-bold rounded text-xs transition-all flex items-center gap-1 cursor-pointer border border-sky-400/40"
+                  title="Configure Sender Name, Email, Reply-To & Proxy Settings"
+                >
+                  <SlidersHorizontal size={13} className="text-amber-300" />
+                  <span>Settings</span>
+                </button>
+
                 {/* User Avatar Circle */}
                 <div
-                  onClick={() => {
-                    setAuthMode("login");
-                    setShowLoginModal(true);
-                  }}
+                  onClick={() => setShowSettingsModal(true)}
                   className="flex items-center gap-2 cursor-pointer group"
-                  title={`Logged in as ${activeUserEmail}. Click to switch account.`}
+                  title={`Logged in as ${activeUserEmail}. Click to customize settings & sender name.`}
                 >
                   <div className="w-8 h-8 rounded-full bg-white/20 border border-white/40 flex items-center justify-center font-bold text-white text-sm shadow-inner group-hover:scale-105 transition-transform">
                     {activeUserFullName ? activeUserFullName.charAt(0).toUpperCase() : "A"}
@@ -3219,16 +3687,51 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
                         <span className="flex items-center gap-1.5"><FileText size={13} /> Drafts</span>
                       </div>
 
-                      <div className="px-2 py-1 text-stone-600 hover:bg-stone-200 rounded cursor-pointer">
-                        Outbox
+                      <div
+                        onClick={() => {
+                          setMailFolder("outbox");
+                          setShowComposer(false);
+                        }}
+                        className={`px-2 py-1 rounded cursor-pointer flex items-center justify-between ${
+                          mailFolder === "outbox" ? "bg-stone-300 font-bold text-[#003B7A]" : "hover:bg-stone-200"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5"><Send size={13} /> Outbox</span>
                       </div>
 
-                      <div className="pt-2 text-[#003B7A] font-semibold flex items-center gap-1 hover:underline cursor-pointer">
+                      {/* Dynamic Custom Folders Created by User */}
+                      {customFolders.map((cf) => (
+                        <div
+                          key={cf}
+                          onClick={() => {
+                            setMailFolder("inbox");
+                            setShowComposer(false);
+                          }}
+                          className="px-2 py-1 rounded cursor-pointer flex items-center justify-between hover:bg-stone-200 text-stone-700"
+                        >
+                          <span className="flex items-center gap-1.5"><Folder size={13} className="text-amber-600" /> {cf}</span>
+                        </div>
+                      ))}
+
+                      <div
+                        onClick={() => setShowAddFolderModal(true)}
+                        className="pt-2 text-[#003B7A] font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                      >
                         <FolderPlus size={13} /> + Add folder
                       </div>
 
-                      <div className="text-[#003B7A] font-semibold flex items-center gap-1 hover:underline cursor-pointer">
-                        + Add email account
+                      <div
+                        onClick={() => setShowSettingsModal(true)}
+                        className="text-[#003B7A] font-bold flex items-center gap-1 hover:underline cursor-pointer pt-1"
+                      >
+                        <SlidersHorizontal size={13} className="text-amber-600" /> Settings & Sender Name
+                      </div>
+
+                      <div
+                        onClick={() => setShowAddAccountModal(true)}
+                        className="text-[#003B7A] font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                      >
+                        <UserPlus size={13} /> + Add email account
                       </div>
                     </div>
                   </div>

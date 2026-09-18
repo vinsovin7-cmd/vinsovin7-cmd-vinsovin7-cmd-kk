@@ -7,7 +7,12 @@ import { ScoMonetizationSuite } from './components/ScoMonetizationSuite';
 import { SolscanSuite } from './components/SolscanSuite';
 import { OfficialTelegramSuite, OFFICIAL_TELEGRAM_APK_URL } from './components/OfficialTelegramSuite';
 import { ExternalTransactionIntegration } from './components/ExternalTransactionIntegration';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2 } from 'lucide-react';
+import { SreymaraAppzInstaller } from './components/SreymaraAppzInstaller';
+import { AdminControlPalace } from './components/AdminControlPalace';
+import { ViralGuestRegisterModal } from './components/ViralGuestRegisterModal';
+import { YouTubeCinemaVideoSuite } from './components/YouTubeCinemaVideoSuite';
+import { CloudflareDomainManager } from './components/CloudflareDomainManager';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -20,27 +25,53 @@ const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: 
 };
 
 const App: React.FC = () => {
-  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "quantum">(() => {
+  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare">(() => {
     if (typeof window !== "undefined") {
-      const hash = window.location.hash.replace("#", "").toLowerCase();
-      if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") return "ton_wallet";
-      if (hash === "external_api" || hash === "api" || hash === "external") return "external_api";
-      if (hash === "telegram_auth" || hash === "telegram" || hash === "tg_auth") return "telegram_auth";
-      if (hash === "solscan" || hash === "solana") return "solscan";
-      if (hash === "sco_monetization" || hash === "sco" || hash === "blockchain" || hash === "github_app") return "sco_monetization";
-      if (hash === "mail_ai" || hash === "mail" || hash === "ai") return "mail_ai";
-      if (hash === "revenue" || hash === "dashboard") return "revenue";
-      if (hash === "quantum") return "quantum";
+      const hash = window.location.hash.toLowerCase();
+      const href = window.location.href.toLowerCase();
+      if (hash.includes("cloudflare") || hash.includes("domain") || hash.includes("earnings")) return "cloudflare";
+      if (hash.includes("cinema") || hash.includes("youtube") || hash.includes("video")) return "cinema_video";
+      if (hash.includes("love_suite") || href.includes("invite=") || hash.includes("guest")) return "telegram_auth";
+      if (hash.includes("admin_palace") || hash.includes("palace") || hash.includes("admin")) return "admin_palace";
+      if (hash.includes("sreymara_appz") || hash.includes("appz") || hash.includes("apps")) return "sreymara_appz";
+      if (hash.includes("ton_wallet") || hash.includes("wallet")) return "ton_wallet";
+      if (hash.includes("external_api") || hash.includes("api")) return "external_api";
+      if (hash.includes("telegram_auth") || hash.includes("telegram")) return "telegram_auth";
+      if (hash.includes("solscan") || hash.includes("solana")) return "solscan";
+      if (hash.includes("sco_monetization") || hash.includes("sco")) return "sco_monetization";
+      if (hash.includes("mail_ai") || hash.includes("mail")) return "mail_ai";
+      if (hash.includes("revenue") || hash.includes("dashboard")) return "revenue";
+      if (hash.includes("quantum")) return "quantum";
       const saved = localStorage.getItem("alphaqubit_active_main_tab");
-      if (saved === "ton_wallet" || saved === "external_api" || saved === "telegram_auth" || saved === "solscan" || saved === "sco_monetization" || saved === "mail_ai" || saved === "revenue" || saved === "quantum") {
-        return saved as "revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "quantum";
-      }
+      if (saved) return saved as any;
     }
     return "revenue";
+  });
+
+  const [isGuestLoveSuiteOnly, setIsGuestLoveSuiteOnly] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const href = window.location.href.toLowerCase();
+      return href.includes("love_suite") || href.includes("invite=") || href.includes("guest");
+    }
+    return false;
+  });
+
+  const [showRegisterModal, setShowRegisterModal] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const href = window.location.href.toLowerCase();
+      return href.includes("love_suite") || href.includes("invite=") || href.includes("guest");
+    }
+    return false;
   });
   const [isTabHidden, setIsTabHidden] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("alphaqubit_is_tab_hidden") === "true";
+    }
+    return false;
+  });
+  const [isNavBannerHidden, setIsNavBannerHidden] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("alphaqubit_nav_banner_hidden") === "true";
     }
     return false;
   });
@@ -56,6 +87,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("alphaqubit_is_tab_hidden", String(isTabHidden));
   }, [isTabHidden]);
+
+  useEffect(() => {
+    localStorage.setItem("alphaqubit_nav_banner_hidden", String(isNavBannerHidden));
+  }, [isNavBannerHidden]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -169,193 +204,298 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Top Navigation Tabs */}
-          <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800 flex-wrap">
-            <button
-              onClick={() => {
-                setActiveMainTab("revenue");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "revenue" && !isTabHidden
-                  ? "bg-amber-600 text-white shadow-lg border border-amber-400/50"
-                  : "text-stone-400 hover:text-white"
-              }`}
-            >
-              <ShoppingBag size={14} className="text-amber-300" />
-              <span>Shopify + Tidio</span>
-            </button>
+          {/* Main Top Navigation Banner OR Collapsed V Toggle Button */}
+          {isNavBannerHidden ? (
+            /* COLLAPSED VIEW: Minimal high-visibility "V" toggle button to display the full navigation banner */
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-show-full-nav-banner"
+                type="button"
+                onClick={() => setIsNavBannerHidden(false)}
+                className="px-4 py-2.5 bg-gradient-to-r from-red-950 via-purple-950 to-amber-950 hover:from-red-900 hover:to-amber-900 text-white rounded-xl text-xs font-black flex items-center gap-2.5 transition-all shadow-2xl border-2 border-red-500/80 cursor-pointer animate-pulse"
+                title="Click V or button to display full navigation banner (Shopify + Tidio, Telegram @Wallet, External API, etc.)"
+              >
+                <ChevronDown size={18} className="text-amber-300 font-black animate-bounce" />
+                <span className="text-amber-400 font-extrabold text-sm">▼</span>
+                <span className="tracking-wide">DISPLAY NAVIGATION BANNER</span>
+                <span className="px-2 py-0.5 bg-red-900 text-red-100 rounded text-[10px] font-mono border border-red-500 font-black">V</span>
+              </button>
+            </div>
+          ) : (
+            /* EXPANDED VIEW: Full Navigation Banner carrying all 11 quick-access tabs + V Hide Button at the far right ending */
+            <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800 flex-wrap relative shadow-2xl">
+              <button
+                onClick={() => {
+                  setActiveMainTab("revenue");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "revenue" && !isTabHidden
+                    ? "bg-amber-600 text-white shadow-lg border border-amber-400/50"
+                    : "text-stone-400 hover:text-white"
+                }`}
+              >
+                <ShoppingBag size={14} className="text-amber-300" />
+                <span>Shopify + Tidio</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("ton_wallet");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "ton_wallet" && !isTabHidden
-                  ? "bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 text-white font-black shadow-lg border border-cyan-400"
-                  : "text-stone-400 hover:text-cyan-300"
-              }`}
-            >
-              <Wallet size={14} className="text-cyan-400" />
-              <span>Telegram @Wallet</span>
-              <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">USDT</span>
-            </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("ton_wallet");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "ton_wallet" && !isTabHidden
+                    ? "bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-700 text-white font-black shadow-lg border border-cyan-400"
+                    : "text-stone-400 hover:text-cyan-300"
+                }`}
+              >
+                <Wallet size={14} className="text-cyan-400" />
+                <span>Telegram @Wallet</span>
+                <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">USDT</span>
+              </button>
 
-            {/* Dedicated External Systems Transaction Integration Button */}
-            <button
-              id="btn-nav-external-api"
-              onClick={() => {
-                setActiveMainTab("external_api");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "external_api" && !isTabHidden
-                  ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-stone-950 font-black shadow-lg border border-emerald-400"
-                  : "text-stone-400 hover:text-emerald-300"
-              }`}
-              title="External Systems Transaction API Gateway (Authenticated with Key 5dd2...ecb2)"
-            >
-              <Share2 size={14} className="text-emerald-400" />
-              <span>External API</span>
-              <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">5dd2</span>
-            </button>
+              {/* Dedicated External Systems Transaction Integration Button */}
+              <button
+                id="btn-nav-external-api"
+                onClick={() => {
+                  setActiveMainTab("external_api");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "external_api" && !isTabHidden
+                    ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-stone-950 font-black shadow-lg border border-emerald-400"
+                    : "text-stone-400 hover:text-emerald-300"
+                }`}
+                title="External Systems Transaction API Gateway (Authenticated with Key 5dd2...ecb2)"
+              >
+                <Share2 size={14} className="text-emerald-400" />
+                <span>External API</span>
+                <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">5dd2</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("telegram_auth");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "telegram_auth" && !isTabHidden
-                  ? "bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 text-white font-black shadow-lg border border-sky-400"
-                  : "text-stone-400 hover:text-sky-300"
-              }`}
-            >
-              <Send size={14} className="text-sky-400" />
-              <span>Telegram Ecosystem</span>
-              <span className="px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded text-[9px] font-mono border border-sky-700 font-bold">CLIENT</span>
-            </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("telegram_auth");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "telegram_auth" && !isTabHidden
+                    ? "bg-gradient-to-r from-sky-600 via-blue-600 to-sky-700 text-white font-black shadow-lg border border-sky-400"
+                    : "text-stone-400 hover:text-sky-300"
+                }`}
+              >
+                <Send size={14} className="text-sky-400" />
+                <span>Telegram Ecosystem</span>
+                <span className="px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded text-[9px] font-mono border border-sky-700 font-bold">CLIENT</span>
+              </button>
 
-            {/* Dedicated "Launch Telegram Web" Quick-Access Button with Live Status Indicator */}
-            <a
-              id="btn-launch-telegram-web"
-              href="https://web.telegram.org/k/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-sky-950/70 hover:bg-sky-900/90 text-sky-300 hover:text-white border border-sky-700/80 shadow-sm whitespace-nowrap"
-              title="Launch Official Telegram Web (Secure Browser Tab)"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-              </span>
-              <span>Launch Telegram Web</span>
-              <ExternalLink size={12} className="text-sky-400" />
-            </a>
+              {/* Dedicated "Launch Telegram Web" Quick-Access Button with Live Status Indicator */}
+              <a
+                id="btn-launch-telegram-web"
+                href="https://web.telegram.org/k/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-sky-950/70 hover:bg-sky-900/90 text-sky-300 hover:text-white border border-sky-700/80 shadow-sm whitespace-nowrap"
+                title="Launch Official Telegram Web (Secure Browser Tab)"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                </span>
+                <span>Launch Telegram Web</span>
+                <ExternalLink size={12} className="text-sky-400" />
+              </a>
 
-            {/* Quick Access: Direct Telegram Android APK Download */}
-            <a
-              id="btn-nav-download-telegram-apk"
-              href={OFFICIAL_TELEGRAM_APK_URL}
-              download="Telegram.apk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-500 text-stone-950 shadow-sm border border-amber-400 whitespace-nowrap"
-              title="Download Official Telegram Android APK (Direct CDN4 Node)"
-            >
-              <Download size={13} />
-              <span>Telegram APK</span>
-              <span className="px-1.5 py-0.2 bg-black/30 text-stone-100 rounded text-[9px] font-mono">72 MB</span>
-            </a>
+              {/* Quick Access: Direct Telegram Android APK Download */}
+              <a
+                id="btn-nav-download-telegram-apk"
+                href={OFFICIAL_TELEGRAM_APK_URL}
+                download="Telegram.apk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-500 text-stone-950 shadow-sm border border-amber-400 whitespace-nowrap"
+                title="Download Official Telegram Android APK (Direct CDN4 Node)"
+              >
+                <Download size={13} />
+                <span>Telegram APK</span>
+                <span className="px-1.5 py-0.2 bg-black/30 text-stone-100 rounded text-[9px] font-mono">72 MB</span>
+              </a>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("solscan");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "solscan" && !isTabHidden
-                  ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-[#00FFA3] text-black font-black shadow-lg border border-[#00FFA3]"
-                  : "text-stone-400 hover:text-[#00FFA3]"
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-[#00FFA3] animate-pulse"></span>
-              <span className="font-mono font-bold tracking-tight">Solscan.io</span>
-              <span className="px-1.5 py-0.5 bg-black/80 text-[#00FFA3] rounded text-[9px] font-mono border border-[#00FFA3]/40 font-bold">FAST RELAY</span>
-            </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("solscan");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "solscan" && !isTabHidden
+                    ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-[#00FFA3] text-black font-black shadow-lg border border-[#00FFA3]"
+                    : "text-stone-400 hover:text-[#00FFA3]"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-[#00FFA3] animate-pulse"></span>
+                <span className="font-mono font-bold tracking-tight">Solscan.io</span>
+                <span className="px-1.5 py-0.5 bg-black/80 text-[#00FFA3] rounded text-[9px] font-mono border border-[#00FFA3]/40 font-bold">FAST RELAY</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("sco_monetization");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "sco_monetization" && !isTabHidden
-                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-stone-950 font-black shadow-lg border border-amber-300"
-                  : "text-stone-400 hover:text-white"
-              }`}
-            >
-              <Coins size={14} className="text-amber-400" />
-              <span>SCO Monetization & Blockchain</span>
-            </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("sco_monetization");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "sco_monetization" && !isTabHidden
+                    ? "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-stone-950 font-black shadow-lg border border-amber-300"
+                    : "text-stone-400 hover:text-white"
+                }`}
+              >
+                <Coins size={14} className="text-amber-400" />
+                <span>SCO Monetization & Blockchain</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("mail_ai");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "mail_ai" && !isTabHidden
-                  ? "bg-purple-900 text-purple-100 shadow-lg border border-purple-600"
-                  : "text-stone-400 hover:text-white"
-              }`}
-            >
-              <Mail size={14} className="text-purple-300" />
-              <Sparkles size={11} className="text-amber-400" />
-              <span>Mail.com & Multi Sreymara AI</span>
-            </button>
+              <button
+                onClick={() => {
+                  setActiveMainTab("mail_ai");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "mail_ai" && !isTabHidden
+                    ? "bg-purple-900 text-purple-100 shadow-lg border border-purple-600"
+                    : "text-stone-400 hover:text-white"
+                }`}
+              >
+                <Mail size={14} className="text-purple-300" />
+                <Sparkles size={11} className="text-amber-400" />
+                <span>Mail.com & Multi Sreymara AI</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setActiveMainTab("quantum");
-                setIsTabHidden(false);
-              }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeMainTab === "quantum" && !isTabHidden
-                  ? "bg-stone-800 text-stone-100 shadow-lg border border-stone-700"
-                  : "text-stone-400 hover:text-white"
-              }`}
-            >
-              <BookOpen size={14} className="text-sky-400" />
-              <span>AlphaQubit Paper</span>
-            </button>
+              <button
+                id="btn-nav-cinema-video"
+                onClick={() => {
+                  setActiveMainTab("cinema_video");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "cinema_video" && !isTabHidden
+                    ? "bg-gradient-to-r from-red-600 via-amber-500 to-purple-600 text-white border-amber-300 ring-2 ring-amber-400/50"
+                    : "bg-gradient-to-r from-red-950/80 to-purple-950/80 text-amber-300 border-red-500/50 hover:text-white"
+                }`}
+                title="YouTube Monetization & Cinema 4K AI Video Generator (15 Presets)"
+              >
+                <Film size={15} className="text-amber-400" />
+                <span>YouTube & Cinema 4K Video</span>
+                <span className="px-1.5 py-0.2 bg-red-600 text-white rounded text-[9px] font-extrabold uppercase">15 AI HD</span>
+              </button>
 
-            {/* Interactive Full Screen Mode Toggle */}
-            <button
-              id="btn-toggle-fullscreen"
-              type="button"
-              onClick={toggleAppFullscreen}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                isFullscreen
-                  ? "bg-purple-900/90 text-purple-200 border-purple-500 shadow-md"
-                  : "bg-stone-900/90 text-stone-400 hover:text-white border-stone-800 hover:border-purple-600/50"
-              }`}
-              title={isFullscreen ? "Exit Full Screen" : "Enter Interactive Full Screen"}
-            >
-              {isFullscreen ? (
-                <>
-                  <Minimize2 size={14} className="text-purple-300" />
-                  <span className="hidden sm:inline">Exit Full Screen</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 size={14} className="text-purple-300" />
-                  <span className="hidden sm:inline">Full Screen</span>
-                </>
-              )}
-            </button>
-          </div>
+              <button
+                id="btn-nav-cloudflare"
+                onClick={() => {
+                  setActiveMainTab("cloudflare");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "cloudflare" && !isTabHidden
+                    ? "bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-stone-950 border-orange-300 ring-2 ring-orange-400/50"
+                    : "bg-gradient-to-r from-orange-950/80 to-purple-950/80 text-orange-300 border-orange-500/50 hover:text-white"
+                }`}
+                title="Cloudflare Domain Integration Manager (earnings.ink)"
+              >
+                <Globe size={15} className="text-orange-400" />
+                <span>Cloudflare earnings.ink</span>
+                <span className="px-1.5 py-0.2 bg-orange-500 text-stone-950 rounded text-[9px] font-extrabold uppercase">DNS</span>
+              </button>
+
+              <button
+                id="btn-nav-admin-palace"
+                onClick={() => {
+                  setActiveMainTab("admin_palace");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "admin_palace" && !isTabHidden
+                    ? "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-stone-950 border-amber-300 ring-2 ring-amber-400/50"
+                    : "bg-gradient-to-r from-amber-950/60 to-purple-950/80 text-amber-300 border-amber-500/50 hover:text-white"
+                }`}
+                title="Ecosystem Control Palace Admin Home"
+              >
+                <Crown size={15} className="text-amber-400" />
+                <span>Admin Control Palace</span>
+                <span className="px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded text-[9px] font-extrabold uppercase">HOME</span>
+              </button>
+
+              <button
+                id="btn-nav-sreymara-appz"
+                onClick={() => {
+                  setActiveMainTab("sreymara_appz");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "sreymara_appz" && !isTabHidden
+                    ? "bg-gradient-to-r from-amber-500 via-pink-600 to-purple-600 text-white font-black shadow-lg border border-amber-300 ring-2 ring-pink-500/40"
+                    : "text-purple-300 hover:text-white bg-purple-950/40 border border-purple-800/60"
+                }`}
+                title="sreymara APPZ Ecosystem App Installer"
+              >
+                <Smartphone size={14} className="text-amber-300" />
+                <span>sreymara APPZ</span>
+                <span className="px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded text-[9px] font-extrabold uppercase">INSTALLER</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveMainTab("quantum");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeMainTab === "quantum" && !isTabHidden
+                    ? "bg-stone-800 text-stone-100 shadow-lg border border-stone-700"
+                    : "text-stone-400 hover:text-white"
+                }`}
+              >
+                <BookOpen size={14} className="text-sky-400" />
+                <span>AlphaQubit Paper</span>
+              </button>
+
+              {/* Interactive Full Screen Mode Toggle */}
+              <button
+                id="btn-toggle-fullscreen"
+                type="button"
+                onClick={toggleAppFullscreen}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  isFullscreen
+                    ? "bg-purple-900/90 text-purple-200 border-purple-500 shadow-md"
+                    : "bg-stone-900/90 text-stone-400 hover:text-white border-stone-800 hover:border-purple-600/50"
+                }`}
+                title={isFullscreen ? "Exit Full Screen" : "Enter Interactive Full Screen"}
+              >
+                {isFullscreen ? (
+                  <>
+                    <Minimize2 size={14} className="text-purple-300" />
+                    <span className="hidden sm:inline">Exit Full Screen</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 size={14} className="text-purple-300" />
+                    <span className="hidden sm:inline">Full Screen</span>
+                  </>
+                )}
+              </button>
+
+              {/* 🔴 V DROPDOWN HIDE & DISPLAY BUTTON AT THE FAR RIGHT ENDING OF THE BANNER (MATCHING USER SCREENSHOT ARROW EXACTLY) */}
+              <button
+                id="btn-hide-nav-banner-v"
+                type="button"
+                onClick={() => setIsNavBannerHidden(true)}
+                className="px-3 py-2 bg-gradient-to-r from-red-900 via-rose-950 to-red-950 hover:from-red-800 hover:to-red-900 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border-2 border-red-500/80 shadow-2xl hover:scale-105 active:scale-95 shrink-0 ml-1 group"
+                title="Hide / Collapse Full Banner till full screen so it does not block the workspace at the back"
+              >
+                <ChevronUp size={16} className="text-amber-300 font-black group-hover:animate-bounce" />
+                <span className="text-amber-400 font-black text-sm leading-none">▼</span>
+                <span className="text-[11px] font-black uppercase tracking-wider text-red-100">V</span>
+              </button>
+
+            </div>
+          )}
 
         </div>
       </header>
@@ -490,6 +630,27 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* VIEW: YOUTUBE & CINEMA 4K AI VIDEO GENERATION SUITE */}
+        {!isTabHidden && activeMainTab === "cinema_video" && (
+          <div className="space-y-6 animate-fade-in">
+            <YouTubeCinemaVideoSuite />
+          </div>
+        )}
+
+        {/* VIEW: CLOUDFLARE CUSTOM DOMAIN INTEGRATION MANAGER */}
+        {!isTabHidden && activeMainTab === "cloudflare" && (
+          <div className="space-y-6 animate-fade-in">
+            <CloudflareDomainManager />
+          </div>
+        )}
+
+        {/* VIEW: ADMIN CONTROL PALACE REAL BACKEND DASHBOARD */}
+        {!isTabHidden && activeMainTab === "admin_palace" && (
+          <div className="space-y-6 animate-fade-in">
+            <AdminControlPalace onClose={() => setActiveMainTab("revenue")} />
+          </div>
+        )}
+
         {/* VIEW: EXTERNAL SYSTEMS TRANSACTION INTEGRATION GATEWAY */}
         {!isTabHidden && activeMainTab === "external_api" && (
           <div className="space-y-6 animate-fade-in">
@@ -524,6 +685,20 @@ const App: React.FC = () => {
             <MailStudioSuite 
               onClose={() => setActiveMainTab("revenue")} 
               onHideTab={() => setIsTabHidden(true)}
+            />
+          </div>
+        )}
+
+        {/* VIEW: SREYMARA APPZ ECOSYSTEM INSTALLER & EMBEDDED WORKSPACE */}
+        {!isTabHidden && activeMainTab === "sreymara_appz" && (
+          <div className="space-y-6 animate-fade-in">
+            <SreymaraAppzInstaller
+              onLaunchApp={(app) => {
+                if (app.type === "internal_suite" && app.internalTabKey) {
+                  setActiveMainTab(app.internalTabKey as any);
+                }
+              }}
+              onClose={() => setActiveMainTab("revenue")}
             />
           </div>
         )}
@@ -668,6 +843,16 @@ const App: React.FC = () => {
         </div>
       </footer>
 
+      {/* VIRAL GUEST REGISTER MODAL OVERLAY */}
+      {showRegisterModal && (
+        <ViralGuestRegisterModal
+          onClose={() => setShowRegisterModal(false)}
+          onRegistered={() => {
+            setShowRegisterModal(false);
+            setActiveMainTab("telegram_auth");
+          }}
+        />
+      )}
     </div>
   );
 };
