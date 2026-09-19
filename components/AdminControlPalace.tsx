@@ -152,6 +152,104 @@ export const AdminControlPalace: React.FC<AdminControlPalaceProps> = ({
   const [broadcastText, setBroadcastText] = useState("");
   const [broadcastStatus, setBroadcastStatus] = useState<string | null>(null);
 
+  // ADMIN LOCK & PIN AUTHENTICATION STATE (CODE: 081677)
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("admin_unlocked_081677") === "true";
+    }
+    return false;
+  });
+  const [adminPinInput, setAdminPinInput] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
+
+  // AI AGENT CONTROL PLANE MONITORING STATE
+  const [agentPrompt, setAgentPrompt] = useState("");
+  const [agentRunning, setAgentRunning] = useState(false);
+  const [agentOutput, setAgentOutput] = useState<any>(null);
+  const [agentRuns, setAgentRuns] = useState<any[]>([]);
+  const [circuitBreakerInfo, setCircuitBreakerInfo] = useState<any>(null);
+
+  const handleUnlockAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPinInput.trim() === "081677") {
+      setIsAdminUnlocked(true);
+      setPinError(null);
+      setAdminPinInput("");
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("admin_unlocked_081677", "true");
+      }
+    } else {
+      setPinError("Invalid Master Admin Security Code. Access Denied.");
+    }
+  };
+
+  const handleLockAdmin = () => {
+    setIsAdminUnlocked(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("admin_unlocked_081677");
+    }
+  };
+
+  const fetchAgentStatus = async () => {
+    try {
+      const [runsRes, cbRes] = await Promise.all([
+        fetch("/api/agent/runs").then((r) => r.json()).catch(() => null),
+        fetch("/api/agent/circuit-breaker").then((r) => r.json()).catch(() => null)
+      ]);
+      if (runsRes?.success) setAgentRuns(runsRes.runs || []);
+      if (cbRes?.success) setCircuitBreakerInfo(cbRes.circuitBreaker || null);
+    } catch (err) {
+      console.warn("Failed to fetch agent status:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdminUnlocked) {
+      fetchAgentStatus();
+      const interval = setInterval(fetchAgentStatus, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdminUnlocked]);
+
+  const handleRunAgentTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agentPrompt.trim()) return;
+    setAgentRunning(true);
+    setAgentOutput(null);
+
+    try {
+      const res = await fetch("/api/agent/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "master-admin-081677",
+          prompt: agentPrompt
+        })
+      });
+      const data = await res.json();
+      setAgentOutput(data);
+      fetchAgentStatus();
+    } catch (err: any) {
+      setAgentOutput({ success: false, error: err?.message || "Execution error" });
+    } finally {
+      setAgentRunning(false);
+    }
+  };
+
+  const handleResetCircuitBreaker = async () => {
+    try {
+      const res = await fetch("/api/agent/reset-breaker", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setCopyFeedback("Circuit Breaker lockdown reset successfully!");
+        fetchAgentStatus();
+        setTimeout(() => setCopyFeedback(null), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     try {
       localStorage.setItem("mechat_registered_viral_users", JSON.stringify(users));
@@ -328,6 +426,16 @@ export const AdminControlPalace: React.FC<AdminControlPalaceProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {isAdminUnlocked && (
+            <button
+              onClick={handleLockAdmin}
+              className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/60 font-bold rounded-xl text-xs transition-all shadow cursor-pointer flex items-center gap-1.5"
+            >
+              <Lock size={14} />
+              <span>Lock Admin Panel</span>
+            </button>
+          )}
+
           {onLaunchGuestMode && (
             <button
               onClick={onLaunchGuestMode}
@@ -356,8 +464,140 @@ export const AdminControlPalace: React.FC<AdminControlPalaceProps> = ({
         </div>
       )}
 
-      {/* PALACE CONTENT DASHBOARD */}
-      <div className="p-6 space-y-8">
+      {/* ADMIN LOCK SCREEN vs UNLOCKED PALACE CONTENT */}
+      {!isAdminUnlocked ? (
+        <div className="p-8 my-10 max-w-md mx-auto bg-gradient-to-b from-[#160633] to-[#0a031a] rounded-3xl border border-amber-500/80 shadow-2xl text-center space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 shadow-xl">
+            <Lock size={32} />
+          </div>
+          <div>
+            <h3 className="text-xl font-serif font-black text-amber-200">MASTER ADMIN MONITORING LOCKED</h3>
+            <p className="text-xs text-stone-300 mt-1">
+              Please enter your 6-digit Master Security Access Code to unlock monitoring and administrative controls.
+            </p>
+          </div>
+
+          {pinError && (
+            <div className="p-3 bg-red-950/90 border border-red-500 rounded-2xl text-red-200 text-xs font-mono font-bold animate-pulse">
+              {pinError}
+            </div>
+          )}
+
+          <form onSubmit={handleUnlockAdmin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                maxLength={6}
+                value={adminPinInput}
+                onChange={(e) => setAdminPinInput(e.target.value)}
+                placeholder="Enter Admin PIN Code"
+                className="w-full text-center px-4 py-3 bg-black border border-amber-500/60 rounded-2xl text-amber-300 text-lg font-mono tracking-[0.5em] focus:outline-none focus:border-amber-400 shadow-inner"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full py-3 bg-gradient-to-r from-amber-500 via-amber-400 to-purple-600 text-stone-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg hover:brightness-110 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Key size={16} />
+              <span>Unlock Master Controls</span>
+            </button>
+          </form>
+          <p className="text-[10px] text-stone-400 font-mono">Secured by AI Control Plane Zero-Crash Guardrails</p>
+        </div>
+      ) : (
+        /* PALACE CONTENT DASHBOARD */
+        <div className="p-6 space-y-8">
+          {/* SECTION: AI AGENT CONTROL PLANE & ZERO-CRASH RUNTIME MONITOR */}
+          <div className="p-6 bg-gradient-to-r from-[#110426] via-[#1a0738] to-[#0f0321] rounded-2xl border border-amber-500/80 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-amber-500/40 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Shield className="text-amber-400" size={20} />
+                <div>
+                  <h3 className="font-serif font-black text-sm text-amber-200 uppercase tracking-wider">
+                    AI AGENT CONTROL PLANE & ZERO-CRASH RUNTIME
+                  </h3>
+                  <p className="text-[11px] text-stone-300">
+                    Open-Source Orchestration • Supabase Durable Checkpoints • Zod Validation • Resilient Circuit Breaker
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-emerald-950 text-emerald-300 text-[10px] font-mono font-bold rounded-full border border-emerald-500">
+                  CIRCUIT BREAKER: {circuitBreakerInfo?.isTripped ? "LOCKED (TRIPPED)" : "ONLINE (NORMAL)"}
+                </span>
+                {circuitBreakerInfo?.isTripped && (
+                  <button
+                    onClick={handleResetCircuitBreaker}
+                    className="px-2.5 py-1 bg-amber-500 text-black font-bold text-[10px] rounded-lg hover:bg-amber-400 cursor-pointer"
+                  >
+                    Reset Breaker
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+              <div className="p-3.5 bg-black/60 rounded-xl border border-purple-800/60 space-y-1">
+                <span className="text-stone-400 text-[10px] uppercase">Circuit Breaker Failures</span>
+                <div className="text-lg font-bold text-amber-300">
+                  {circuitBreakerInfo?.failureCount || 0} / {circuitBreakerInfo?.failureThreshold || 3}
+                </div>
+              </div>
+              <div className="p-3.5 bg-black/60 rounded-xl border border-purple-800/60 space-y-1">
+                <span className="text-stone-400 text-[10px] uppercase">Total Calls Handled</span>
+                <div className="text-lg font-bold text-emerald-300">
+                  {circuitBreakerInfo?.totalCallsHandled || 0} (Success: {circuitBreakerInfo?.successfulCalls || 0})
+                </div>
+              </div>
+              <div className="p-3.5 bg-black/60 rounded-xl border border-purple-800/60 space-y-1">
+                <span className="text-stone-400 text-[10px] uppercase">Active Checkpoints Saved</span>
+                <div className="text-lg font-bold text-purple-300">
+                  {agentRuns.length} Runs Logged
+                </div>
+              </div>
+            </div>
+
+            {/* LIVE TEST RUNNER FORM */}
+            <form onSubmit={handleRunAgentTest} className="space-y-3">
+              <label className="block text-xs font-bold text-amber-200">
+                Dispatch Prompt to Fault-Tolerant Control Plane Loop (Max 10 iterations):
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={agentPrompt}
+                  onChange={(e) => setAgentPrompt(e.target.value)}
+                  placeholder="e.g. Verify Solscan Solana transaction and broadcast ecosystem update to Telegram"
+                  className="flex-1 px-3.5 py-2.5 bg-black border border-purple-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  type="submit"
+                  disabled={agentRunning}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-purple-600 text-stone-950 font-black rounded-xl text-xs shadow hover:brightness-110 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Play size={14} />
+                  <span>{agentRunning ? "Running Agent..." : "Run Agent Control Plane"}</span>
+                </button>
+              </div>
+            </form>
+
+            {/* OUTPUT FEEDBACK & CHECKPOINT DUMP */}
+            {agentOutput && (
+              <div className="p-4 bg-black/80 rounded-xl border border-purple-700 font-mono text-xs space-y-2">
+                <div className="flex items-center justify-between text-amber-300 font-bold border-b border-purple-900 pb-1">
+                  <span>AGENT RUN RESULT (RUN ID: {agentOutput.state?.runId})</span>
+                  <span className="text-[10px] text-emerald-400">STATUS: {agentOutput.state?.status}</span>
+                </div>
+                <p className="text-stone-200 font-sans text-xs">{agentOutput.result}</p>
+                <details className="text-[10px] text-stone-400 cursor-pointer">
+                  <summary className="hover:text-amber-300">View Memory Dump & Checkpoint State</summary>
+                  <pre className="mt-2 p-2 bg-stone-950 rounded text-emerald-400 overflow-x-auto">
+                    {JSON.stringify(agentOutput.state?.memoryDump, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+          </div>
         {/* STATS METRICS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-5 bg-gradient-to-b from-[#150730] to-[#0a031a] rounded-2xl border border-purple-800/60 shadow-xl space-y-2">
@@ -822,6 +1062,7 @@ export const AdminControlPalace: React.FC<AdminControlPalaceProps> = ({
           </form>
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -770,7 +770,10 @@ const App: React.FC = () => {
         {/* VIEW: DATINGARTS LUXURY MATCHMAKING & 100% HUMAN CHAT SUITE */}
         {!isTabHidden && activeMainTab === "datingarts" && (
           <div className="space-y-6 animate-fade-in">
-            <DatingArtsMatchmakingSuite />
+            <DatingArtsMatchmakingSuite 
+              onSwitchToEcosystem={() => setActiveMainTab("revenue")}
+              onSwitchToAdmin={() => setActiveMainTab("admin_palace")}
+            />
           </div>
         )}
 
