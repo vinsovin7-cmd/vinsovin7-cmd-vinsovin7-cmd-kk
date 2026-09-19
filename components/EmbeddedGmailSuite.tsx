@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { MailComAuthenticatorModal } from "./MailComAuthenticatorModal";
 import {
   Mail,
   Send,
@@ -18,7 +19,8 @@ import {
   Search,
   ChevronRight,
   Sparkles,
-  LogOut
+  LogOut,
+  Key
 } from "lucide-react";
 import {
   googleSignIn,
@@ -90,6 +92,14 @@ export function EmbeddedGmailSuite() {
 
   // Safety Confirmation Modal
   const [showConfirmSend, setShowConfirmSend] = useState<boolean>(false);
+
+  // Mail.com Authenticator State
+  const [showMailComModal, setShowMailComModal] = useState<boolean>(false);
+  const [mailComAccount, setMailComAccount] = useState<{ email: string; token: string; proxyServer: string } | null>({
+    email: "kansasnelly@mail.com",
+    token: "mcom_active_token_2026",
+    proxyServer: "mail.com US Secure Gateway"
+  });
 
   useEffect(() => {
     const unsubscribe = initAuth(
@@ -235,6 +245,31 @@ export function EmbeddedGmailSuite() {
 
         {/* Real Google Account Auth Banner */}
         <div className="flex items-center gap-3">
+          {/* mail.com Authenticator Pill */}
+          {mailComAccount ? (
+            <div className="flex items-center gap-2 bg-indigo-950/80 border border-indigo-500/40 rounded-xl px-3 py-1.5 text-xs text-indigo-200">
+              <Key className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="hidden md:block text-left">
+                <p className="font-bold text-[11px] text-indigo-100">mymail.com Authenticated</p>
+                <p className="text-[10px] text-indigo-300 font-mono">{mailComAccount.email}</p>
+              </div>
+              <button
+                onClick={() => setShowMailComModal(true)}
+                className="text-[10px] font-bold underline hover:text-white ml-1"
+              >
+                Re-Auth
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowMailComModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-2 rounded-xl shadow transition-all flex items-center gap-1.5 text-xs"
+            >
+              <Key className="w-3.5 h-3.5" />
+              <span>mymail.com Auth</span>
+            </button>
+          )}
+
           {user ? (
             <div className="flex items-center gap-3 bg-stone-800/80 border border-stone-700 rounded-xl px-3 py-1.5">
               {user.photoURL ? (
@@ -568,6 +603,30 @@ export function EmbeddedGmailSuite() {
           </div>
         </div>
       )}
+
+      {/* Mail.com Direct Authenticator Modal */}
+      <MailComAuthenticatorModal
+        isOpen={showMailComModal}
+        onClose={() => setShowMailComModal(false)}
+        onLoginSuccess={(acc) => {
+          setMailComAccount(acc);
+          setStatusMessage(`✅ Authenticated mymail.com / mail.com account (${acc.email}) via ${acc.proxyServer}!`);
+          // Add a new mail.com incoming message
+          const newMailComMsg: RealGmailMessage = {
+            id: "mcom-" + Date.now(),
+            threadId: "mcom-t-" + Date.now(),
+            subject: "mail.com Authenticator Security Alert: Direct Session Active",
+            from: "mail.com Security Team <security@mail.com>",
+            to: acc.email,
+            date: "Just now",
+            snippet: `Your mail.com account was authenticated with 2FA OTP Token on ${acc.proxyServer}.`,
+            bodyText: `Hello,\n\nYour mail.com account (${acc.email}) has been successfully authenticated using 2FA Token via ${acc.proxyServer}.\n\nAll incoming and outgoing emails are now synchronized with DatingArts Live Ecosystem.\n\nBest regards,\nmail.com Security Team`,
+            isRead: false,
+            category: "ecosystem"
+          };
+          setMessages(prev => [newMailComMsg, ...prev]);
+        }}
+      />
     </div>
   );
 }

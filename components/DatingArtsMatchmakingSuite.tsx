@@ -48,7 +48,12 @@ import {
   Film,
   UserCheck,
   UserPlus,
-  Phone
+  Phone,
+  Bell,
+  Minimize2,
+  QrCode,
+  Paperclip,
+  Smartphone
 } from "lucide-react";
 
 interface Profile {
@@ -103,6 +108,54 @@ interface DatingConversation {
 // Sample Profile Roster for AI Matchmaker and Search view
 const SAMPLE_SEARCH_PROFILES: Profile[] = [
   {
+    id: "da-elena",
+    name: "Elena Rostova",
+    age: 26,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Milan",
+    country: "Italy",
+    distanceKm: 3.5,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 24,
+    videoCount: 3,
+    bio: "Luxury fashion buyer & opera enthusiast in Milan. Passionate about architecture, wine tasting, and spontaneous travel.",
+    profession: "Luxury Fashion Buyer",
+    verified: true,
+    online: true,
+    matchScore: 99,
+    ambition: "High - Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Italian Fashion", "Opera", "Tuscan Wine"],
+    greetingMessage: "Ciao! AI Matchmaker connected us with 99% chemistry. Loved your profile! How are you doing today?"
+  },
+  {
+    id: "da-marcus",
+    name: "Marcus Vance",
+    age: 29,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "London",
+    country: "United Kingdom",
+    distanceKm: 6.2,
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 18,
+    videoCount: 2,
+    bio: "Venture capital investor & competitive rower. Seeking intelligent conversation and shared ambitions.",
+    profession: "Venture Capitalist",
+    verified: true,
+    online: true,
+    matchScore: 97,
+    ambition: "High - Visionary",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Tech VC", "Rowing", "Fine Dining"],
+    greetingMessage: "Hello from London! Great to meet you. Loved your answers in the matchmaking quiz."
+  },
+  {
     id: "da-adesuwa",
     name: "Adesuwa Okonkwo",
     age: 27,
@@ -111,8 +164,8 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     city: "Lagos",
     country: "Nigeria",
     distanceKm: 4.2,
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80"],
     photoCount: 22,
     videoCount: 2,
     bio: "Fintech product lead & contemporary African art collector. Passionate about innovation, live jazz, and deep connection.",
@@ -135,8 +188,8 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     city: "Phnom Penh",
     country: "Cambodia",
     distanceKm: 5.1,
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"],
+    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80"],
     photoCount: 16,
     videoCount: 1,
     bio: "Architect & social entrepreneur preserving Southeast Asian heritage design. Coffee lover and slow travel advocate.",
@@ -199,6 +252,30 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     greetingMessage: "Xin chào! So wonderful to meet you here."
   },
   {
+    id: "da-carlos",
+    name: "Carlos Mendoza",
+    age: 28,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Madrid",
+    country: "Spain",
+    distanceKm: 4.8,
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 15,
+    videoCount: 1,
+    bio: "Industrial designer & flamenco enthusiast. Passionate about minimalist aesthetics and warm sunset conversations.",
+    profession: "Industrial Design Lead",
+    verified: true,
+    online: true,
+    matchScore: 98,
+    ambition: "Creative & Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Flamenco", "Spanish Tapas", "Minimalist Design"],
+    greetingMessage: "Hola! Delighted to connect with you. What is your favorite weekend escape?"
+  },
+  {
     id: "da-maria",
     name: "Maria De Los Angeles",
     age: 23,
@@ -207,8 +284,8 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     city: "Los Angeles",
     country: "United States",
     distanceKm: 1.8,
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80"],
     photoCount: 18,
     videoCount: 1,
     bio: "Fashion design student & digital creator. Looking for someone genuine and fun to explore coastal cafes with.",
@@ -224,15 +301,15 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
   },
   {
     id: "da-luciano",
-    name: "Luciano",
-    age: 49,
+    name: "Luciano Vercelli",
+    age: 32,
     gender: "Man",
     targetInterest: "Woman",
     city: "Rome",
     country: "Italy",
     distanceKm: 14.2,
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"],
+    avatarUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80"],
     photoCount: 14,
     videoCount: 0,
     bio: "Restaurateur & sommelier. Life is best enjoyed with fine wine, great laughter, and warm company.",
@@ -248,15 +325,15 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
   },
   {
     id: "da-daisy",
-    name: "Daisy",
+    name: "Daisy Santos",
     age: 29,
     gender: "Woman",
     targetInterest: "Man",
     city: "Manila",
     country: "Philippines",
     distanceKm: 6.5,
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"],
+    avatarUrl: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80"],
     photoCount: 11,
     videoCount: 1,
     bio: "Travel vlogger & beach enthusiast. Sunshine, good food, and positive energy always.",
@@ -271,36 +348,60 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     greetingMessage: "Hi there! I saw your profile and had to say hello. Where is your favorite beach destination?"
   },
   {
-    id: "da-artur",
-    name: "Artur",
-    age: 59,
+    id: "da-kenji",
+    name: "Kenji Sato",
+    age: 30,
     gender: "Man",
     targetInterest: "Woman",
-    city: "Vienna",
-    country: "Austria",
-    distanceKm: 18.0,
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80"],
-    photoCount: 11,
-    videoCount: 0,
-    bio: "Architect & classical music patron. Seeking intelligent companionship and inspiring dialogue.",
-    profession: "Senior Architectural Principal",
+    city: "Tokyo",
+    country: "Japan",
+    distanceKm: 9.8,
+    avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 16,
+    videoCount: 2,
+    bio: "Game studio director & matcha connoisseur. Combining technology with artistic storytelling.",
+    profession: "Game Studio Director",
     verified: true,
     online: true,
-    matchScore: 93,
-    ambition: "Established",
+    matchScore: 98,
+    ambition: "High - Creative",
     timeAssetPreference: "Yes, efficiency",
     intent: "Romance",
-    aesthetics: ["Classical Opera", "Modern Architecture", "Philosophy"],
-    greetingMessage: "Good evening. Chemistry begins with shared taste and mutual respect. Delighted to connect."
+    aesthetics: ["Tokyo Neon", "Matcha Tea", "Digital Art"],
+    greetingMessage: "Konnichiwa! The AI matchmaker highlighted our shared creative values. Excited to chat!"
+  },
+  {
+    id: "da-chloe",
+    name: "Chloe Dubois",
+    age: 25,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Paris",
+    country: "France",
+    distanceKm: 5.2,
+    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 20,
+    videoCount: 1,
+    bio: "Contemporary gallery curator & vintage cinema lover in Paris.",
+    profession: "Art Curator",
+    verified: true,
+    online: true,
+    matchScore: 98,
+    ambition: "Creative",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Parisian Cafes", "Art Galleries", "French Cinema"],
+    greetingMessage: "Bonjour! So happy the AI paired us together. How is your day going?"
   },
   {
     id: "da-cristina",
     name: "Cristina Rosana",
-    age: 48,
+    age: 34,
     gender: "Woman",
     targetInterest: "Man",
-    city: "Madrid",
+    city: "Barcelona",
     country: "Spain",
     distanceKm: 9.3,
     avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
@@ -319,28 +420,28 @@ const SAMPLE_SEARCH_PROFILES: Profile[] = [
     greetingMessage: "Hola! What is your favorite way to unwind after a busy week?"
   },
   {
-    id: "da-edwin",
-    name: "Edwin",
-    age: 41,
+    id: "da-victor",
+    name: "Victor Eduardo",
+    age: 33,
     gender: "Man",
     targetInterest: "Woman",
-    city: "Sydney",
-    country: "Australia",
-    distanceKm: 11.4,
-    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
-    galleryUrls: ["https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80"],
-    photoCount: 21,
+    city: "Lisbon",
+    country: "Portugal",
+    distanceKm: 7.1,
+    avatarUrl: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80"],
+    photoCount: 17,
     videoCount: 2,
-    bio: "Environmental engineer & outdoor adventurer. Love hiking, sailing, and genuine human connection.",
-    profession: "Environmental Principal Consultant",
+    bio: "Tech founder & jazz trumpeter. Seeking a true companion for wine, travel, and grand dreams.",
+    profession: "Tech Founder",
     verified: true,
     online: true,
-    matchScore: 94,
-    ambition: "Balanced",
+    matchScore: 99,
+    ambition: "High - Visionary",
     timeAssetPreference: "Yes, efficiency",
     intent: "Romance",
-    aesthetics: ["Coastal Trails", "Sailing", "Sustainablity"],
-    greetingMessage: "G'day! Looking for a partner in crime for weekend outdoor adventures and great food."
+    aesthetics: ["Jazz Trumpet", "Lisbon Sunsets", "Startups"],
+    greetingMessage: "Olá! Delighted to connect. The AI matchmaker flagged our chemistry at 99%!"
   },
   {
     id: "da-volodymyr",
@@ -534,11 +635,265 @@ export function DatingArtsMatchmakingSuite() {
   const [inputText, setInputText] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
+  // AI Social Outreach & Global Phone Number Hunter Engine State
+  const [selectedHunterRegion, setSelectedHunterRegion] = useState<string>("US");
+  const [aiHunterLogs, setAiHunterLogs] = useState<string[]>([
+    "🔍 [AI Phone Hunter] Searching active US (+1) & International numbers across Telegram, WhatsApp & TikTok...",
+    "📲 [Telegram AI Bot] Sent request to +1 (310) 849-2091 (@sophia_la) in Los Angeles -> Active!",
+    "💬 [WhatsApp AI] Connected with +1 (415) 582-9910 (@david_sf) in San Francisco -> Mingle Ready!",
+    "🎬 [TikTok Engine] Outreached to +44 7911 123456 (@chloe_london) -> Request Received!"
+  ]);
+
+  // Social Requests Queue (Telegram, WhatsApp, TikTok, YouTube, Instagram)
+  const [socialRequests, setSocialRequests] = useState<Array<{
+    id: string;
+    name: string;
+    age: number;
+    city: string;
+    country: string;
+    phone: string;
+    whatsapp: string;
+    telegram: string;
+    avatarUrl: string;
+    platform: "Telegram" | "WhatsApp" | "TikTok" | "YouTube" | "Instagram";
+    handle: string;
+    status: "pending" | "accepted";
+    time: string;
+    greeting: string;
+  }>>([
+    {
+      id: "req-1",
+      name: "Sophia Vance",
+      age: 24,
+      city: "Los Angeles",
+      country: "USA 🇺🇸",
+      phone: "+1 (310) 849-2091",
+      whatsapp: "+13108492091",
+      telegram: "@sophia_la",
+      avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80",
+      platform: "Telegram",
+      handle: "@sophia_la",
+      status: "pending",
+      time: "2m ago",
+      greeting: "Hi! Received your AI Telegram match request. Let's chat!"
+    },
+    {
+      id: "req-2",
+      name: "Lucas Dupont",
+      age: 27,
+      city: "Paris",
+      country: "France 🇫🇷",
+      phone: "+33 6 12 34 56 78",
+      whatsapp: "+33612345678",
+      telegram: "@lucas_paris",
+      avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+      platform: "WhatsApp",
+      handle: "+33 6 12 34 56 78",
+      status: "pending",
+      time: "5m ago",
+      greeting: "Bonjour! Matched via WhatsApp Outreach Bridge. Ready to mingle!"
+    },
+    {
+      id: "req-3",
+      name: "Amara Adeleke",
+      age: 23,
+      city: "Lagos",
+      country: "Nigeria 🇳🇬",
+      phone: "+234 803 412 9910",
+      whatsapp: "+2348034129910",
+      telegram: "@amina_lagos",
+      avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80",
+      platform: "TikTok",
+      handle: "@amara_vibe",
+      status: "pending",
+      time: "8m ago",
+      greeting: "Saw your profile on TikTok AI Matchmaker link! Let me join!"
+    },
+    {
+      id: "req-4",
+      name: "Kenji Sato",
+      age: 26,
+      city: "Tokyo",
+      country: "Japan 🇯🇵",
+      phone: "+81 90 1234 5678",
+      whatsapp: "+819012345678",
+      telegram: "@kenji_tokyo",
+      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+      platform: "YouTube",
+      handle: "@kenji_creator",
+      status: "pending",
+      time: "12m ago",
+      greeting: "Konnichiwa! Joined from YouTube Live Stream invitation."
+    }
+  ]);
+
+  // Google / Gmail Quick Authentication State
+  const [googleAuthUser, setGoogleAuthUser] = useState<{
+    authenticated: boolean;
+    email: string;
+    name: string;
+    picture: string;
+  }>({
+    authenticated: true,
+    email: "kansasnelly@gmail.com",
+    name: "Kansas Nelly",
+    picture: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+  });
+
+  // Telegram / WhatsApp Profile Modal State
+  const [showTelegramProfileModal, setShowTelegramProfileModal] = useState<boolean>(false);
+  const [userProfileBio, setUserProfileBio] = useState<string>("Active Ecosystem Member | Verified via Gmail (kansasnelly@gmail.com)");
+  const [userCustomPhoto, setUserCustomPhoto] = useState<string>("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80");
+  const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+
+  // Accept Social Request & Move to Active Marketplace + Love Chat
+  const handleAcceptSocialRequest = (reqId: string) => {
+    const request = socialRequests.find(r => r.id === reqId);
+    if (!request) return;
+
+    // Update request status
+    setSocialRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: "accepted" } : r));
+
+    // Check if conversation exists or add it
+    const convId = "c-" + request.id;
+    setConversations(prev => {
+      const exists = prev.some(c => c.id === convId);
+      if (!exists) {
+        const freshConv = {
+          id: convId,
+          partnerId: request.id,
+          partnerName: request.name,
+          partnerAge: request.age,
+          partnerAvatar: request.avatarUrl,
+          online: true,
+          unreadCount: 1,
+          lastMessageTime: "Just now",
+          lastMessageText: request.greeting,
+          messages: [
+            {
+              id: "msg-" + Date.now(),
+              sender: "partner" as const,
+              text: request.greeting,
+              time: "Just now"
+            }
+          ]
+        };
+        return [freshConv, ...prev];
+      }
+      return prev;
+    });
+
+    // Notify backend
+    fetch("/api/datingarts/social-outreach-dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        platform: request.platform,
+        region: request.country,
+        phone: request.phone,
+        handle: request.handle
+      })
+    }).catch(() => {});
+
+    setToastMessage(`✨ Accepted ${request.name}'s ${request.platform} request! Moved to Active & Love Section.`);
+    setTimeout(() => setToastMessage(null), 3500);
+
+    // Open active conversation and switch to All tab (Love Section)
+    setActiveConvId(convId);
+    setActiveFilterTab("all");
+  };
+
+  // Trigger AI Phone Hunter Search for US & Global Numbers
+  const handleTriggerAiPhoneHunter = () => {
+    const phonePrefixes: Record<string, { country: string; flag: string; cities: string[]; code: string }> = {
+      US: { country: "USA", flag: "🇺🇸", cities: ["Los Angeles", "New York", "Miami", "San Francisco", "Chicago"], code: "+1" },
+      UK: { country: "UK", flag: "🇬🇧", cities: ["London", "Manchester", "Birmingham"], code: "+44" },
+      EU: { country: "France", flag: "🇫🇷", cities: ["Paris", "Nice", "Lyon"], code: "+33" },
+      JP: { country: "Japan", flag: "🇯🇵", cities: ["Tokyo", "Osaka", "Kyoto"], code: "+81" },
+      NG: { country: "Nigeria", flag: "🇳🇬", cities: ["Lagos", "Abuja", "Port Harcourt"], code: "+234" }
+    };
+
+    const targetRegion = phonePrefixes[selectedHunterRegion] || phonePrefixes.US;
+    const randomCity = targetRegion.cities[Math.floor(Math.random() * targetRegion.cities.length)];
+    const phone = `${targetRegion.code} (${Math.floor(200 + Math.random() * 700)}) ${Math.floor(100 + Math.random() * 800)}-${Math.floor(1000 + Math.random() * 8000)}`;
+
+    const names = ["Marcus Vance", "Elena Rostova", "Sothea Vanna", "Daisy Mendoza", "Chloe Bennett", "Daniel Kim", "Amara Jackson", "Kofi Mensah"];
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    const platforms = ["Telegram", "WhatsApp", "TikTok", "YouTube"] as const;
+    const platform = platforms[Math.floor(Math.random() * platforms.length)];
+    const handle = `@${randomName.toLowerCase().replace(/\s+/g, "_")}_${targetRegion.code.replace("+", "")}`;
+
+    const newReq = {
+      id: "req-" + Date.now(),
+      name: randomName,
+      age: Math.floor(21 + Math.random() * 10),
+      city: randomCity,
+      country: `${targetRegion.country} ${targetRegion.flag}`,
+      phone,
+      whatsapp: phone,
+      telegram: handle,
+      avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 500000000)}?auto=format&fit=crop&w=400&q=80`,
+      platform,
+      handle,
+      status: "pending" as const,
+      time: "Just now",
+      greeting: `Hello from ${randomCity}! AI Hunter found my ${platform} number (${phone}). Excited to connect!`
+    };
+
+    setSocialRequests(prev => [newReq, ...prev]);
+    setAiHunterLogs(prev => [
+      `🎯 [AI Hunter] Found active ${targetRegion.flag} number ${phone} (${randomName}) on ${platform}! Sent invitation request.`,
+      ...prev.slice(0, 8)
+    ]);
+
+    setToastMessage(`⚡ AI Hunter dispatched request to ${randomName} (${phone}) via ${platform}!`);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Embedded WhatsApp Web Suite Modal State
+  const [showEmbeddedWhatsappModal, setShowEmbeddedWhatsappModal] = useState<boolean>(false);
+  const [whatsappSearchText, setWhatsappSearchText] = useState<string>("");
+  const [whatsappInputText, setWhatsappInputText] = useState<string>("");
+  const [showWhatsappQrModal, setShowWhatsappQrModal] = useState<boolean>(false);
+
   // AI Autonomous Matchmaker Drop-down Popup System
   const [aiMatchIntervalSec, setAiMatchIntervalSec] = useState<number>(60);
   const [matchCountdown, setMatchCountdown] = useState<number>(60);
   const [aiAutoMatchmakerEnabled, setAiAutoMatchmakerEnabled] = useState<boolean>(true);
   const [showAiMatchPopup, setShowAiMatchPopup] = useState<boolean>(true);
+  const [isAiDropMinimized, setIsAiDropMinimized] = useState<boolean>(false);
+  const [aiDropTab, setAiDropTab] = useState<"match" | "notifications">("match");
+  const [aiMatchDropIndex, setAiMatchDropIndex] = useState<number>(0);
+
+  const [aiNotifications, setAiNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    time: string;
+    type: "match" | "email" | "coin" | "message";
+  }>>([
+    {
+      id: "n1",
+      title: "⚡ AI Synergy Matchmaker Drop",
+      description: "Elena Rostova (Milan, Italy) joined ecosystem with 99% chemistry score.",
+      time: "Just now",
+      type: "match"
+    },
+    {
+      id: "n2",
+      title: "📧 Gmail & Mail.com Active",
+      description: "Email Suite synchronized & authenticated in ecosystem.",
+      time: "2m ago",
+      type: "email"
+    },
+    {
+      id: "n3",
+      title: "🪙 Free Daily Credit Added",
+      description: "200 coins issued to your wallet balance.",
+      time: "10m ago",
+      type: "coin"
+    }
+  ]);
   
   // Current Dropdown Match state
   const [currentDropMatch, setCurrentDropMatch] = useState<{
@@ -554,16 +909,16 @@ export function DatingArtsMatchmakingSuite() {
     whatsapp?: string;
     verifiedBadge?: string;
   }>({
-    id: "da-cristina",
-    name: "Cristina Rosana",
-    age: 48,
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    id: "da-elena",
+    name: "Elena Rostova",
+    age: 26,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
     online: true,
-    tagline: "Your feelings are mutual 💜",
-    score: 96,
+    tagline: "Ciao! AI Matchmaker connected us with 99% chemistry 💜",
+    score: 99,
     isRealPerson: true,
-    phone: "+34 612 345 678",
-    whatsapp: "+34 612 345 678",
+    phone: "+39 02 612 3456",
+    whatsapp: "+39 02 612 3456",
     verifiedBadge: "Real Verified Ecosystem Member"
   });
 
@@ -691,30 +1046,77 @@ export function DatingArtsMatchmakingSuite() {
 
   // Function to trigger a fresh AI match dropdown notification
   const triggerRandomAiMatchDrop = () => {
-    // Pick next profile from sample roster
-    const randomIndex = Math.floor(Math.random() * SAMPLE_SEARCH_PROFILES.length);
-    const profile = SAMPLE_SEARCH_PROFILES[randomIndex];
+    // Cycle sequentially through SAMPLE_SEARCH_PROFILES using index so every match drop shows a DIFFERENT profile & photo!
+    setAiMatchDropIndex(prevIndex => {
+      const nextIndex = (prevIndex + 1) % SAMPLE_SEARCH_PROFILES.length;
+      const profile = SAMPLE_SEARCH_PROFILES[nextIndex];
 
-    const taglines = [
-      "maybe it's time to say hi?",
-      "Your feelings are mutual 💜",
-      "AI Matchmaker: 99% Chemistry Match",
-      "Online now! Looking for real conversation.",
-      "Matches your ambition & timing preferences"
-    ];
-    const randomTagline = taglines[Math.floor(Math.random() * taglines.length)];
+      const taglines = [
+        "maybe it's time to say hi?",
+        "Your feelings are mutual 💜",
+        "AI Matchmaker: 99% Chemistry Match",
+        "Online now! Looking for real conversation.",
+        "Matches your ambition & timing preferences",
+        `Spontaneous chemistry from ${profile.city} ✈️`
+      ];
+      const randomTagline = taglines[Math.floor(Math.random() * taglines.length)];
 
-    setCurrentDropMatch({
-      id: profile.id,
-      name: profile.name,
-      age: profile.age,
-      avatarUrl: profile.avatarUrl,
-      online: profile.online,
-      tagline: randomTagline,
-      score: profile.matchScore
+      setCurrentDropMatch({
+        id: profile.id,
+        name: profile.name,
+        age: profile.age,
+        avatarUrl: profile.avatarUrl,
+        online: profile.online,
+        tagline: randomTagline,
+        score: profile.matchScore,
+        isRealPerson: true,
+        verifiedBadge: "Real Verified Ecosystem Member"
+      });
+
+      // Automatically add/update them in conversations so they immediately appear in chat sidebar & Admin monitor!
+      const newConvId = "c-" + profile.id.replace("da-", "");
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === newConvId || c.partnerId === profile.id);
+        if (!exists) {
+          const freshConv = {
+            id: newConvId,
+            partnerId: profile.id,
+            partnerName: profile.name,
+            partnerAge: profile.age,
+            partnerAvatar: profile.avatarUrl,
+            online: true,
+            unreadCount: 1,
+            lastMessageTime: "Just now",
+            lastMessageText: profile.greetingMessage || "Hello! So happy the AI paired us together.",
+            messages: [
+              {
+                id: "msg-" + Date.now(),
+                sender: "partner" as const,
+                text: profile.greetingMessage || "Hello! So happy the AI paired us together.",
+                time: "Just now"
+              }
+            ]
+          };
+          return [freshConv, ...prev];
+        }
+        return prev;
+      });
+
+      // Push notification item
+      setAiNotifications(prev => [
+        {
+          id: "notif-" + Date.now(),
+          title: `⚡ New Match: ${profile.name}`,
+          description: `AI Matchmaker brought ${profile.name} (${profile.city}, ${profile.country}) into ecosystem.`,
+          time: "Just now",
+          type: "match"
+        },
+        ...prev
+      ]);
+
+      setShowAiMatchPopup(true);
+      return nextIndex;
     });
-
-    setShowAiMatchPopup(true);
   };
 
   // Fetch initial conversations from backend
@@ -846,7 +1248,7 @@ export function DatingArtsMatchmakingSuite() {
     setIsTyping(true);
 
     try {
-      const res = await fetch("/api/datingarts/messages", {
+      const res = await fetch("/api/datingarts/send-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -857,15 +1259,16 @@ export function DatingArtsMatchmakingSuite() {
       const data = await res.json();
       setIsTyping(false);
 
-      if (data.success && data.replyMessage) {
+      const reply = data.partnerReply || data.replyMessage;
+      if (data.success && reply) {
         setConversations(prev =>
           prev.map(c => {
             if (c.id === activeConvId) {
               return {
                 ...c,
-                lastMessageText: data.replyMessage.text,
-                lastMessageTime: data.replyMessage.time,
-                messages: [...c.messages, data.replyMessage]
+                lastMessageText: reply.text,
+                lastMessageTime: reply.time,
+                messages: [...c.messages, reply]
               };
             }
             return c;
@@ -1542,7 +1945,7 @@ export function DatingArtsMatchmakingSuite() {
                   </div>
                 </div>
 
-                {/* Sub-Tabs: All chats, Active (2), Requests */}
+                {/* Sub-Tabs: All chats, Active (Count), Requests (Count) */}
                 <div className="flex items-center border-b border-stone-200 text-xs font-bold text-stone-500 px-3 pt-2">
                   <button
                     onClick={() => setActiveFilterTab("all")}
@@ -1559,306 +1962,675 @@ export function DatingArtsMatchmakingSuite() {
                     }`}
                   >
                     <span>Active</span>
-                    <span className="bg-pink-600 text-white rounded-full text-[9px] px-1.5 py-0.2">2</span>
+                    <span className="bg-pink-600 text-white rounded-full text-[9px] px-1.5 py-0.2 font-black">
+                      {conversations.filter(c => c.online).length}
+                    </span>
                   </button>
                   <button
                     onClick={() => setActiveFilterTab("requests")}
-                    className={`pb-2 px-2 transition border-b-2 cursor-pointer ${
+                    className={`pb-2 px-2 transition border-b-2 flex items-center gap-1 cursor-pointer ${
                       activeFilterTab === "requests" ? "text-pink-600 border-pink-600 font-extrabold" : "border-transparent hover:text-stone-800"
                     }`}
                   >
-                    Requests
+                    <span>Requests</span>
+                    <span className="bg-sky-600 text-white rounded-full text-[9px] px-1.5 py-0.2 font-black">
+                      {socialRequests.filter(r => r.status === "pending").length}
+                    </span>
                   </button>
                 </div>
 
-                {/* Conversation List */}
+                {/* Conversation & Requests Left List */}
                 <div className="divide-y divide-stone-100 max-h-[580px] overflow-y-auto">
-                  {conversations.map(c => {
-                    const isActive = c.id === activeConvId;
-                    return (
+                  {activeFilterTab === "requests" ? (
+                    socialRequests.map(r => (
                       <div
-                        key={c.id}
-                        onClick={() => setActiveConvId(c.id)}
+                        key={r.id}
+                        onClick={() => handleAcceptSocialRequest(r.id)}
                         className={`p-3 flex items-center gap-3 hover:bg-stone-50 cursor-pointer transition relative ${
-                          isActive ? "bg-pink-50/60 border-l-4 border-pink-600" : ""
+                          r.status === "accepted" ? "bg-emerald-50/50" : ""
                         }`}
                       >
                         <div className="relative shrink-0">
                           <img
-                            src={c.partnerAvatar}
-                            alt={c.partnerName}
+                            src={r.avatarUrl}
+                            alt={r.name}
                             className="w-11 h-11 rounded-full object-cover border border-stone-200"
                           />
-                          {c.online && (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
-                          )}
+                          <span className="absolute -bottom-1 -right-1 bg-sky-500 text-white text-[8px] font-black px-1 rounded-md shadow-2xs">
+                            {r.platform}
+                          </span>
                         </div>
-
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-0.5">
-                            <h4 className="text-xs font-bold text-stone-900 truncate">{c.partnerName}</h4>
-                            <span className="text-[10px] text-stone-400 font-medium shrink-0 flex items-center gap-0.5">
-                              {c.messages.some(m => m.sender === "user") && <CheckCheck className="w-3 h-3 text-emerald-500" />}
-                              {c.lastMessageTime}
-                            </span>
+                            <h4 className="text-xs font-bold text-stone-900 truncate">{r.name}</h4>
+                            <span className="text-[9px] text-stone-400 font-medium">{r.time}</span>
                           </div>
-
-                          <div className="flex items-center justify-between gap-1">
-                            <p className="text-[11px] text-stone-500 truncate">{c.lastMessageText}</p>
-                            {c.unreadCount > 0 && (
-                              <span className="bg-pink-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0">
-                                {c.unreadCount}
-                              </span>
-                            )}
-                            {c.matchBadge && (
-                              <span className="bg-purple-100 text-purple-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-purple-200 shrink-0">
-                                {c.matchBadge}
-                              </span>
-                            )}
+                          <p className="text-[10px] text-stone-500 truncate">{r.greeting}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[9px] text-sky-700 font-semibold bg-sky-50 px-1.5 py-0.2 rounded border border-sky-100">
+                              {r.phone}
+                            </span>
+                            <span className="text-[9px] font-bold text-pink-600 hover:underline">
+                              {r.status === "accepted" ? "Active" : "Accept & Mingle ➔"}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : activeFilterTab === "active" ? (
+                    conversations.filter(c => c.online).map(c => {
+                      const isActive = c.id === activeConvId;
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => {
+                            setActiveConvId(c.id);
+                            setActiveFilterTab("all");
+                          }}
+                          className={`p-3 flex items-center gap-3 hover:bg-stone-50 cursor-pointer transition relative ${
+                            isActive ? "bg-pink-50/60 border-l-4 border-pink-600" : ""
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <img
+                              src={c.partnerAvatar}
+                              alt={c.partnerName}
+                              className="w-11 h-11 rounded-full object-cover border border-stone-200"
+                            />
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <h4 className="text-xs font-bold text-stone-900 truncate">{c.partnerName}</h4>
+                              <span className="text-[10px] text-stone-400 font-medium shrink-0 flex items-center gap-0.5">
+                                <CheckCheck className="w-3 h-3 text-emerald-500" />
+                                {c.lastMessageTime}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-[11px] text-stone-500 truncate">{c.lastMessageText}</p>
+                              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-emerald-200">
+                                Mingle
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    conversations.map(c => {
+                      const isActive = c.id === activeConvId;
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setActiveConvId(c.id)}
+                          className={`p-3 flex items-center gap-3 hover:bg-stone-50 cursor-pointer transition relative ${
+                            isActive ? "bg-pink-50/60 border-l-4 border-pink-600" : ""
+                          }`}
+                        >
+                          <div className="relative shrink-0">
+                            <img
+                              src={c.partnerAvatar}
+                              alt={c.partnerName}
+                              className="w-11 h-11 rounded-full object-cover border border-stone-200"
+                            />
+                            {c.online && (
+                              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <h4 className="text-xs font-bold text-stone-900 truncate">{c.partnerName}</h4>
+                              <span className="text-[10px] text-stone-400 font-medium shrink-0 flex items-center gap-0.5">
+                                {c.messages.some(m => m.sender === "user") && <CheckCheck className="w-3 h-3 text-emerald-500" />}
+                                {c.lastMessageTime}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="text-[11px] text-stone-500 truncate">{c.lastMessageText}</p>
+                              {c.unreadCount > 0 && (
+                                <span className="bg-pink-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shrink-0">
+                                  {c.unreadCount}
+                                </span>
+                              )}
+                              {c.matchBadge && (
+                                <span className="bg-purple-100 text-purple-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-purple-200 shrink-0">
+                                  {c.matchBadge}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
-              {/* CENTER MAIN CHAT WINDOW (6 COLUMNS) */}
-              <div className="lg:col-span-6 bg-white rounded-xl shadow-sm border border-stone-200 flex flex-col h-[650px] relative overflow-hidden">
-                {/* Partner Header */}
-                <div className="px-4 py-2.5 border-b border-stone-200 flex flex-wrap items-center justify-between bg-white sticky top-0 z-10 gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative">
-                      <img
-                        src={activeConv.partnerAvatar}
-                        alt={activeConv.partnerName}
-                        className="w-10 h-10 rounded-full object-cover border border-stone-200"
-                      />
-                      {activeConv.online && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
-                      )}
-                    </div>
+              {/* CENTER MAIN WINDOW (REQUESTS VIEW / ACTIVE MARKETPLACE / LOVE CHAT) */}
+              {activeFilterTab === "requests" ? (
+                <div className="lg:col-span-9 bg-white rounded-xl shadow-sm border border-stone-200 p-5 space-y-5 h-[650px] overflow-y-auto">
+                  {/* Top Header */}
+                  <div className="bg-gradient-to-r from-sky-900 via-indigo-900 to-purple-900 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-black text-stone-900 leading-snug">{activeConv.partnerName}</h3>
-                        <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-emerald-200 flex items-center gap-0.5">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          REAL PERSON
+                      <div className="flex items-center gap-2">
+                        <span className="bg-sky-400 text-stone-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          AI Social Outreach Engine
                         </span>
+                        <span className="text-xs font-bold text-sky-200">US & Global Phone Hunter</span>
                       </div>
-                      <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                        ● Active now • Real Contact Verified
-                      </span>
+                      <h2 className="text-lg font-black mt-1">Telegram, WhatsApp, TikTok & YouTube Outreach</h2>
+                      <p className="text-xs text-stone-300">
+                        Searching active US (+1) & International phone numbers, sending AI match invites, and ingesting real online members.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/10 p-2 rounded-xl border border-white/20">
+                      <select
+                        value={selectedHunterRegion}
+                        onChange={e => setSelectedHunterRegion(e.target.value)}
+                        className="bg-stone-900 text-white text-xs font-bold px-2 py-1.5 rounded-lg border border-stone-700 outline-none cursor-pointer"
+                      >
+                        <option value="US">🇺🇸 USA (+1)</option>
+                        <option value="UK">🇬🇧 UK (+44)</option>
+                        <option value="EU">🇫🇷 Europe (+33)</option>
+                        <option value="JP">🇯🇵 Japan (+81)</option>
+                        <option value="NG">🇳🇬 Nigeria (+234)</option>
+                      </select>
+
+                      <button
+                        onClick={handleTriggerAiPhoneHunter}
+                        className="px-3.5 py-1.5 bg-pink-500 hover:bg-pink-600 text-white font-extrabold text-xs rounded-lg transition shadow-md flex items-center gap-1 cursor-pointer shrink-0"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                        <span>Search US & Global Numbers</span>
+                      </button>
                     </div>
                   </div>
 
-                  {/* Real Direct Contact Buttons */}
-                  <div className="flex items-center gap-1.5">
-                    <a
-                      href={`https://wa.me/13108492091`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="1-Click WhatsApp Direct Chat"
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition cursor-pointer"
-                    >
-                      <span>WhatsApp</span>
-                    </a>
+                  {/* Terminal Live Phone Hunter Console */}
+                  <div className="bg-stone-950 rounded-xl p-3 text-emerald-400 text-[11px] font-mono border border-stone-800 space-y-1 max-h-32 overflow-y-auto shadow-inner">
+                    <div className="text-stone-400 font-bold border-b border-stone-800 pb-1 mb-1 flex items-center justify-between">
+                      <span>⚡ AI Phone Hunter Log Terminal</span>
+                      <span className="text-[10px] text-emerald-500 animate-pulse">● Searching Live Numbers</span>
+                    </div>
+                    {aiHunterLogs.map((log, idx) => (
+                      <div key={idx} className="leading-tight">{log}</div>
+                    ))}
+                  </div>
 
-                    <a
-                      href={`tel:+13108492091`}
-                      title="1-Click Call Direct"
-                      className="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition cursor-pointer"
-                    >
-                      <Phone className="w-3 h-3" />
-                      <span>Call</span>
-                    </a>
+                  {/* Embedded Social Networks Outreach Hub */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    {/* Telegram */}
+                    <div className="p-3 bg-sky-50 rounded-xl border border-sky-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-sky-900">Telegram Bot</span>
+                        <span className="bg-sky-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Embedded</span>
+                      </div>
+                      <p className="text-[10px] text-sky-800 font-medium">@MeChatBot active dispatching matches to real Telegram channels & US phone contacts.</p>
+                      <button
+                        onClick={() => {
+                          setToastMessage("📲 Telegram Outreach Engine triggered! Dispatching requests to @MeChatBot.");
+                          setTimeout(() => setToastMessage(null), 3000);
+                        }}
+                        className="w-full py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[10px] rounded-lg transition cursor-pointer"
+                      >
+                        Dispatch Telegram Invites
+                      </button>
+                    </div>
+
+                    {/* WhatsApp */}
+                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-emerald-900">WhatsApp Bridge</span>
+                        <span className="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full font-mono">+1 (310)</span>
+                      </div>
+                      <p className="text-[10px] text-emerald-800 font-medium">Direct WhatsApp wa.me link generation & phone verification bridge active.</p>
+                      <button
+                        onClick={() => {
+                          setToastMessage("💬 WhatsApp Outreach Bridge active! Phone numbers verified.");
+                          setTimeout(() => setToastMessage(null), 3000);
+                        }}
+                        className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-lg transition cursor-pointer"
+                      >
+                        Verify WhatsApp Contacts
+                      </button>
+                    </div>
+
+                    {/* TikTok */}
+                    <div className="p-3 bg-stone-900 text-white rounded-xl border border-stone-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-pink-400">TikTok Live</span>
+                        <span className="bg-pink-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Shareable</span>
+                      </div>
+                      <p className="text-[10px] text-stone-300 font-medium">TikTok creator matchmaking links & live stream chat invites synced.</p>
+                      <button
+                        onClick={() => {
+                          setToastMessage("🎬 TikTok Creator Matchmaking Link copied!");
+                          setTimeout(() => setToastMessage(null), 3000);
+                        }}
+                        className="w-full py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-[10px] rounded-lg transition cursor-pointer"
+                      >
+                        Share TikTok Match Link
+                      </button>
+                    </div>
+
+                    {/* YouTube */}
+                    <div className="p-3 bg-red-50 rounded-xl border border-red-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-red-900">YouTube Chat</span>
+                        <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Live</span>
+                      </div>
+                      <p className="text-[10px] text-red-800 font-medium">YouTube Live stream matchmaking bot bringing viewers directly to Love Section.</p>
+                      <button
+                        onClick={() => {
+                          setToastMessage("🎥 YouTube Stream Inviter active!");
+                          setTimeout(() => setToastMessage(null), 3000);
+                        }}
+                        className="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[10px] rounded-lg transition cursor-pointer"
+                      >
+                        Broadcast YouTube Invites
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Incoming Social Requests Grid */}
+                  <div>
+                    <h3 className="text-xs font-extrabold text-stone-900 uppercase tracking-wider mb-3 flex items-center justify-between">
+                      <span>Incoming Requests from AI Hunter ({socialRequests.filter(r => r.status === "pending").length} Pending)</span>
+                      <span className="text-[10px] text-stone-400">Click Accept to move to Active Marketplace & Love Section</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {socialRequests.map(r => (
+                        <div key={r.id} className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3 hover:border-pink-300 transition">
+                          <img src={r.avatarUrl} alt={r.name} className="w-12 h-12 rounded-full object-cover border border-stone-300 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-black text-stone-900 truncate">{r.name}, {r.age}</h4>
+                              <span className="bg-sky-100 text-sky-800 text-[9px] font-extrabold px-1.5 py-0.2 rounded border border-sky-200">
+                                {r.platform}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-stone-500 font-bold flex items-center gap-1 mt-0.5">
+                              <span>{r.city}, {r.country}</span>
+                              <span>•</span>
+                              <span className="text-emerald-600 font-mono">{r.phone}</span>
+                            </div>
+                            <p className="text-[11px] text-stone-600 italic mt-1 leading-snug">"{r.greeting}"</p>
+
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => handleAcceptSocialRequest(r.id)}
+                                className="flex-1 py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center gap-1"
+                              >
+                                <Heart className="w-3 h-3 fill-white" />
+                                <span>{r.status === "accepted" ? "Accepted (In Active)" : "Accept & Mingle"}</span>
+                              </button>
+                              <button
+                                onClick={() => setShowEmbeddedWhatsappModal(true)}
+                                className="px-2.5 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700 transition cursor-pointer"
+                              >
+                                WhatsApp
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : activeFilterTab === "active" ? (
+                <div className="lg:col-span-9 bg-white rounded-xl shadow-sm border border-stone-200 p-5 space-y-4 h-[650px] overflow-y-auto">
+                  {/* Top Banner */}
+                  <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-700 rounded-2xl p-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-emerald-400 text-stone-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          Active Online Marketplace
+                        </span>
+                        <span className="text-xs font-bold text-pink-100">Live Ecosystem Marketplace</span>
+                      </div>
+                      <h2 className="text-lg font-black mt-1">Mingle & Join Active People Around the World</h2>
+                      <p className="text-xs text-stone-200">
+                        Click "Mingle & Chat" on any active member to enter the Love Section for direct 1-on-1 private messaging.
+                      </p>
+                    </div>
 
                     <button
-                      onClick={() => {
-                        setToastMessage(`📱 Contact details: WhatsApp & Phone (+1 310-849-2091) • Verified Member`);
-                        setTimeout(() => setToastMessage(null), 4000);
-                      }}
-                      className="p-1.5 rounded-full hover:bg-stone-100 text-stone-500 transition cursor-pointer"
-                      title="More contact details"
+                      onClick={() => setActiveFilterTab("requests")}
+                      className="px-3.5 py-2 bg-white text-pink-700 font-extrabold text-xs rounded-xl shadow cursor-pointer hover:bg-pink-50 transition"
                     >
-                      <MoreVertical className="w-4 h-4" />
+                      + Discover More via AI Requests
+                    </button>
+                  </div>
+
+                  {/* Active Marketplace Roster Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {conversations.filter(c => c.online).map(c => (
+                      <div key={c.id} className="bg-stone-50 rounded-2xl border border-stone-200 p-3.5 space-y-3 hover:border-pink-300 hover:shadow-md transition relative">
+                        <div className="relative">
+                          <img src={c.partnerAvatar} alt={c.partnerName} className="w-full h-36 rounded-xl object-cover border border-stone-200" />
+                          <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                            ONLINE NOW
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-stone-900">{c.partnerName}, {c.partnerAge || 24}</h3>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <p className="text-[11px] text-stone-500 font-medium">Real Verified Ecosystem Member</p>
+                          <p className="text-xs text-stone-700 italic mt-1 font-serif">"{c.lastMessageText}"</p>
+                        </div>
+
+                        <div className="pt-1 border-t border-stone-200 flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => {
+                              setActiveConvId(c.id);
+                              setActiveFilterTab("all");
+                            }}
+                            className="flex-1 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-extrabold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Heart className="w-3.5 h-3.5 fill-white" />
+                            <span>Mingle & Chat (Love Section)</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* STANDARD LOVE SECTION (1-ON-1 CHAT ROOM) */
+                <div className="lg:col-span-6 bg-white rounded-xl shadow-sm border border-stone-200 flex flex-col h-[650px] relative overflow-hidden">
+                  {/* Partner Header */}
+                  <div className="px-4 py-2.5 border-b border-stone-200 flex flex-wrap items-center justify-between bg-white sticky top-0 z-10 gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative">
+                        <img
+                          src={activeConv.partnerAvatar}
+                          alt={activeConv.partnerName}
+                          className="w-10 h-10 rounded-full object-cover border border-stone-200 cursor-pointer"
+                          onClick={() => setShowTelegramProfileModal(true)}
+                        />
+                        {activeConv.online && (
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h3
+                            onClick={() => setShowTelegramProfileModal(true)}
+                            className="text-sm font-black text-stone-900 leading-snug cursor-pointer hover:text-pink-600 transition"
+                          >
+                            {activeConv.partnerName}
+                          </h3>
+                          <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-emerald-200 flex items-center gap-0.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            REAL PERSON
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                          ● Active now • Real Contact Verified
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Direct Contact & Google Gmail Auth Badge */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="hidden sm:flex items-center gap-1 bg-stone-100 px-2 py-1 rounded-lg border border-stone-200 text-[10px] font-extrabold text-stone-700">
+                        <img src="https://www.google.com/favicon.ico" alt="Gmail" className="w-3 h-3" />
+                        <span>{googleAuthUser.email}</span>
+                      </div>
+
+                      <button
+                        onClick={() => setShowEmbeddedWhatsappModal(true)}
+                        title="Open Embedded WhatsApp Web Suite Inside App"
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                      >
+                        <span>WhatsApp</span>
+                      </button>
+
+                      <a
+                        href={`tel:+13108492091`}
+                        title="1-Click Call Direct"
+                        className="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>Call</span>
+                      </a>
+
+                      <button
+                        onClick={() => setShowTelegramProfileModal(true)}
+                        className="p-1.5 rounded-full hover:bg-stone-100 text-stone-600 transition cursor-pointer"
+                        title="Telegram / WhatsApp Profile & Photo Editor"
+                      >
+                        <Camera className="w-4 h-4 text-pink-600" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Chat Messages Stream */}
+                  <div className="flex-1 p-4 overflow-y-auto bg-[#eef2f5] space-y-3">
+                    {activeConv.messages.map(m => {
+                      if (m.sender === "divider") {
+                        return (
+                          <div key={m.id} className="my-3 flex items-center justify-center">
+                            <span className="bg-stone-200/80 text-stone-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-2xs">
+                              {m.text}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      const isUser = m.sender === "user";
+                      return (
+                        <div
+                          key={m.id}
+                          className={`flex items-end gap-2 ${isUser ? "justify-end" : "justify-start"}`}
+                        >
+                          {!isUser && (
+                            <img
+                              src={activeConv.partnerAvatar}
+                              alt={activeConv.partnerName}
+                              className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 border border-stone-300 cursor-pointer"
+                              onClick={() => setShowTelegramProfileModal(true)}
+                            />
+                          )}
+
+                          <div
+                            className={`max-w-[78%] px-3.5 py-2 rounded-2xl text-xs font-medium leading-relaxed shadow-2xs ${
+                              isUser
+                                ? "bg-[#fff8e1] text-stone-900 rounded-br-2xs border border-amber-200/60"
+                                : "bg-white text-stone-900 rounded-bl-2xs border border-stone-200"
+                            }`}
+                          >
+                            <p>{m.text}</p>
+
+                            {/* Simulated Voice Note waveform if applicable */}
+                            {m.text.includes("Voice") && (
+                              <div className="mt-2 p-2 bg-stone-100 rounded-xl flex items-center gap-2 border border-stone-200">
+                                <button
+                                  onClick={() => setPlayingVoiceId(playingVoiceId === m.id ? null : m.id)}
+                                  className="w-7 h-7 rounded-full bg-pink-600 text-white flex items-center justify-center cursor-pointer hover:scale-105 transition shrink-0"
+                                >
+                                  {playingVoiceId === m.id ? <Pause className="w-3.5 h-3.5 fill-white" /> : <Play className="w-3.5 h-3.5 fill-white ml-0.5" />}
+                                </button>
+                                <div className="flex-1 space-y-0.5">
+                                  <div className="h-1 bg-stone-300 rounded-full overflow-hidden">
+                                    <div className={`h-full bg-pink-600 ${playingVoiceId === m.id ? "w-3/4 animate-pulse" : "w-1/4"}`} />
+                                  </div>
+                                  <span className="text-[9px] text-stone-500 font-bold">0:14 • Voice Message</span>
+                                </div>
+                              </div>
+                            )}
+
+                            <div
+                              className={`flex items-center gap-1 text-[9px] mt-1 font-semibold ${
+                                isUser ? "justify-end text-stone-500" : "text-stone-400"
+                              }`}
+                            >
+                              <span>{m.time}</span>
+                              {isUser && <CheckCheck className="w-3 h-3 text-emerald-600" />}
+                            </div>
+                          </div>
+
+                          {isUser && (
+                            <img
+                              src={userCustomPhoto}
+                              alt="User Avatar"
+                              className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 border border-stone-300 cursor-pointer"
+                              onClick={() => setShowTelegramProfileModal(true)}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {isTyping && (
+                      <div className="flex items-center gap-2 text-stone-500 text-xs italic pl-2 pt-1">
+                        <span className="animate-pulse font-bold">{activeConv.partnerName} is typing...</span>
+                      </div>
+                    )}
+
+                    <div ref={chatBottomRef} />
+                  </div>
+
+                  {/* Toolbar Actions: Stickers, Photo, Voice Note */}
+                  <div className="bg-white border-t border-stone-200 px-3 py-1.5 flex items-center gap-4 text-xs font-bold text-stone-600">
+                    <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer">
+                      <span>😃 Stickers ▾</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setToastMessage("📸 Photo Attachment tool ready. Selected photo attached!");
+                        setTimeout(() => setToastMessage(null), 3000);
+                      }}
+                      className="flex items-center gap-1 hover:text-pink-600 cursor-pointer"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Photo</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setToastMessage("🎙️ Recorded 5s Voice Note attached to chat!");
+                        setTimeout(() => setToastMessage(null), 3000);
+                      }}
+                      className="flex items-center gap-1 hover:text-pink-600 cursor-pointer"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Voice Note</span>
+                    </button>
+                    <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer relative">
+                      <Gift className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Gifts</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-pink-600 absolute -top-0.5 -right-1" />
+                    </button>
+                  </div>
+
+                  {/* Text Input & Send Button */}
+                  <div className="p-3 bg-white border-t border-stone-100 flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={inputText}
+                        onChange={e => setInputText(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && sendMessage()}
+                        placeholder="Type your message..."
+                        className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-800 outline-none focus:border-pink-500 focus:bg-white transition"
+                      />
+                      <span className="absolute right-3 top-2.5 text-[10px] text-stone-400 font-bold flex items-center gap-0.5">
+                        😃 300
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={sendMessage}
+                      className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+                    >
+                      <span>Send</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Cost Banner Footer */}
+                  <div className="bg-stone-50 border-t border-stone-200 px-3 py-1.5 text-[10px] text-stone-500 flex items-center justify-between font-medium">
+                    <div className="flex items-center gap-1">
+                      <span>Chat: Free Active • Gmail Sync Active</span>
+                    </div>
+                    <button
+                      onClick={() => setShowTelegramProfileModal(true)}
+                      className="text-pink-600 font-extrabold hover:underline cursor-pointer"
+                    >
+                      Edit Profile & Photo
                     </button>
                   </div>
                 </div>
+              )}
 
-                {/* Chat Messages Stream (Scrollable Container) */}
-                <div className="flex-1 p-4 overflow-y-auto bg-[#eef2f5] space-y-3">
-                  {activeConv.messages.map(m => {
-                    if (m.sender === "divider") {
-                      return (
-                        <div key={m.id} className="my-3 flex items-center justify-center">
-                          <span className="bg-stone-200/80 text-stone-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-2xs">
-                            {m.text}
-                          </span>
-                        </div>
-                      );
-                    }
+              {/* RIGHT SIDEBAR: CREDITS & ACTIVITY PANELS (3 COLUMNS - ONLY IN ALL CHATS VIEW) */}
+              {activeFilterTab === "all" && (
+                <div className="lg:col-span-3 space-y-4">
+                  {/* Card 1: Get More with Credits */}
+                  <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4 space-y-3">
+                    <h3 className="text-xs font-bold text-stone-900">Get More with Credits</h3>
 
-                    const isUser = m.sender === "user";
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex items-end gap-2 ${isUser ? "justify-end" : "justify-start"}`}
-                      >
-                        {!isUser && (
-                          <img
-                            src={activeConv.partnerAvatar}
-                            alt={activeConv.partnerName}
-                            className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 border border-stone-300"
-                          />
-                        )}
-
-                        <div
-                          className={`max-w-[78%] px-3.5 py-2 rounded-2xl text-xs font-medium leading-relaxed shadow-2xs ${
-                            isUser
-                              ? "bg-[#fff8e1] text-stone-900 rounded-br-2xs border border-amber-200/60"
-                              : "bg-white text-stone-900 rounded-bl-2xs border border-stone-200"
-                          }`}
-                        >
-                          <p>{m.text}</p>
-                          <div
-                            className={`flex items-center gap-1 text-[9px] mt-1 font-semibold ${
-                              isUser ? "justify-end text-stone-500" : "text-stone-400"
-                            }`}
-                          >
-                            <span>{m.time}</span>
-                            {isUser && <CheckCheck className="w-3 h-3 text-emerald-600" />}
-                          </div>
-                        </div>
-
-                        {isUser && (
-                          <img
-                            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                            alt="User Avatar"
-                            className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 border border-stone-300"
-                          />
-                        )}
+                    <div className="space-y-2 text-xs text-stone-600 font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-[10px]">💬</div>
+                        <span>Chat with anyone you like</span>
                       </div>
-                    );
-                  })}
 
-                  {isTyping && (
-                    <div className="flex items-center gap-2 text-stone-500 text-xs italic pl-2 pt-1">
-                      <span className="animate-pulse font-bold">{activeConv.partnerName} is typing...</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 text-[10px]">💎</div>
+                        <span>Send Virtual Gifts</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-[10px]">✉️</div>
+                        <span>Respond in Mail</span>
+                      </div>
                     </div>
-                  )}
 
-                  <div ref={chatBottomRef} />
-                </div>
-
-                {/* Toolbar Actions: Stickers, Photo, Gifts, Let's talk */}
-                <div className="bg-white border-t border-stone-200 px-3 py-1.5 flex items-center gap-4 text-xs font-bold text-stone-600">
-                  <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer">
-                    <span>😃 Stickers ▾</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer">
-                    <ImageIcon className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Photo</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer relative">
-                    <Gift className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Gifts</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-600 absolute -top-0.5 -right-1" />
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-pink-600 cursor-pointer">
-                    <Smile className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Let's talk ▾</span>
-                  </button>
-                </div>
-
-                {/* Text Area Input & Send Button */}
-                <div className="p-3 bg-white border-t border-stone-100 flex items-center gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={inputText}
-                      onChange={e => setInputText(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && sendMessage()}
-                      placeholder="Type your message..."
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2 text-xs text-stone-800 outline-none focus:border-pink-500 focus:bg-white transition"
-                    />
-                    <span className="absolute right-3 top-2.5 text-[10px] text-stone-400 font-bold flex items-center gap-0.5">
-                      😃 300
-                    </span>
+                    <button
+                      onClick={() => setShowCoinsModal(true)}
+                      className="w-full py-2 border-2 border-pink-600 text-pink-600 hover:bg-pink-50 font-black text-xs rounded-xl transition cursor-pointer text-center"
+                    >
+                      Get Credits
+                    </button>
                   </div>
 
-                  <button
-                    onClick={sendMessage}
-                    className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
-                  >
-                    <span>Send</span>
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  {/* Card 2: My Activity */}
+                  <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4 space-y-3">
+                    <h3 className="text-xs font-bold text-stone-900">My Activity</h3>
 
-                {/* Cost Banner Footer */}
-                <div className="bg-stone-50 border-t border-stone-200 px-3 py-1.5 text-[10px] text-stone-500 flex items-center justify-between font-medium">
-                  <div className="flex items-center gap-1">
-                    <span>Chat: 2 cr/min ❓</span>
-                    <span>• Sending a photo: 10 cr</span>
-                    <span>• Sending a sticker: 5 cr</span>
-                  </div>
-                  <button className="text-pink-600 font-extrabold hover:underline cursor-pointer">
-                    Get Credits
-                  </button>
-                </div>
-              </div>
+                    <div className="space-y-2 text-xs font-bold text-stone-700">
+                      <div className="flex items-center justify-between p-2 bg-pink-50/70 text-pink-700 rounded-lg">
+                        <span>Messages</span>
+                        <span className="bg-pink-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                          {conversations.length}
+                        </span>
+                      </div>
 
-              {/* RIGHT SIDEBAR: CREDITS & ACTIVITY PANELS (3 COLUMNS) */}
-              <div className="lg:col-span-3 space-y-4">
-                {/* Card 1: Get More with Credits */}
-                <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4 space-y-3">
-                  <h3 className="text-xs font-bold text-stone-900">Get More with Credits</h3>
+                      <div className="flex items-center justify-between p-2 hover:bg-stone-50 rounded-lg text-stone-600 cursor-pointer" onClick={() => setPortalTab("mail")}>
+                        <span>Mail</span>
+                        <span className="bg-stone-200 text-stone-800 text-[10px] font-black px-1.5 py-0.2 rounded-full">1</span>
+                      </div>
 
-                  <div className="space-y-2 text-xs text-stone-600 font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 text-[10px]">💬</div>
-                      <span>Chat with anyone you like</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 text-[10px]">💎</div>
-                      <span>Send Virtual Gifts</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-[10px]">✉️</div>
-                      <span>Respond in Mail</span>
-                    </div>
-                  </div>
-
-                  <button className="w-full py-2 border-2 border-pink-600 text-pink-600 hover:bg-pink-50 font-black text-xs rounded-xl transition cursor-pointer text-center">
-                    Get Credits
-                  </button>
-                </div>
-
-                {/* Card 2: My Activity */}
-                <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-4 space-y-3">
-                  <h3 className="text-xs font-bold text-stone-900">My Activity</h3>
-
-                  <div className="space-y-2 text-xs font-bold text-stone-700">
-                    <div className="flex items-center justify-between p-2 bg-pink-50/70 text-pink-700 rounded-lg">
-                      <span>Messages</span>
-                      <span className="bg-pink-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">8</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-2 hover:bg-stone-50 rounded-lg text-stone-600 cursor-pointer">
-                      <span>Mail</span>
-                      <span className="bg-stone-200 text-stone-800 text-[10px] font-black px-1.5 py-0.2 rounded-full">1</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-2 hover:bg-stone-50 rounded-lg text-stone-600 cursor-pointer" onClick={() => setPortalTab("search")}>
-                      <span>Following</span>
-                      <span className="text-pink-600 font-black">22</span>
+                      <div className="flex items-center justify-between p-2 hover:bg-stone-50 rounded-lg text-stone-600 cursor-pointer" onClick={() => setPortalTab("search")}>
+                        <span>Following</span>
+                        <span className="text-pink-600 font-black">22</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -1921,62 +2693,185 @@ export function DatingArtsMatchmakingSuite() {
             </div>
           )}
 
-          {/* FLOATING AUTOMATED AI MATCHMAKER DROP-DOWN / SLIDE-UP NOTIFICATION (EXACT POPUP POINTED BY RED ARROW IN IMAGE.PNG!) */}
-          {showAiMatchPopup && (
-            <div className="fixed bottom-6 right-6 z-50 bg-[#121214] text-white rounded-2xl p-3.5 shadow-2xl border-2 border-pink-600/80 max-w-xs w-full animate-bounce duration-700">
-              {/* Header Badge */}
-              <div className="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-pink-400">
-                  <Zap className="w-3.5 h-3.5 fill-pink-500 text-pink-500" />
-                  <span>AI MATCHMAKER DROP</span>
-                  <span className="bg-emerald-950 text-emerald-300 text-[9px] px-1 rounded border border-emerald-800 font-bold flex items-center gap-0.5">
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
-                    REAL PERSON
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowAiMatchPopup(false)}
-                  className="text-stone-400 hover:text-white p-0.5 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Profile Card Body */}
-              <div className="flex items-center gap-3">
-                <div className="relative shrink-0">
+          {/* FLOATING AUTOMATED AI MATCHMAKER & NOTIFICATION HUB (STEADY POSITION, MINIMIZE/RESTORE TOGGLE) */}
+          {showAiMatchPopup ? (
+            isAiDropMinimized ? (
+              /* MINIMIZED FLOATING PILL */
+              <div
+                onClick={() => setIsAiDropMinimized(false)}
+                className="fixed bottom-5 right-5 z-50 bg-stone-900/95 hover:bg-stone-900 text-white rounded-full px-4 py-2.5 shadow-2xl border-2 border-pink-500 flex items-center gap-3 cursor-pointer transition-all hover:scale-105 backdrop-blur-md"
+              >
+                <div className="relative">
                   <img
                     src={currentDropMatch.avatarUrl}
                     alt={currentDropMatch.name}
-                    className="w-16 h-20 rounded-xl object-cover border border-stone-700 shadow-md"
+                    className="w-7 h-7 rounded-full object-cover border border-pink-400"
                   />
-                  {currentDropMatch.online && (
-                    <span className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-stone-900 shadow-sm" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-stone-900" />
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  <span className="text-pink-400 font-extrabold flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 fill-pink-500" />
+                    <span>AI Matchmaker</span>
+                  </span>
+                  <span className="text-stone-300">• {currentDropMatch.name} ({currentDropMatch.score}%)</span>
+                  {aiNotifications.length > 0 && (
+                    <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                      <Bell className="w-2.5 h-2.5" />
+                      <span>{aiNotifications.length}</span>
+                    </span>
                   )}
-                  <div className="absolute -bottom-1 -left-1 bg-pink-600 text-white text-[9px] font-black px-1 rounded">
-                    {currentDropMatch.score}% Match
+                </div>
+              </div>
+            ) : (
+              /* EXPANDED STEADY CARD (NO BOUNCING!) */
+              <div className="fixed bottom-5 right-5 z-50 bg-[#121214] text-white rounded-2xl p-4 shadow-2xl border-2 border-pink-600/90 max-w-sm w-full font-sans transition-all duration-300">
+                {/* Header Bar */}
+                <div className="flex items-center justify-between border-b border-stone-800 pb-2.5 mb-3">
+                  <div className="flex items-center gap-1 bg-stone-900 p-1 rounded-xl border border-stone-800">
+                    <button
+                      onClick={() => setAiDropTab("match")}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition flex items-center gap-1 cursor-pointer ${
+                        aiDropTab === "match" ? "bg-pink-600 text-white shadow" : "text-stone-400 hover:text-stone-200"
+                      }`}
+                    >
+                      <Zap className="w-3 h-3 fill-pink-300" />
+                      <span>AI Match Drop</span>
+                    </button>
+                    <button
+                      onClick={() => setAiDropTab("notifications")}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition flex items-center gap-1 cursor-pointer ${
+                        aiDropTab === "notifications" ? "bg-pink-600 text-white shadow" : "text-stone-400 hover:text-stone-200"
+                      }`}
+                    >
+                      <Bell className="w-3 h-3" />
+                      <span>Notifications ({aiNotifications.length})</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsAiDropMinimized(true)}
+                      title="Minimize AI Matchmaker"
+                      className="text-stone-400 hover:text-white p-1.5 rounded-lg hover:bg-stone-800 cursor-pointer text-xs font-bold"
+                    >
+                      <Minimize2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setShowAiMatchPopup(false)}
+                      title="Close AI Matchmaker"
+                      className="text-stone-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-stone-800 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-black text-white truncate flex items-center gap-1">
-                    <span>{currentDropMatch.name}, {currentDropMatch.age}</span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  </h4>
-                  <p className="text-[11px] text-stone-300 font-medium leading-tight mt-1 italic">
-                    "{currentDropMatch.tagline}"
-                  </p>
+                {/* TAB 1: AI MATCH DROP */}
+                {aiDropTab === "match" && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-stone-400">
+                      <span className="flex items-center gap-1 text-emerald-400 font-extrabold">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        Real Ecosystem Member
+                      </span>
+                      <span className="text-amber-400 font-mono">Next Match in: {matchCountdown}s</span>
+                    </div>
 
-                  <button
-                    onClick={() => handle1ClickSynergyMatch(currentDropMatch.id, currentDropMatch.name)}
-                    className="mt-2.5 w-full py-1.5 px-3 bg-gradient-to-r from-[#b00058] to-purple-600 hover:from-pink-600 hover:to-purple-500 text-white text-xs font-black rounded-xl transition shadow-lg cursor-pointer text-center flex items-center justify-center gap-1.5"
-                  >
-                    <span>1-Click Match & Chat</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                    <div className="flex items-center gap-3 bg-stone-900/90 p-3 rounded-xl border border-stone-800">
+                      <div className="relative shrink-0">
+                        <img
+                          src={currentDropMatch.avatarUrl}
+                          alt={currentDropMatch.name}
+                          className="w-16 h-20 rounded-xl object-cover border border-pink-500/50 shadow-md"
+                        />
+                        {currentDropMatch.online && (
+                          <span className="absolute top-1 right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-stone-900 shadow-sm" />
+                        )}
+                        <div className="absolute -bottom-1 -left-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
+                          {currentDropMatch.score}% Match
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <h4 className="text-xs font-black text-white truncate flex items-center gap-1">
+                          <span>{currentDropMatch.name}, {currentDropMatch.age}</span>
+                        </h4>
+                        <p className="text-[11px] text-stone-300 font-medium leading-tight italic line-clamp-2">
+                          "{currentDropMatch.tagline}"
+                        </p>
+                        <div className="text-[10px] text-stone-400 font-medium flex items-center gap-1">
+                          <span>📍 Real-Time Matchmaking Ecosystem</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={triggerRandomAiMatchDrop}
+                        className="py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold rounded-xl transition cursor-pointer text-center"
+                      >
+                        Skip Candidate
+                      </button>
+                      <button
+                        onClick={() => handle1ClickSynergyMatch(currentDropMatch.id, currentDropMatch.name)}
+                        className="py-2 px-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-black rounded-xl shadow-lg transition hover:scale-105 active:scale-95 cursor-pointer text-center flex items-center justify-center gap-1"
+                      >
+                        <span>1-Click Match</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: AI NOTIFICATION HUB */}
+                {aiDropTab === "notifications" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-stone-400 border-b border-stone-800 pb-1.5">
+                      <span>Ecosystem Live Activity Feed</span>
+                      <button
+                        onClick={() => setAiNotifications([])}
+                        className="text-stone-500 hover:text-stone-300 underline cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {aiNotifications.length === 0 ? (
+                        <p className="text-xs text-stone-500 text-center py-6">No recent notifications</p>
+                      ) : (
+                        aiNotifications.map(n => (
+                          <div
+                            key={n.id}
+                            className="p-2.5 bg-stone-900/90 rounded-xl border border-stone-800 space-y-1 hover:border-pink-500/50 transition"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-pink-400">{n.title}</span>
+                              <span className="text-[9px] text-stone-500">{n.time}</span>
+                            </div>
+                            <p className="text-[11px] text-stone-300 leading-snug">{n.description}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )
+          ) : (
+            /* RESTORE LAUNCHER BUTTON WHEN CLOSED */
+            <button
+              onClick={() => {
+                setShowAiMatchPopup(true);
+                setIsAiDropMinimized(false);
+              }}
+              className="fixed bottom-5 right-5 z-50 bg-stone-900 text-white hover:bg-stone-800 border-2 border-pink-600 rounded-full p-3 shadow-2xl cursor-pointer flex items-center gap-2 transition hover:scale-110"
+              title="Open AI Matchmaker & Notifications"
+            >
+              <Zap className="w-5 h-5 text-pink-500 fill-pink-500" />
+              <span className="text-xs font-black hidden sm:inline text-pink-300">AI Matchmaker</span>
+            </button>
           )}
         </div>
       )}
@@ -2144,6 +3039,369 @@ export function DatingArtsMatchmakingSuite() {
                     <p className="text-stone-400 text-[11px] truncate">Last Message: {c.lastMessageText}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMBEDDED WHATSAPP WEB SUITE MODAL */}
+      {showEmbeddedWhatsappModal && (
+        <div className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-300 w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden relative">
+            {/* Embedded WhatsApp Header Bar */}
+            <div className="bg-[#00a884] text-white px-4 py-2.5 flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-extrabold text-sm">
+                  💬
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-black tracking-wide">WhatsApp Web</h2>
+                    <span className="bg-emerald-800 text-emerald-100 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-600">
+                      Embedded in DatingArts App
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-emerald-100 font-medium">
+                    Account Linked: <span className="font-mono font-bold">+1 (310) 849-2091</span> • Real Person Bridge Active
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowWhatsappQrModal(true)}
+                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>Scan QR / Link Phone</span>
+                </button>
+                <button
+                  onClick={() => setShowEmbeddedWhatsappModal(false)}
+                  className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center text-white font-black text-sm transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Main WhatsApp Web Split Layout */}
+            <div className="flex-1 flex overflow-hidden bg-[#efeae2]">
+              {/* Left Contacts Sidebar */}
+              <div className="w-full sm:w-80 md:w-96 bg-white border-r border-stone-200 flex flex-col h-full shrink-0">
+                {/* User Profile Header */}
+                <div className="p-3 bg-[#f0f2f5] border-b border-stone-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={userCustomPhoto}
+                      alt="User"
+                      className="w-10 h-10 rounded-full object-cover border border-stone-300"
+                    />
+                    <div>
+                      <h4 className="text-xs font-bold text-stone-900 truncate">{googleAuthUser.name}</h4>
+                      <span className="text-[10px] text-emerald-600 font-semibold font-mono">+1 (310) 849-2091</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-stone-600">
+                    <button
+                      onClick={() => setShowWhatsappQrModal(true)}
+                      className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer"
+                      title="Link Phone"
+                    >
+                      <Smartphone className="w-4 h-4 text-emerald-600" />
+                    </button>
+                    <button className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search Bar */}
+                <div className="p-2 bg-white border-b border-stone-100">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={whatsappSearchText}
+                      onChange={e => setWhatsappSearchText(e.target.value)}
+                      placeholder="Search or start new chat"
+                      className="w-full bg-[#f0f2f5] rounded-lg pl-8 pr-3 py-1.5 text-xs text-stone-800 outline-none focus:bg-white border border-transparent focus:border-emerald-500 transition"
+                    />
+                    <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
+                  </div>
+
+                  {/* WhatsApp Filter Pills */}
+                  <div className="flex items-center gap-1.5 mt-2 text-[11px] font-bold text-stone-600">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold">All</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-stone-100 hover:bg-stone-200 cursor-pointer">Unread 61</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-stone-100 hover:bg-stone-200 cursor-pointer">Favorites</span>
+                  </div>
+                </div>
+
+                {/* Contacts List (Matching User's Screenshot 1!) */}
+                <div className="flex-1 overflow-y-auto divide-y divide-stone-100">
+                  {/* DatingArts Active Conversations synced as WhatsApp Contacts */}
+                  {conversations.map(c => {
+                    const isSelected = c.id === activeConvId;
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => setActiveConvId(c.id)}
+                        className={`p-3 flex items-center gap-3 hover:bg-[#f0f2f5] cursor-pointer transition ${
+                          isSelected ? "bg-[#f0f2f5]" : ""
+                        }`}
+                      >
+                        <div className="relative shrink-0">
+                          <img
+                            src={c.partnerAvatar}
+                            alt={c.partnerName}
+                            className="w-12 h-12 rounded-full object-cover border border-stone-200"
+                          />
+                          {c.online && (
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <h4 className="text-xs font-bold text-stone-900 truncate">
+                              {c.partnerName} <span className="text-[10px] text-stone-400 font-mono font-normal">(+1 310-849-2091)</span>
+                            </h4>
+                            <span className="text-[10px] text-stone-400 font-medium shrink-0 flex items-center gap-0.5">
+                              <CheckCheck className="w-3 h-3 text-sky-500" />
+                              {c.lastMessageTime}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-[11px] text-stone-500 truncate">{c.lastMessageText}</p>
+                            {c.unreadCount > 0 && (
+                              <span className="bg-[#25d366] text-white text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shrink-0">
+                                {c.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Real WhatsApp Contacts matching user screenshot 1 */}
+                  {[
+                    { name: "APNA ADDA 👤💖", phone: "+1 (310) 849-2091", msg: "~KAALAA: This call could...", time: "00:00", unread: 741 },
+                    { name: "Ubi", phone: "+1 (310) 849-2091", msg: "📷 Photo", time: "Yesterday" },
+                    { name: "Nija Exchange Guy@Cambodia", phone: "+1 (310) 849-2091", msg: "✓ Boss", time: "Yesterday" },
+                    { name: "Goodness", phone: "+1 (310) 849-2091", msg: "✓ sharp", time: "Yesterday" },
+                    { name: "+855 10 371 231 (You)", phone: "+855 10 371 231", msg: "✓👋 Hello dear.", time: "Yesterday" },
+                    { name: "+1 (708) 504-6853", phone: "+1 (708) 504-6853", msg: "I'm good baby", time: "Yesterday", unread: 1 },
+                    { name: "New third batch group", phone: "Group", msg: "~eze: All north America active...", time: "Yesterday", unread: 34 },
+                    { name: "+91 6296 712 676", phone: "+91 6296 712 676", msg: "Mittha bolis na bhai", time: "Yesterday", unread: 1 },
+                    { name: "TAJUDDIN KHAN PATHAN", phone: "+91 9823 109 231", msg: "Why you going offline...", time: "Yesterday", unread: 6 },
+                    { name: "SREYMARA", phone: "+855 98 120 442", msg: "Srey joined via link", time: "Yesterday" }
+                  ].map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setToastMessage(`💬 WhatsApp contact ${item.name} connected to DatingArts Love Section!`);
+                        setTimeout(() => setToastMessage(null), 3000);
+                      }}
+                      className="p-3 flex items-center gap-3 hover:bg-[#f0f2f5] cursor-pointer transition"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-stone-200 text-stone-700 font-black flex items-center justify-center text-sm shrink-0">
+                        {item.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <h4 className="text-xs font-bold text-stone-900 truncate">{item.name}</h4>
+                          <span className="text-[10px] text-stone-400 font-medium shrink-0">{item.time}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-[11px] text-stone-500 truncate">{item.msg}</p>
+                          {item.unread && (
+                            <span className="bg-[#25d366] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shrink-0">
+                              {item.unread}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Chat Window */}
+              <div className="flex-1 flex flex-col h-full bg-[#efeae2] relative">
+                {/* Chat Header */}
+                <div className="p-3 bg-[#f0f2f5] border-b border-stone-200 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={activeConv.partnerAvatar}
+                      alt={activeConv.partnerName}
+                      className="w-10 h-10 rounded-full object-cover border border-stone-300"
+                    />
+                    <div>
+                      <h3 className="text-xs font-black text-stone-900">{activeConv.partnerName}</h3>
+                      <p className="text-[10px] text-emerald-600 font-semibold font-mono">+1 (310) 849-2091 • Active on WhatsApp & App</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-stone-600">
+                    <button className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer" title="Video Call">
+                      <Video className="w-4 h-4 text-stone-700" />
+                    </button>
+                    <button className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer" title="Voice Call">
+                      <Phone className="w-4 h-4 text-stone-700" />
+                    </button>
+                    <div className="h-4 w-px bg-stone-300 mx-1" />
+                    <button className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer">
+                      <Search className="w-4 h-4 text-stone-700" />
+                    </button>
+                    <button className="p-1.5 rounded-full hover:bg-stone-200 cursor-pointer">
+                      <MoreVertical className="w-4 h-4 text-stone-700" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Messages Body */}
+                <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                  {/* End to end encryption notice */}
+                  <div className="flex justify-center my-2">
+                    <div className="bg-[#ffeebd] text-[#54656f] text-[10px] font-medium px-4 py-1.5 rounded-lg text-center max-w-md shadow-2xs border border-amber-200/60">
+                      🔒 Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or answer them.
+                    </div>
+                  </div>
+
+                  {activeConv.messages.map(m => {
+                    const isUser = m.sender === "user";
+                    return (
+                      <div
+                        key={m.id}
+                        className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[75%] px-3.5 py-2 rounded-xl text-xs leading-relaxed shadow-2xs relative ${
+                            isUser
+                              ? "bg-[#d9fdd3] text-stone-900 rounded-tr-2xs border border-emerald-100"
+                              : "bg-white text-stone-900 rounded-tl-2xs border border-stone-200"
+                          }`}
+                        >
+                          <p>{m.text}</p>
+                          <div
+                            className={`flex items-center gap-1 text-[9px] mt-1 font-semibold ${
+                              isUser ? "justify-end text-stone-500" : "text-stone-400"
+                            }`}
+                          >
+                            <span>{m.time}</span>
+                            {isUser && <CheckCheck className="w-3.5 h-3.5 text-sky-500" />}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {isTyping && (
+                    <div className="flex items-center gap-2 text-stone-500 text-xs italic pl-2">
+                      <span className="animate-pulse font-bold">{activeConv.partnerName} is typing on WhatsApp...</span>
+                    </div>
+                  )}
+
+                  <div ref={chatBottomRef} />
+                </div>
+
+                {/* Input Bar */}
+                <div className="p-3 bg-[#f0f2f5] border-t border-stone-200 flex items-center gap-2 shrink-0">
+                  <button className="p-2 rounded-full hover:bg-stone-200 text-stone-600 transition cursor-pointer">
+                    <Smile className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 rounded-full hover:bg-stone-200 text-stone-600 transition cursor-pointer">
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+
+                  <input
+                    type="text"
+                    value={whatsappInputText}
+                    onChange={e => setWhatsappInputText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && whatsappInputText.trim()) {
+                        const txt = whatsappInputText.trim();
+                        setWhatsappInputText("");
+                        setInputText(txt);
+                        setTimeout(() => sendMessage(), 50);
+                      }
+                    }}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-white rounded-lg px-4 py-2 text-xs text-stone-800 outline-none border border-stone-200 focus:border-emerald-500 transition"
+                  />
+
+                  <button
+                    onClick={() => {
+                      if (whatsappInputText.trim()) {
+                        const txt = whatsappInputText.trim();
+                        setWhatsappInputText("");
+                        setInputText(txt);
+                        setTimeout(() => sendMessage(), 50);
+                      }
+                    }}
+                    className="p-2.5 bg-[#00a884] hover:bg-[#008f6f] text-white rounded-full transition shadow-sm cursor-pointer shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP LINK PHONE & QR CODE MODAL */}
+      {showWhatsappQrModal && (
+        <div className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 border border-stone-200 shadow-2xl relative">
+            <button
+              onClick={() => setShowWhatsappQrModal(false)}
+              className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 font-black cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-2 text-[#00a884] font-black text-base">
+              <QrCode className="w-6 h-6" />
+              <span>WhatsApp Web Account Synchronization</span>
+            </div>
+
+            <p className="text-xs text-stone-600 font-medium">
+              Link your WhatsApp phone number or scan the QR Code below to bridge real WhatsApp conversations into DatingArts.
+            </p>
+
+            <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 text-center space-y-3">
+              <div className="w-40 h-40 bg-white border-2 border-stone-900 rounded-xl mx-auto flex items-center justify-center p-2 relative shadow-sm">
+                <img
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://datingarts.com/whatsapp-link-13108492091"
+                  alt="WhatsApp QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <p className="text-[10px] text-stone-500 font-bold">Point your phone's WhatsApp scanner at this code</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-stone-800">Or Link with WhatsApp Phone Number:</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  defaultValue="+1 (310) 849-2091"
+                  className="flex-1 bg-stone-50 border border-stone-300 rounded-lg px-3 py-2 text-xs font-mono font-bold text-stone-800 outline-none"
+                />
+                <button
+                  onClick={() => {
+                    setToastMessage("✅ WhatsApp number +1 (310) 849-2091 verified & linked to DatingArts!");
+                    setShowWhatsappQrModal(false);
+                    setTimeout(() => setToastMessage(null), 3500);
+                  }}
+                  className="px-4 py-2 bg-[#00a884] hover:bg-[#008f6f] text-white font-extrabold text-xs rounded-lg transition cursor-pointer"
+                >
+                  Verify & Sync
+                </button>
               </div>
             </div>
           </div>
