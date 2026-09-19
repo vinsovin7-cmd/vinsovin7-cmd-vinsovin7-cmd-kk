@@ -148,6 +148,34 @@
         }
       }
     </style>
+    <!-- RichAds / RichPartners Telegram Mini App Monetization SDK -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+      (function() {
+        try {
+          if (typeof TelegramAdsController !== "undefined") {
+            window.TelegramAdsController = new TelegramAdsController();
+            window.TelegramAdsController.initialize({
+              pubId: "1018889",
+              appId: "8914",
+            });
+            console.log("RichAds Telegram Monetization Controller initialized successfully.");
+          } else {
+            window.addEventListener('load', function() {
+              if (typeof TelegramAdsController !== "undefined") {
+                window.TelegramAdsController = new TelegramAdsController();
+                window.TelegramAdsController.initialize({
+                  pubId: "1018889",
+                  appId: "8914",
+                });
+              }
+            });
+          }
+        } catch (e) {
+          console.warn("RichAds initialization note:", e);
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="/index.css">
   </head>
   <body>

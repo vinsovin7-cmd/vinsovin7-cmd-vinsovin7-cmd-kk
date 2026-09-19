@@ -730,7 +730,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
     setTimeout(() => setCopyFeedback(null), 3500);
   };
 
-  // REAL EMBEDDED IN-APP DOWNLOAD PROCESS (NO EXTERNAL WINDOW / POPUP)
+  // REAL EMBEDDED IN-APP DOWNLOAD PROCESS (100% INSIDE ECOSYSTEM VAULT & PLAYER)
   const handleStartEmbeddedDownload = async (video: CinemaVideoItem) => {
     if (downloadProgressMap[video.id] !== undefined && downloadProgressMap[video.id] < 100) {
       return;
@@ -775,10 +775,14 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
           return [updatedItem, ...existing];
         });
 
-        // Set as playing video in top player inside ecosystem
+        // Open and play immediately inside Ecosystem Player
         setPlayingVideoId(video.id);
+        const playerEl = document.getElementById("featured-hd-player");
+        if (playerEl) {
+          playerEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
 
-        setCopyFeedback(`✨ "${video.title}" Downloaded Embeddedly & playing inside Ecosystem!`);
+        setCopyFeedback(`✨ "${video.title}" Full Downloaded & playing inside Ecosystem Vault & HD Player!`);
         setTimeout(() => setCopyFeedback(null), 4000);
       } else {
         setDownloadProgressMap((prev) => ({ ...prev, [video.id]: currentProgress }));
@@ -786,13 +790,13 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
     }, 200);
   };
 
-  // DIRECT DISK EXPORTER FOR SAVED MP4 FILES
+  // OPTIONAL EXPORT TO LOCAL COMPUTER DISK
   const handleExportToDisk = async (video: CinemaVideoItem) => {
     const safeTitle = video.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
     const filename = `${safeTitle}.mp4`;
     
     setIsExportingMap((prev) => ({ ...prev, [video.id]: true }));
-    setCopyFeedback(`⏳ Exporting MP4 file "${filename}" to device disk...`);
+    setCopyFeedback(`⏳ Copying MP4 file "${filename}" to local computer disk...`);
 
     try {
       const targetUrl = video.localBlobUrl || video.downloadUrl;
@@ -809,7 +813,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
       document.body.removeChild(a);
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-      setCopyFeedback(`💾 Saved MP4 file "${filename}" directly to Device Disk!`);
+      setCopyFeedback(`💾 Saved copy of "${filename}" to local computer disk!`);
     } catch (e) {
       // Direct anchor download fallback
       const a = document.createElement("a");
@@ -819,7 +823,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setCopyFeedback(`Exporting MP4 file to device...`);
+      setCopyFeedback(`Copying MP4 file to local computer disk...`);
     }
 
     setTimeout(() => setCopyFeedback(null), 3500);
@@ -1221,7 +1225,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                 </span>
               </h3>
               <p className="text-xs text-stone-300">
-                Videos downloaded embeddedly remain permanently saved in your Executive Library for instant playback, social sharing, or device disk export.
+                Videos downloaded remain permanently saved inside your Ecosystem Vault for instant playback in the ecosystem player, social sharing, or optional PC disk copy.
               </p>
             </div>
           </div>
@@ -1544,7 +1548,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                       {downloadProgress !== undefined && downloadProgress < 100 ? (
                         <div className="space-y-1.5 p-3 bg-purple-950/80 rounded-xl border border-pink-500/60">
                           <div className="flex justify-between text-[11px] font-mono font-bold text-pink-300">
-                            <span>Downloading MP4 Embeddedly...</span>
+                            <span>Downloading MP4 into Ecosystem Vault...</span>
                             <span>{downloadProgress}%</span>
                           </div>
                           <div className="w-full bg-stone-900 h-2 rounded-full overflow-hidden">
@@ -1552,14 +1556,22 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                           </div>
                         </div>
                       ) : isDownloaded ? (
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => handlePreviewHD(activeVid)}
+                            className="w-full py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-stone-950 font-black rounded-xl text-xs shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider"
+                          >
+                            <Play size={16} className="fill-current" />
+                            <span>Full Downloaded — Open & Play in Ecosystem</span>
+                          </button>
+
                           <button
                             onClick={() => handleExportToDisk(activeVid)}
                             disabled={isExporting}
-                            className="w-full py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-extrabold rounded-xl text-xs shadow-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            className="w-full py-2 bg-stone-900/90 hover:bg-stone-800 border border-stone-700/80 text-stone-300 hover:text-white font-bold rounded-xl text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                           >
-                            {isExporting ? <Loader2 size={15} className="animate-spin" /> : <HardDrive size={15} />}
-                            <span>{isExporting ? "Saving Video File Blob..." : "Export Saved MP4 to Device Disk"}</span>
+                            {isExporting ? <Loader2 size={14} className="animate-spin" /> : <HardDrive size={14} />}
+                            <span>{isExporting ? "Copying to Computer Disk..." : "Copy / Save to PC Disk (Optional)"}</span>
                           </button>
                         </div>
                       ) : (
@@ -1568,7 +1580,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                           className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-stone-950 font-black rounded-xl text-xs shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider"
                         >
                           <Download size={16} />
-                          <span>Download MP4 Embeddedly ({activeVid.fileSize})</span>
+                          <span>Full Download to Ecosystem Vault ({activeVid.fileSize})</span>
                         </button>
                       )}
 
@@ -1759,7 +1771,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                       {downloadProgress !== undefined && downloadProgress < 100 ? (
                         <div className="space-y-1 p-2 bg-[#170530] rounded-xl border border-pink-500/60">
                           <div className="flex justify-between text-[10px] font-mono text-pink-300 font-bold">
-                            <span>Downloading MP4 Embeddedly...</span>
+                            <span>Downloading MP4 into Ecosystem Vault...</span>
                             <span>{downloadProgress}%</span>
                           </div>
                           <div className="w-full bg-black h-1.5 rounded-full overflow-hidden">
@@ -1767,23 +1779,34 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                           </div>
                         </div>
                       ) : isDownloaded ? (
-                        <div className="flex gap-2">
+                        <div className="space-y-1.5">
                           <button
-                            onClick={() => handleExportToDisk(vid)}
-                            disabled={isExporting}
-                            className="flex-1 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-extrabold rounded-xl text-[11px] shadow transition-all cursor-pointer flex items-center justify-center gap-1"
+                            onClick={() => handlePreviewHD(vid)}
+                            className="w-full py-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-stone-950 font-black rounded-xl text-[11px] shadow-md transition-all cursor-pointer flex items-center justify-center gap-1"
                           >
-                            <HardDrive size={13} />
-                            <span>Export MP4</span>
+                            <Play size={13} className="fill-current" />
+                            <span>Open in Ecosystem Player</span>
                           </button>
 
-                          <button
-                            onClick={() => setSharingVideo(vid)}
-                            className="p-2 bg-purple-900 hover:bg-purple-800 text-pink-300 border border-purple-700 rounded-xl cursor-pointer"
-                            title="Share Video to Social Media"
-                          >
-                            <Share2 size={13} />
-                          </button>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => handleExportToDisk(vid)}
+                              disabled={isExporting}
+                              className="flex-1 py-1.5 bg-stone-900/90 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold rounded-lg text-[10px] shadow transition-all cursor-pointer flex items-center justify-center gap-1"
+                              title="Copy MP4 file to local computer disk"
+                            >
+                              <HardDrive size={11} />
+                              <span>Copy to PC (Optional)</span>
+                            </button>
+
+                            <button
+                              onClick={() => setSharingVideo(vid)}
+                              className="p-1.5 bg-purple-900 hover:bg-purple-800 text-pink-300 border border-purple-700 rounded-lg cursor-pointer"
+                              title="Share Video"
+                            >
+                              <Share2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <button
@@ -1791,7 +1814,7 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                           className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-xs shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           <Download size={14} />
-                          <span>Download MP4 ({vid.fileSize})</span>
+                          <span>Full Download ({vid.fileSize})</span>
                         </button>
                       )}
 

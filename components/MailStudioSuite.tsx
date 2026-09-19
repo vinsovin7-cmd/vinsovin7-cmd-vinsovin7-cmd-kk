@@ -458,7 +458,7 @@ export const MailStudioSuite: React.FC<MailStudioSuiteProps> = ({ onClose, onHid
         parts: currentParts
       });
 
-      const candidateModels = ["gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"];
+      const candidateModels = ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
       for (const m of candidateModels) {
         try {
           const res = await fetch(
@@ -1107,9 +1107,10 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
     });
   };
 
-  const handleAuthSubmit = async (e?: React.FormEvent) => {
+  const handleAuthSubmit = async (e?: React.FormEvent, directEmail?: string, directName?: string) => {
     if (e) e.preventDefault();
-    const cleanEmail = mailEmailInput.trim().toLowerCase();
+    const emailToUse = directEmail || mailEmailInput;
+    const cleanEmail = emailToUse.trim().toLowerCase();
     if (!cleanEmail) {
       setAuthFeedback({ type: "error", message: "Please enter a valid email address." });
       return;
@@ -1126,13 +1127,13 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
         body: JSON.stringify({
           email: cleanEmail,
           password: mailPasswordInput || "secureSSLPass2026!",
-          fullName: mailFullNameInput.trim() || undefined,
+          fullName: directName || mailFullNameInput.trim() || undefined,
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         const userEmail = data.account?.email || cleanEmail;
-        const userName = data.account?.fullName || userEmail.split("@")[0];
+        const userName = data.account?.fullName || data.account?.name || directName || userEmail.split("@")[0];
 
         setActiveUserEmail(userEmail);
         setActiveUserFullName(userName);
@@ -1146,7 +1147,7 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
         await fetchSentLedger();
 
         // Broadcast to ExpressVpnWebBrowser
-        window.dispatchEvent(new CustomEvent("mail-account-synced", { detail: { email: userEmail, fullName: userName, loggedIn: true } }));
+        window.dispatchEvent(new CustomEvent("mail-account-synced", { detail: { email: userEmail, fullName: userName, name: userName, isLoggedIn: true } }));
 
         setTimeout(() => {
           setShowLoginModal(false);
@@ -1159,7 +1160,7 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
     } catch (err) {
       // Graceful local authentication fallback for Vercel/offline environments
       const userEmail = cleanEmail;
-      const userName = mailFullNameInput.trim() || userEmail.split("@")[0] || "User";
+      const userName = directName || mailFullNameInput.trim() || userEmail.split("@")[0] || "User";
 
       setActiveUserEmail(userEmail);
       setActiveUserFullName(userName);
@@ -1171,7 +1172,7 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
       setAuthFeedback({ type: "success", message: `Connected to Mail.com SSL Gateway as ${userEmail} (Direct Gateway Active)!` });
       await fetchAccountFolders(userEmail);
 
-      window.dispatchEvent(new CustomEvent("mail-account-synced", { detail: { email: userEmail, fullName: userName, loggedIn: true } }));
+      window.dispatchEvent(new CustomEvent("mail-account-synced", { detail: { email: userEmail, fullName: userName, name: userName, isLoggedIn: true } }));
 
       setTimeout(() => {
         setShowLoginModal(false);
@@ -3426,6 +3427,165 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
               </div>
             )}
 
+            {/* AUTHENTIC MAIL.COM REAL SIGN-IN PORTAL (SHOWN WHEN NOT LOGGED IN & LOGIN MODAL IS CLOSED) */}
+            {!isLoggedIn && !showLoginModal ? (
+              <div className="flex-1 bg-[#F2F4F7] p-6 sm:p-10 flex flex-col items-center justify-center min-h-[600px] font-sans">
+                <div className="w-full max-w-md bg-white rounded-2xl border border-stone-300 shadow-2xl overflow-hidden animate-fade-in">
+                  {/* Mail.com Header */}
+                  <div className="bg-[#003B7A] text-white p-6 text-center space-y-2 relative">
+                    <div className="font-extrabold text-3xl tracking-tight">
+                      mail<span className="text-sky-300">.com</span>
+                    </div>
+                    <p className="text-sky-200 text-xs font-medium">Official SSL Webmail Gateway • Secure 256-Bit Entry</p>
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-900/80 text-emerald-200 text-[10px] font-mono px-2.5 py-0.5 rounded-full border border-emerald-600/60 mt-1">
+                      <ShieldCheck size={12} /> TLS 1.3 Active • us-east-1.mail.com
+                    </div>
+                  </div>
+
+                  {/* Portal Body */}
+                  <div className="p-6 space-y-5">
+                    {authFeedback && (
+                      <div
+                        className={`p-3 rounded-lg text-xs font-mono font-bold flex items-center gap-2 ${
+                          authFeedback.type === "success"
+                            ? "bg-emerald-50 text-emerald-800 border border-emerald-300"
+                            : "bg-red-50 text-red-800 border border-red-300"
+                        }`}
+                      >
+                        {authFeedback.type === "success" ? <Check size={16} /> : <X size={16} />}
+                        <span>{authFeedback.message}</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={(e) => handleAuthSubmit(e)} className="space-y-4 text-xs">
+                      {authMode === "signup" && (
+                        <div>
+                          <label className="block font-bold mb-1 text-stone-700">Full Name / Display Name</label>
+                          <input
+                            type="text"
+                            value={mailFullNameInput}
+                            onChange={(e) => setMailFullNameInput(e.target.value)}
+                            placeholder="e.g. Arthur Kingsley"
+                            className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:border-[#003B7A] bg-stone-50 text-sm font-medium"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block font-bold text-stone-700">
+                            {authMode === "signup" ? "Desired Mail.com Address" : "Email Address"}
+                          </label>
+                          <div className="flex gap-1">
+                            {["@mail.com", "@usmail.com", "@email.com"].map((dom) => (
+                              <button
+                                key={dom}
+                                type="button"
+                                onClick={() => {
+                                  const prefix = mailEmailInput.split("@")[0] || "arthur20011043";
+                                  setMailEmailInput(`${prefix}${dom}`);
+                                }}
+                                className="text-[10px] bg-stone-100 hover:bg-stone-200 text-[#003B7A] px-1.5 py-0.5 rounded border border-stone-300 cursor-pointer"
+                              >
+                                {dom}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <input
+                          type="email"
+                          required
+                          value={mailEmailInput}
+                          onChange={(e) => setMailEmailInput(e.target.value)}
+                          placeholder="arthur20011043@mail.com"
+                          className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:border-[#003B7A] font-mono text-sm bg-stone-50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-1 text-stone-700">Password</label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={mailPasswordInput}
+                            onChange={(e) => setMailPasswordInput(e.target.value)}
+                            placeholder="Enter password..."
+                            className="w-full px-3 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:border-[#003B7A] font-mono text-sm bg-stone-50 pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-stone-400 hover:text-stone-700 cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center text-[11px] text-[#003B7A] font-medium pt-1">
+                        <span className="hover:underline cursor-pointer">Forgot password?</span>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input type="checkbox" defaultChecked className="rounded border-stone-300 text-[#003B7A]" />
+                          <span>Keep me logged in</span>
+                        </label>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSubmittingAuth}
+                        className="w-full py-3 bg-[#003B7A] hover:bg-blue-900 disabled:opacity-50 text-white font-bold rounded-xl text-sm shadow-lg cursor-pointer transition-all flex items-center justify-center gap-2"
+                      >
+                        {isSubmittingAuth ? (
+                          <>
+                            <RefreshCw size={15} className="animate-spin" />
+                            <span>Authenticating SSL Session...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock size={15} />
+                            <span>{authMode === "signup" ? "Create Account & Sign In" : "Log In to Mail.com"}</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    <div className="pt-4 border-t border-stone-200 flex flex-col items-center gap-2 text-center text-xs">
+                      {authMode === "login" ? (
+                        <p className="text-stone-600">
+                          Don't have a mail.com account?{" "}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAuthMode("signup");
+                              setAuthFeedback(null);
+                            }}
+                            className="text-[#003B7A] font-bold hover:underline cursor-pointer"
+                          >
+                            Sign up for free
+                          </button>
+                        </p>
+                      ) : (
+                        <p className="text-stone-600">
+                          Already have an account?{" "}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAuthMode("login");
+                              setAuthFeedback(null);
+                            }}
+                            className="text-[#003B7A] font-bold hover:underline cursor-pointer"
+                          >
+                            Log in here
+                          </button>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* REAL MAIL.COM NAVIGATOR LXA TOP BAR (MATCHING USER SCREENSHOT 1) */}
             <div className="bg-[#003B7A] text-white px-4 py-2.5 flex justify-between items-center select-none shadow-sm">
               <div className="flex items-center gap-6">
@@ -4163,6 +4323,8 @@ ${prompt.length > 5 ? `Regarding **"${prompt.slice(0, 120)}${prompt.length > 120
                 JOIN US
               </button>
             </div>
+            </>
+            )}
 
           </div>
         )}

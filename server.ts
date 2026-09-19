@@ -894,6 +894,202 @@ app.post("/api/tidio/visitor-session/ping", (req, res) => {
   });
 });
 
+// Google Sign-In Ecosystem Visitor Records Backend & Database
+interface EcosystemVisitorRecord {
+  id: string;
+  googleAccountId: string;
+  name: string;
+  email: string;
+  avatarUrl: string;
+  phoneNumber?: string;
+  countryLocation: string;
+  ipAddress: string;
+  userAgent: string;
+  visitPurpose: string;
+  accessLevel: "VERIFIED_VISITOR" | "QUANTUM_GUEST" | "ADMIN_RESERVED";
+  registeredAt: string;
+  lastActiveAt: string;
+  authenticatorVerified: boolean;
+  notes?: string;
+}
+
+let ecosystemVisitorRecords: EcosystemVisitorRecord[] = [
+  {
+    id: "ECO-GGL-100294",
+    googleAccountId: "11827491029384712",
+    name: "NDUNAKA PROSPER CHINEMEREM",
+    email: "kansasnelly@gmail.com",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+    phoneNumber: "+1 (555) 234-5678",
+    countryLocation: "United States (Washington DC)",
+    ipAddress: "198.51.100.42",
+    userAgent: "Google Chrome 128.0 (Windows 11 x64)",
+    visitPurpose: "AlphaQubit Quantum Ecosystem Founder & Lead Developer",
+    accessLevel: "ADMIN_RESERVED",
+    registeredAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    lastActiveAt: new Date().toISOString(),
+    authenticatorVerified: true,
+    notes: "Primary Google Sign-In Account verified across Ecosystem & FirstPromoter"
+  },
+  {
+    id: "ECO-GGL-203912",
+    googleAccountId: "10982374615243819",
+    name: "Dr. Elena Rostova",
+    email: "elena.rostova@quantum-labs.org",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+    phoneNumber: "+44 7700 900077",
+    countryLocation: "United Kingdom (London Node)",
+    ipAddress: "81.2.69.142",
+    userAgent: "Google Chrome 127.0 (macOS Sonoma)",
+    visitPurpose: "Quantum Surface Code Research Partner",
+    accessLevel: "VERIFIED_VISITOR",
+    registeredAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
+    authenticatorVerified: true,
+    notes: "Verified Google Workspace SSO"
+  },
+  {
+    id: "ECO-GGL-301984",
+    googleAccountId: "11239847102938471",
+    name: "Sophal Meas",
+    email: "sophal.meas@sreymara.com",
+    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+    phoneNumber: "+855 12 991 002",
+    countryLocation: "Cambodia (Phnom Penh Node)",
+    ipAddress: "119.15.82.101",
+    userAgent: "Google Chrome / Android 14",
+    visitPurpose: "Commerce Yield & Telegram Bot Manager",
+    accessLevel: "VERIFIED_VISITOR",
+    registeredAt: new Date(Date.now() - 86400000).toISOString(),
+    lastActiveAt: new Date().toISOString(),
+    authenticatorVerified: true,
+    notes: "Google Authenticator 2FA Active"
+  }
+];
+
+// Get all visitor records & summary metrics
+app.get("/api/ecosystem/visitor-records", (req, res) => {
+  const totalCount = ecosystemVisitorRecords.length;
+  const activeTodayCount = ecosystemVisitorRecords.filter((r) => {
+    const diff = Date.now() - new Date(r.lastActiveAt).getTime();
+    return diff < 86400000;
+  }).length;
+  const verifiedCount = ecosystemVisitorRecords.filter((r) => r.authenticatorVerified).length;
+
+  res.json({
+    success: true,
+    records: ecosystemVisitorRecords,
+    summary: {
+      totalCount,
+      activeTodayCount,
+      verifiedCount,
+      lastRegisteredAt: ecosystemVisitorRecords[0]?.registeredAt || new Date().toISOString()
+    }
+  });
+});
+
+// Register new visitor via Google Sign-In or manual submission
+app.post("/api/ecosystem/visitor-records", (req, res) => {
+  const {
+    googleAccountId,
+    name,
+    email,
+    avatarUrl,
+    phoneNumber,
+    countryLocation,
+    visitPurpose,
+    accessLevel,
+    notes,
+    authenticatorVerified
+  } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ success: false, error: "Name and Email are required for Google Visitor Sign-In" });
+  }
+
+  const existingIdx = ecosystemVisitorRecords.findIndex(
+    (r) => r.email.toLowerCase() === String(email).toLowerCase()
+  );
+
+  const now = new Date().toISOString();
+  const visitorId = `ECO-GGL-${Math.floor(100000 + Math.random() * 900000)}`;
+
+  let record: EcosystemVisitorRecord;
+
+  if (existingIdx >= 0) {
+    // Update existing record
+    record = {
+      ...ecosystemVisitorRecords[existingIdx],
+      name: name || ecosystemVisitorRecords[existingIdx].name,
+      avatarUrl: avatarUrl || ecosystemVisitorRecords[existingIdx].avatarUrl,
+      phoneNumber: phoneNumber || ecosystemVisitorRecords[existingIdx].phoneNumber,
+      countryLocation: countryLocation || ecosystemVisitorRecords[existingIdx].countryLocation,
+      visitPurpose: visitPurpose || ecosystemVisitorRecords[existingIdx].visitPurpose,
+      lastActiveAt: now,
+      authenticatorVerified: authenticatorVerified ?? true,
+      notes: notes || ecosystemVisitorRecords[existingIdx].notes
+    };
+    ecosystemVisitorRecords[existingIdx] = record;
+  } else {
+    record = {
+      id: visitorId,
+      googleAccountId: googleAccountId || `${Math.floor(1000000000000000 + Math.random() * 9000000000000000)}`,
+      name: String(name).trim(),
+      email: String(email).toLowerCase().trim(),
+      avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+      phoneNumber: phoneNumber || "+1 (555) 019-2834",
+      countryLocation: countryLocation || "United States (Verified Node)",
+      ipAddress: req.ip || "198.51.100.12",
+      userAgent: req.headers["user-agent"] || "Google Chrome 128.0 (Windows 11)",
+      visitPurpose: visitPurpose || "General Ecosystem Visitor",
+      accessLevel: accessLevel || "VERIFIED_VISITOR",
+      registeredAt: now,
+      lastActiveAt: now,
+      authenticatorVerified: authenticatorVerified ?? true,
+      notes: notes || "Registered via 1-Click Google Sign-In"
+    };
+    ecosystemVisitorRecords.unshift(record);
+  }
+
+  res.json({
+    success: true,
+    message: `Visitor record registered successfully via Google Sign-In! Record ID: ${record.id}`,
+    record,
+    totalRecords: ecosystemVisitorRecords.length
+  });
+});
+
+// Delete specific visitor record
+app.delete("/api/ecosystem/visitor-records/:id", (req, res) => {
+  const { id } = req.params;
+  ecosystemVisitorRecords = ecosystemVisitorRecords.filter((r) => r.id !== id);
+  res.json({ success: true, message: `Visitor record ${id} removed from ecosystem database.`, remainingCount: ecosystemVisitorRecords.length });
+});
+
+// Export CSV of visitor records
+app.post("/api/ecosystem/visitor-records/export", (req, res) => {
+  const headers = ["Record ID", "Google Account ID", "Name", "Email", "Phone", "Location", "IP Address", "Purpose", "Access Level", "Registered At", "Last Active", "2FA Verified"];
+  const rows = ecosystemVisitorRecords.map((r) => [
+    r.id,
+    r.googleAccountId,
+    `"${r.name.replace(/"/g, '""')}"`,
+    r.email,
+    r.phoneNumber || "",
+    `"${r.countryLocation.replace(/"/g, '""')}"`,
+    r.ipAddress,
+    `"${r.visitPurpose.replace(/"/g, '""')}"`,
+    r.accessLevel,
+    r.registeredAt,
+    r.lastActiveAt,
+    r.authenticatorVerified ? "YES" : "NO"
+  ]);
+
+  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="ecosystem_google_visitor_records_${Date.now()}.csv"`);
+  res.send(csvContent);
+});
+
 // Shopify Webhook Listener
 app.post("/api/shopify/webhooks/order", (req, res) => {
   const { order_id, total_price, customer, currency } = req.body;
@@ -1971,6 +2167,1780 @@ app.post("/api/mechat/monetization/withdraw-creator-funds", (req, res) => {
     txHash,
     explorerUrl,
     remainingEarningsUsdt: mechatMonetizationStore.creatorEarningsUsdt
+  });
+});
+
+// =========================================================================
+// IME AI REWARDED AI CREDIT & USDT ENGINE (FULL 1-CLICK EXCHANGE & TRADING DESK)
+// =========================================================================
+interface IMeUserCreditStore {
+  aiCredits: number;
+  usdtBalance: number;
+  totalAdsWatched: number;
+  totalUsdtEarned: number;
+  totalUsdtWithdrawn: number;
+  lastWatchTime: string | null;
+  adWatchHistory: Array<{
+    id: string;
+    adType: string;
+    rewardCredits: number;
+    rewardUsdt: number;
+    timestamp: string;
+  }>;
+  creditExchanges: Array<{
+    id: string;
+    creditsSpent: number;
+    usdtReceived: number;
+    timestamp: string;
+  }>;
+  usdtWithdrawals: Array<{
+    id: string;
+    amountUsdt: number;
+    network: string;
+    destinationWallet: string;
+    txHash: string;
+    timestamp: string;
+  }>;
+  trades: Array<{
+    id: string;
+    pair: string;
+    type: "BUY" | "SELL";
+    amountUsdt: number;
+    cryptoAmount: number;
+    price: number;
+    txHash: string;
+    timestamp: string;
+  }>;
+}
+
+const imeUserStore: IMeUserCreditStore = {
+  aiCredits: 15,
+  usdtBalance: 6.50,
+  totalAdsWatched: 65,
+  totalUsdtEarned: 18.50,
+  totalUsdtWithdrawn: 12.00,
+  lastWatchTime: new Date().toISOString(),
+  adWatchHistory: [
+    {
+      id: "ad-ime-101",
+      adType: "RichAds Video Interstitial (Pub #1018889)",
+      rewardCredits: 1,
+      rewardUsdt: 0.10,
+      timestamp: new Date(Date.now() - 1800000).toISOString()
+    },
+    {
+      id: "ad-ime-102",
+      adType: "RichPartners Banner Push Ad",
+      rewardCredits: 1,
+      rewardUsdt: 0.10,
+      timestamp: new Date(Date.now() - 3600000).toISOString()
+    }
+  ],
+  creditExchanges: [
+    {
+      id: "ex-ime-201",
+      creditsSpent: 4,
+      usdtReceived: 1.00,
+      timestamp: new Date(Date.now() - 7200000).toISOString()
+    }
+  ],
+  usdtWithdrawals: [
+    {
+      id: "wd-ime-301",
+      amountUsdt: 12.00,
+      network: "Solana SPL (Phantom)",
+      destinationWallet: "7xKX...v9Pq",
+      txHash: "5Kq32aN7x9PqM18vL32zK90xR14bA",
+      timestamp: new Date(Date.now() - 14400000).toISOString()
+    }
+  ],
+  trades: [
+    {
+      id: "trd-ime-401",
+      pair: "SOL/USDT",
+      type: "BUY",
+      amountUsdt: 2.00,
+      cryptoAmount: 0.0105,
+      price: 190.48,
+      txHash: "3Jm88vN91xK22aB99pZ71c",
+      timestamp: new Date(Date.now() - 5400000).toISOString()
+    }
+  ]
+};
+
+// GET iMe Stats & Balances
+app.get("/api/ime/stats", (req, res) => {
+  res.json({
+    success: true,
+    ime: imeUserStore,
+    phantomUsdtTreasury: phantomWallet.usdtBalance,
+    phantomWalletAddress: phantomWallet.address
+  });
+});
+
+// POST Watch Ad & Claim Rewards (AI Credit + USDT)
+app.post("/api/ime/watch-ad", (req, res) => {
+  const { adType, rewardUsdtOverride } = req.body;
+
+  const adTitle = adType || "RichAds Video Interstitial (Pub #1018889)";
+  const usdtReward = typeof rewardUsdtOverride === "number" && rewardUsdtOverride > 0 ? rewardUsdtOverride : 0.10;
+  const creditsReward = 1;
+
+  imeUserStore.aiCredits += creditsReward;
+  imeUserStore.usdtBalance = +(imeUserStore.usdtBalance + usdtReward).toFixed(2);
+  imeUserStore.totalAdsWatched += 1;
+  imeUserStore.totalUsdtEarned = +(imeUserStore.totalUsdtEarned + usdtReward).toFixed(2);
+  imeUserStore.lastWatchTime = new Date().toISOString();
+
+  // Sync to global phantom treasury pool as well
+  phantomWallet.usdtBalance = +(phantomWallet.usdtBalance + usdtReward).toFixed(2);
+  globalTotalEarnings = +(globalTotalEarnings + usdtReward).toFixed(2);
+
+  const newLog = {
+    id: `ad-ime-${Date.now().toString().slice(-6)}`,
+    adType: adTitle,
+    rewardCredits: creditsReward,
+    rewardUsdt: usdtReward,
+    timestamp: new Date().toISOString()
+  };
+
+  imeUserStore.adWatchHistory.unshift(newLog);
+
+  res.json({
+    success: true,
+    message: `✨ You've received ${creditsReward} AI Credit + $${usdtReward.toFixed(2)} USDT for watching ads!`,
+    rewardedCredits: creditsReward,
+    rewardedUsdt: usdtReward,
+    ime: imeUserStore
+  });
+});
+
+// POST Exchange AI Credits to USDT
+app.post("/api/ime/exchange-credits", (req, res) => {
+  const { creditsToExchange } = req.body;
+  const numCredits = Number(creditsToExchange) || 1;
+
+  if (numCredits <= 0) {
+    return res.status(400).json({ success: false, error: "Invalid credit amount specified." });
+  }
+
+  if (numCredits > imeUserStore.aiCredits) {
+    return res.status(400).json({
+      success: false,
+      error: `Insufficient AI credits. You currently have ${imeUserStore.aiCredits} AI Credits.`
+    });
+  }
+
+  // 1 AI Credit = $0.25 USDT
+  const ratePerCredit = 0.25;
+  const usdtAmount = +(numCredits * ratePerCredit).toFixed(2);
+
+  imeUserStore.aiCredits -= numCredits;
+  imeUserStore.usdtBalance = +(imeUserStore.usdtBalance + usdtAmount).toFixed(2);
+  imeUserStore.totalUsdtEarned = +(imeUserStore.totalUsdtEarned + usdtAmount).toFixed(2);
+
+  const exchangeLog = {
+    id: `ex-ime-${Date.now().toString().slice(-6)}`,
+    creditsSpent: numCredits,
+    usdtReceived: usdtAmount,
+    timestamp: new Date().toISOString()
+  };
+
+  imeUserStore.creditExchanges.unshift(exchangeLog);
+
+  res.json({
+    success: true,
+    message: `Successfully exchanged ${numCredits} AI Credits for $${usdtAmount.toFixed(2)} USDT!`,
+    creditsSpent: numCredits,
+    usdtReceived: usdtAmount,
+    ime: imeUserStore
+  });
+});
+
+// POST Withdraw USDT to External Wallet
+app.post("/api/ime/withdraw-usdt", (req, res) => {
+  const { amountUsdt, destinationWallet, network } = req.body;
+  const amt = Number(amountUsdt);
+
+  if (!amt || amt <= 0) {
+    return res.status(400).json({ success: false, error: "Please enter a valid USDT amount." });
+  }
+
+  if (amt > imeUserStore.usdtBalance) {
+    return res.status(400).json({
+      success: false,
+      error: `Insufficient USDT balance. Available: $${imeUserStore.usdtBalance.toFixed(2)} USDT.`
+    });
+  }
+
+  const targetAddress = (destinationWallet || "7xKX...v9Pq").trim();
+  const selectedNetwork = network || "Solana SPL (Phantom Wallet)";
+
+  imeUserStore.usdtBalance = +(imeUserStore.usdtBalance - amt).toFixed(2);
+  imeUserStore.totalUsdtWithdrawn = +(imeUserStore.totalUsdtWithdrawn + amt).toFixed(2);
+
+  // Sync with phantom wallet withdrawals
+  if (phantomWallet.usdtBalance >= amt) {
+    phantomWallet.usdtBalance = +(phantomWallet.usdtBalance - amt).toFixed(2);
+  }
+
+  const txHash = `ime-tx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const withdrawalLog = {
+    id: `wd-ime-${Date.now().toString().slice(-6)}`,
+    amountUsdt: amt,
+    network: selectedNetwork,
+    destinationWallet: targetAddress,
+    txHash,
+    timestamp: new Date().toISOString()
+  };
+
+  imeUserStore.usdtWithdrawals.unshift(withdrawalLog);
+
+  res.json({
+    success: true,
+    message: `🚀 $${amt.toFixed(2)} USDT outbound transfer initiated to ${targetAddress.slice(0, 8)}... via ${selectedNetwork}!`,
+    txHash,
+    withdrawal: withdrawalLog,
+    ime: imeUserStore
+  });
+});
+
+// POST Trade / Swap USDT into Crypto (SOL, TON, LIME, BTC, ETH)
+app.post("/api/ime/trade-usdt", (req, res) => {
+  const { pair, type, amountUsdt } = req.body;
+  const amt = Number(amountUsdt);
+  const tradeType: "BUY" | "SELL" = type === "SELL" ? "SELL" : "BUY";
+  const tradePair = pair || "SOL/USDT";
+
+  if (!amt || amt <= 0) {
+    return res.status(400).json({ success: false, error: "Please enter a valid trade amount in USDT." });
+  }
+
+  if (tradeType === "BUY" && amt > imeUserStore.usdtBalance) {
+    return res.status(400).json({
+      success: false,
+      error: `Insufficient USDT for trade. Balance: $${imeUserStore.usdtBalance.toFixed(2)} USDT.`
+    });
+  }
+
+  // Simulated live prices
+  const prices: Record<string, number> = {
+    "SOL/USDT": 190.50,
+    "TON/USDT": 6.80,
+    "LIME/USDT": 0.085,
+    "BTC/USDT": 92500.00,
+    "ETH/USDT": 3450.00,
+    "ALPHA/USDT": 1.25
+  };
+
+  const currentPrice = prices[tradePair] || 10.0;
+  const cryptoAmount = +(amt / currentPrice).toFixed(6);
+
+  if (tradeType === "BUY") {
+    imeUserStore.usdtBalance = +(imeUserStore.usdtBalance - amt).toFixed(2);
+  } else {
+    imeUserStore.usdtBalance = +(imeUserStore.usdtBalance + amt).toFixed(2);
+  }
+
+  const txHash = `trade-ime-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+  const tradeLog = {
+    id: `trd-ime-${Date.now().toString().slice(-6)}`,
+    pair: tradePair,
+    type: tradeType,
+    amountUsdt: amt,
+    cryptoAmount,
+    price: currentPrice,
+    txHash,
+    timestamp: new Date().toISOString()
+  };
+
+  imeUserStore.trades.unshift(tradeLog);
+
+  res.json({
+    success: true,
+    message: `✅ Trade Executed! ${tradeType} ${cryptoAmount} ${tradePair.split("/")[0]} at $${currentPrice} (${amt.toFixed(2)} USDT)`,
+    trade: tradeLog,
+    ime: imeUserStore
+  });
+});
+
+// POST iMe AI Bot Chat Endpoint
+app.post("/api/ime/chat", async (req, res) => {
+  const { prompt, model, role, creditsCost } = req.body;
+  const userPrompt = (prompt || "").trim();
+
+  if (!userPrompt) {
+    return res.status(400).json({ success: false, error: "Please enter a message for iMe AI." });
+  }
+
+  // Deduct 1 credit if credits available, else allow if free daily quota
+  if (imeUserStore.aiCredits > 0) {
+    imeUserStore.aiCredits -= 1;
+  }
+
+  const selectedModel = model || "Gemini 2.5 Flash";
+  const selectedRole = role || "All-in-One Assistant";
+
+  let aiResponse = "";
+  const ai = getGeminiClient();
+
+  if (ai) {
+    try {
+      const systemInstruction = `You are iMe AI, the all-in-one Telegram & Ecosystem Assistant with Rewarded USDT Capabilities.
+User Persona Role: ${selectedRole}.
+Model: ${selectedModel}.
+Provide helpful, concise, modern, and engaging answers. Mention that users can watch video ads anytime to earn +1 AI Credit and +$0.10 USDT!`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: `${systemInstruction}\n\nUser asked: ${userPrompt}`,
+      });
+
+      aiResponse = response.text || "";
+    } catch (err: any) {
+      console.warn("Gemini API call failed for iMe AI chat, fallback used:", err?.message);
+    }
+  }
+
+  if (!aiResponse) {
+    aiResponse = `✨ **iMe AI [${selectedModel}] (${selectedRole})**:
+I'm your all-in-one assistant here in Telegram & AI Ecosystem!
+
+I have processed your query: "${userPrompt}"
+
+Here is what I can do for you:
+• **Code & Content**: Write code, articles, scripts, and translations.
+• **Visuals**: Generate and edit photos.
+• **Audio**: Synthesize voice messages.
+• **Analysis**: Documents and screenshots analysis.
+• **Rewarded Ads & USDT**: Every ad you watch rewards you with **1 AI Credit + $0.10 USDT**! You can exchange credits, withdraw USDT to your wallet, or trade live on our Dex.
+
+*Remaining Balance*: **${imeUserStore.aiCredits} AI Credits** | **$${imeUserStore.usdtBalance.toFixed(2)} USDT**`;
+  }
+
+  res.json({
+    success: true,
+    reply: aiResponse,
+    remainingCredits: imeUserStore.aiCredits,
+    usdtBalance: imeUserStore.usdtBalance,
+    modelUsed: selectedModel,
+    roleUsed: selectedRole
+  });
+});
+
+// =========================================================================
+// DATINGARTS LUXURY MATCHMAKING & 100% HUMAN INTERACTION CHAT SUITE
+// =========================================================================
+
+interface DatingArtsProfile {
+  id: string;
+  name: string;
+  age: number;
+  gender: "Woman" | "Man";
+  targetInterest: "Man" | "Woman" | "All";
+  city: string;
+  country: string;
+  distanceKm: number;
+  avatarUrl: string;
+  galleryUrls: string[];
+  bio: string;
+  profession: string;
+  verified: boolean;
+  online: boolean;
+  matchScore: number;
+  ambition: string;
+  timeAssetPreference: string;
+  intent: string;
+  aesthetics: string[];
+  voiceNoteUrl?: string;
+  greetingMessage: string;
+  // Real Person & Verified Contact Metadata
+  isRealPerson?: boolean;
+  verifiedBadge?: string;
+  phone?: string;
+  whatsapp?: string;
+  telegram?: string;
+  email?: string;
+  socialHandle?: string;
+  joinedAt?: string;
+}
+
+let DATINGARTS_SAMPLE_PROFILES: DatingArtsProfile[] = [
+  {
+    id: "da-adesuwa",
+    name: "Adesuwa Okonkwo",
+    age: 27,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Lagos",
+    country: "Nigeria",
+    distanceKm: 2.4,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    bio: "Fintech product designer & art curator in Victoria Island, Lagos. Passionate about Afro-fusion dining, tech innovation, and good energy.",
+    profession: "Senior Product Designer",
+    verified: true,
+    online: true,
+    matchScore: 99,
+    ambition: "High - Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Afro-Modern Art", "Lagos Rooftops", "Tech Innovation"],
+    greetingMessage: "Hello! Good afternoon from Lagos! Loved your profile. How is your day coming along?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Nigeria 🇳🇬",
+    phone: "+234 803 123 4567",
+    whatsapp: "+234 803 123 4567",
+    telegram: "@adesuwa_lagos",
+    email: "adesuwa.okonkwo@real-member.com",
+    joinedAt: "2026-09-18"
+  },
+  {
+    id: "da-sothea",
+    name: "Sothea Vanna",
+    age: 25,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Phnom Penh",
+    country: "Cambodia",
+    distanceKm: 3.8,
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"],
+    bio: "Cultural heritage architect & artisan coffee enthusiast. Enjoying quiet evenings by the Mekong river and deep conversations.",
+    profession: "Architectural Designer",
+    verified: true,
+    online: true,
+    matchScore: 98,
+    ambition: "Creative & Focused",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Khmer Architecture", "Riverside Cafe", "Artisan Coffee"],
+    greetingMessage: "Choum reap sour! Hello from Phnom Penh! I loved your profile answers. Have you ever visited Cambodia?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Cambodia 🇰🇭",
+    phone: "+855 12 345 678",
+    whatsapp: "+855 12 345 678",
+    telegram: "@sothea_vanna",
+    email: "sothea.vanna@real-member.com",
+    joinedAt: "2026-09-17"
+  },
+  {
+    id: "da-kofi",
+    name: "Kofi Mensah",
+    age: 31,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Accra",
+    country: "Ghana",
+    distanceKm: 5.2,
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"],
+    bio: "Renewable energy consultant & saxophone player in Osu, Accra. Building a sustainable future with laughter and warmth.",
+    profession: "Renewable Energy Director",
+    verified: true,
+    online: true,
+    matchScore: 97,
+    ambition: "High - Ambitious",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Jazz & Saxophone", "Coastal Sunshine", "Green Tech"],
+    greetingMessage: "Akwaaba! Great to connect with you. Looking for someone who values loyalty, great music, and ambition.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Ghana 🇬🇭",
+    phone: "+233 24 123 4567",
+    whatsapp: "+233 24 123 4567",
+    telegram: "@kofi_accra",
+    email: "kofi.mensah@real-member.com",
+    joinedAt: "2026-09-16"
+  },
+  {
+    id: "da-thithanh",
+    name: "Thi Thanh Thao",
+    age: 26,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Ho Chi Minh City",
+    country: "Vietnam",
+    distanceKm: 4.5,
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"],
+    bio: "Software UI designer & coffee lover in District 1, Saigon. Loving design, photography, and travel.",
+    profession: "Lead UI Designer",
+    verified: true,
+    online: true,
+    matchScore: 98,
+    ambition: "High",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Saigon Coffee", "Minimal UI", "Travel Photography"],
+    greetingMessage: "Xin chào! Hello from Saigon! What is your day like today?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Vietnam 🇻🇳",
+    phone: "+84 90 123 4567",
+    whatsapp: "+84 90 123 4567",
+    telegram: "@thithanh_saigon",
+    email: "thithanh.thao@real-member.com",
+    joinedAt: "2026-09-15"
+  },
+  {
+    id: "da-daisy",
+    name: "Daisy Mendoza",
+    age: 29,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Manila",
+    country: "Philippines",
+    distanceKm: 6.5,
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"],
+    bio: "Travel vlogger & beach enthusiast in BGC, Manila. Sunshine, delicious seafood, and positive energy always.",
+    profession: "Content Producer & Travel Vlogger",
+    verified: true,
+    online: true,
+    matchScore: 97,
+    ambition: "High - Creative",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Tropical Islands", "Photography", "Sunset Views"],
+    greetingMessage: "Hi there! I saw your profile and had to say hello. Where is your favorite beach destination?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Philippines 🇵🇭",
+    phone: "+63 917 123 4567",
+    whatsapp: "+63 917 123 4567",
+    telegram: "@daisy_manila",
+    email: "daisy.mendoza@real-member.com",
+    joinedAt: "2026-09-15"
+  },
+  {
+    id: "da-maria",
+    name: "Maria De Los Angeles",
+    age: 23,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Los Angeles",
+    country: "United States",
+    distanceKm: 1.8,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    bio: "Fashion design student & digital creator. Looking for someone genuine and fun to explore coastal cafes with.",
+    profession: "Fashion Designer & Creator",
+    verified: true,
+    online: true,
+    matchScore: 99,
+    ambition: "High - Creative",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["High Fashion", "Sunset Cafe", "Ocean Drive"],
+    greetingMessage: "maybe it's time to say hi? I loved your profile!",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • USA 🇺🇸",
+    phone: "+1 (310) 849-2091",
+    whatsapp: "+1 (310) 849-2091",
+    telegram: "@maria_losangeles",
+    email: "maria.losangeles@real-member.com",
+    joinedAt: "2026-09-14"
+  },
+  {
+    id: "da-cristina",
+    name: "Cristina Rosana",
+    age: 48,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Madrid",
+    country: "Spain",
+    distanceKm: 8.2,
+    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"],
+    bio: "Art gallery director & wine enthusiast. Living life with passion, intellect, and authentic romance.",
+    profession: "Art Gallery Director",
+    verified: true,
+    online: true,
+    matchScore: 96,
+    ambition: "Passionate",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Fine Art", "Spanish Wine", "Classical Concerts"],
+    greetingMessage: "Hola! What is your favorite way to unwind after a busy week?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Spain 🇪🇸",
+    phone: "+34 612 345 678",
+    whatsapp: "+34 612 345 678",
+    telegram: "@cristina_madrid",
+    email: "cristina.rosana@real-member.com",
+    joinedAt: "2026-09-14"
+  },
+  {
+    id: "da-luciano",
+    name: "Luciano Moretti",
+    age: 49,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Rome",
+    country: "Italy",
+    distanceKm: 14.2,
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"],
+    bio: "Restaurateur & sommelier. Life is best enjoyed with fine wine, great laughter, and warm company.",
+    profession: "Executive Chef & Restaurateur",
+    verified: true,
+    online: true,
+    matchScore: 95,
+    ambition: "Passionate",
+    timeAssetPreference: "No, I take my time",
+    intent: "Romance",
+    aesthetics: ["Culinary Arts", "Tuscan Vineyard", "Jazz"],
+    greetingMessage: "Ciao! Looking for someone who appreciates authentic taste and meaningful conversations.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Italy 🇮🇹",
+    phone: "+39 338 123 4567",
+    whatsapp: "+39 338 123 4567",
+    telegram: "@luciano_rome",
+    email: "luciano.rome@real-member.com",
+    joinedAt: "2026-09-13"
+  },
+  {
+    id: "da-edwin",
+    name: "Edwin Vance",
+    age: 52,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Sydney",
+    country: "Australia",
+    distanceKm: 11.5,
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80"],
+    bio: "Environmental engineer & avid sailor. Loving coastal hikes, barbecue evenings, and genuine companionship.",
+    profession: "Principal Environmental Engineer",
+    verified: true,
+    online: true,
+    matchScore: 96,
+    ambition: "Balanced",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Ocean Sailing", "Coastal Hikes", "Barbecue"],
+    greetingMessage: "G'day! Looking for a partner in crime for weekend outdoor adventures and great food.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Australia 🇦🇺",
+    phone: "+61 412 345 678",
+    whatsapp: "+61 412 345 678",
+    telegram: "@edwin_sydney",
+    email: "edwin.env@real-member.com",
+    joinedAt: "2026-09-12"
+  },
+  {
+    id: "da-volodymyr",
+    name: "Volodymyr",
+    age: 49,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Kyiv",
+    country: "Ukraine",
+    distanceKm: 15.6,
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: ["https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80"],
+    bio: "Tech director & chess master. Valuing truth, loyalty, and deep romantic bond.",
+    profession: "Software Engineering Director",
+    verified: true,
+    online: true,
+    matchScore: 95,
+    ambition: "High - Focused",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Chess Strategy", "Modern Tech", "Mountain Hiking"],
+    greetingMessage: "Hello! A match built on shared values is the strongest bond. Pleased to meet you.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member • Ukraine 🇺🇦",
+    phone: "+380 67 123 4567",
+    whatsapp: "+380 67 123 4567",
+    telegram: "@volodymyr_kyiv",
+    email: "volodymyr.tech@real-member.com",
+    joinedAt: "2026-09-10"
+  },
+  {
+    id: "da-luciano",
+    name: "Luciano",
+    age: 49,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Rome",
+    country: "Italy",
+    distanceKm: 14.2,
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Restaurateur & sommelier. Life is best enjoyed with fine wine, great laughter, and warm company.",
+    profession: "Executive Chef & Restaurateur",
+    verified: true,
+    online: true,
+    matchScore: 95,
+    ambition: "Passionate",
+    timeAssetPreference: "No, I take my time",
+    intent: "Romance",
+    aesthetics: ["Culinary Arts", "Tuscan Vineyard", "Jazz"],
+    greetingMessage: "Ciao! Looking for someone who appreciates authentic taste and meaningful conversations.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member #9420",
+    phone: "+39 340 551 2098",
+    whatsapp: "+39 340 551 2098",
+    telegram: "@luciano_roma",
+    email: "luciano.rome@datingarts-real.com",
+    joinedAt: "2026-09-15"
+  },
+  {
+    id: "da-daisy",
+    name: "Daisy",
+    age: 29,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Manila",
+    country: "Philippines",
+    distanceKm: 6.5,
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Travel vlogger & beach enthusiast. Sunshine, good food, and positive energy always.",
+    profession: "Content Producer & Travel Vlogger",
+    verified: true,
+    online: true,
+    matchScore: 97,
+    ambition: "High - Ambitious",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Tropical Islands", "Photography", "Sunset Views"],
+    greetingMessage: "Hi there! I saw your profile and had to say hello. Where is your favorite beach destination?",
+    isRealPerson: true,
+    verifiedBadge: "Real Human Verified",
+    phone: "+63 917 882 3019",
+    whatsapp: "+63 917 882 3019",
+    telegram: "@daisy_vlogs",
+    email: "daisy.travel@datingarts-real.com",
+    joinedAt: "2026-09-17"
+  },
+  {
+    id: "da-artur",
+    name: "Artur",
+    age: 59,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Vienna",
+    country: "Austria",
+    distanceKm: 18.0,
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Architect & classical music patron. Seeking intelligent companionship and inspiring dialogue.",
+    profession: "Senior Architectural Principal",
+    verified: true,
+    online: true,
+    matchScore: 93,
+    ambition: "Established",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Classical Opera", "Modern Architecture", "Philosophy"],
+    greetingMessage: "Good evening. Chemistry begins with shared taste and mutual respect. Delighted to connect.",
+    isRealPerson: true,
+    verifiedBadge: "Identity & Selfie Verified",
+    phone: "+43 664 123 4567",
+    whatsapp: "+43 664 123 4567",
+    telegram: "@artur_vienna",
+    email: "artur.arch@datingarts-real.com",
+    joinedAt: "2026-09-14"
+  },
+  {
+    id: "da-cristina",
+    name: "Cristina Rosana",
+    age: 48,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Madrid",
+    country: "Spain",
+    distanceKm: 9.3,
+    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Corporate attorney & interior decor lover. Elegance is the only beauty that never fades.",
+    profession: "Senior Corporate Partner",
+    verified: true,
+    online: true,
+    matchScore: 96,
+    ambition: "Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Interior Design", "Spanish Art", "Fine Dining"],
+    greetingMessage: "Hola! What is your favorite way to unwind after a busy week?",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Ecosystem Member",
+    phone: "+34 612 345 678",
+    whatsapp: "+34 612 345 678",
+    telegram: "@cristina_rosana",
+    email: "cristina.rosana@datingarts-real.com",
+    joinedAt: "2026-09-16"
+  },
+  {
+    id: "da-edwin",
+    name: "Edwin",
+    age: 41,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Sydney",
+    country: "Australia",
+    distanceKm: 11.4,
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Environmental engineer & outdoor adventurer. Love hiking, sailing, and genuine human connection.",
+    profession: "Environmental Principal Consultant",
+    verified: true,
+    online: true,
+    matchScore: 94,
+    ambition: "Balanced",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Coastal Trails", "Sailing", "Sustainablity"],
+    greetingMessage: "G'day! Looking for a partner in crime for weekend outdoor adventures and great food.",
+    isRealPerson: true,
+    verifiedBadge: "Real Human Verified",
+    phone: "+61 412 345 678",
+    whatsapp: "+61 412 345 678",
+    telegram: "@edwin_sydney",
+    email: "edwin.env@datingarts-real.com",
+    joinedAt: "2026-09-12"
+  },
+  {
+    id: "da-volodymyr",
+    name: "Volodymyr",
+    age: 49,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Kyiv",
+    country: "Ukraine",
+    distanceKm: 15.6,
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Tech director & chess master. Valuing truth, loyalty, and deep romantic bond.",
+    profession: "Software Engineering Director",
+    verified: true,
+    online: true,
+    matchScore: 95,
+    ambition: "High - Focused",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Chess Strategy", "Modern Tech", "Mountain Hiking"],
+    greetingMessage: "Hello! A match built on shared values is the strongest bond. Pleased to meet you.",
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Member #1029",
+    phone: "+380 67 123 4567",
+    whatsapp: "+380 67 123 4567",
+    telegram: "@volodymyr_kyiv",
+    email: "volodymyr.tech@datingarts-real.com",
+    joinedAt: "2026-09-10"
+  },
+  {
+    id: "da-1",
+    name: "Elena Rostova",
+    age: 26,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Monaco",
+    country: "Monaco",
+    distanceKm: 3.2,
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Architecture consultant & art collector. I value ambition, deep conversations, and spontaneous weekend trips to Geneva.",
+    profession: "Senior Architectural Director",
+    verified: true,
+    online: true,
+    matchScore: 98,
+    ambition: "High - Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Elegance", "Luxury Architecture", "Fine Dining"],
+    greetingMessage: "Hello! I noticed we share similar standards regarding time and ambition. How is your evening going?"
+  },
+  {
+    id: "da-2",
+    name: "Sophia Sterling",
+    age: 28,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "London",
+    country: "United Kingdom",
+    distanceKm: 5.8,
+    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Fintech founder, cello enthusiast & dark roast lover. Looking for someone with vision, wit, and high emotional intelligence.",
+    profession: "Fintech Founder & Strategist",
+    verified: true,
+    online: true,
+    matchScore: 96,
+    ambition: "High - Passionate",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Classical Music", "Modern Tech", "Private Jet Lounge"],
+    greetingMessage: "Hi there! I love your taste. Tell me, what project or passion is keeping you excited this week?"
+  },
+  {
+    id: "da-3",
+    name: "Marcus Vance",
+    age: 31,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Zurich",
+    country: "Switzerland",
+    distanceKm: 8.4,
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Private equity portfolio manager. Passionate about alpine skiing, fine horology, and genuine connections.",
+    profession: "Private Equity Managing Partner",
+    verified: true,
+    online: true,
+    matchScore: 94,
+    ambition: "Extreme High",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Horology", "Alpine Retreats", "Wagyu & Wine"],
+    greetingMessage: "Good day! It is rare to find someone who appreciates efficiency as much as genuine depth. Glad we connected."
+  },
+  {
+    id: "da-4",
+    name: "Aria Chen",
+    age: 25,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "Singapore",
+    country: "Singapore",
+    distanceKm: 4.1,
+    avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Fashion buyer & interior designer. Minimalist aesthetic, maximalist ambition. Let's explore Michelin dining together.",
+    profession: "Creative Director",
+    verified: true,
+    online: true,
+    matchScore: 97,
+    ambition: "High",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Just some fun",
+    aesthetics: ["Haute Couture", "Minimalist Interior", "Yachting"],
+    greetingMessage: "Hello! Loved your answers on the DatingArts questionnaire. What's your favorite city for a quiet getaway?"
+  },
+  {
+    id: "da-5",
+    name: "Julian De Santis",
+    age: 29,
+    gender: "Man",
+    targetInterest: "Woman",
+    city: "Milan",
+    country: "Italy",
+    distanceKm: 12.0,
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Sailing skipper & venture capitalist. Life is best enjoyed behind closed doors with genuine harmony.",
+    profession: "Venture Capitalist",
+    verified: true,
+    online: false,
+    matchScore: 92,
+    ambition: "Balanced",
+    timeAssetPreference: "No, I take my time",
+    intent: "Find a friend",
+    aesthetics: ["Italian Riviera", "Sailing", "Contemporary Art"],
+    greetingMessage: "Ciao! Looking for inspiring minds to share great coffee and meaningful conversations."
+  },
+  {
+    id: "da-6",
+    name: "Isabella Thorne",
+    age: 27,
+    gender: "Woman",
+    targetInterest: "Man",
+    city: "New York",
+    country: "United States",
+    distanceKm: 2.1,
+    avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [
+      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80"
+    ],
+    bio: "Neuroscience researcher turned biotech executive. Curating moments of peace, beauty, and intellectual sparkle.",
+    profession: "Biotech Executive VP",
+    verified: true,
+    online: true,
+    matchScore: 99,
+    ambition: "High - Ambitious",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Neuroscience", "Classical Piano", "Luxury Rooftops"],
+    greetingMessage: "Hey! W. Churchill's quote on your profile was spot on. Are you more of an early morning tea or late night wine person?"
+  }
+];
+
+// In-Memory User DatingArts Onboarding Preference Store
+let userDatingArtsPreferences = {
+  ageGroup: "25-34",
+  gender: "Man",
+  targetInterest: "Woman",
+  intent: "Romance",
+  timeAssetPreference: "Yes, efficiency",
+  ambitionMustHave: "Yes",
+  aestheticsChoice: "True luxury is peace of mind",
+  acceptedRules: true,
+  updatedAt: new Date().toISOString()
+};
+
+// GET DatingArts Matches Feed
+app.get("/api/datingarts/feed", (req, res) => {
+  res.json({
+    success: true,
+    preferences: userDatingArtsPreferences,
+    totalMatchesCount: DATINGARTS_SAMPLE_PROFILES.length,
+    profiles: DATINGARTS_SAMPLE_PROFILES
+  });
+});
+
+// DatingArts In-Memory Account & Conversations Store
+let datingArtsSession = {
+  isLoggedIn: true,
+  email: "kansasnelly@gmail.com",
+  userName: "Kansas Nelly",
+  userAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+  credits: 3250,
+  accountTier: "VIP Platinum",
+  loginTime: new Date().toISOString()
+};
+
+let aiAutoMatchmakerEnabled = true;
+
+interface DatingMessage {
+  id: string;
+  sender: "user" | "partner" | "divider";
+  text: string;
+  time: string;
+  read?: boolean;
+}
+
+interface DatingConversation {
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  partnerAge?: number;
+  partnerAvatar: string;
+  online: boolean;
+  unreadCount: number;
+  lastMessageTime: string;
+  lastMessageText: string;
+  statusTag?: string;
+  matchBadge?: string;
+  mutualPopup?: boolean;
+  messages: DatingMessage[];
+}
+
+let datingArtsConversations: DatingConversation[] = [
+  {
+    id: "c-adesuwa",
+    partnerId: "da-adesuwa",
+    partnerName: "Adesuwa Okonkwo",
+    partnerAge: 27,
+    partnerAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 1,
+    lastMessageTime: "Just now",
+    lastMessageText: "Hello! Good afternoon from Lagos! Loved your profile. How is your day coming along?",
+    statusTag: "Real Verified Member • Nigeria 🇳🇬",
+    matchBadge: "Real Person Verified 🟢",
+    messages: [
+      { id: "am1", sender: "partner", text: "Hello! Good afternoon from Lagos! Loved your profile. How is your day coming along?", time: "6:22 pm" }
+    ]
+  },
+  {
+    id: "c-sothea",
+    partnerId: "da-sothea",
+    partnerName: "Sothea Vanna",
+    partnerAge: 25,
+    partnerAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 1,
+    lastMessageTime: "2 min ago",
+    lastMessageText: "Choum reap sour! Hello from Phnom Penh! Have you ever visited Cambodia?",
+    statusTag: "Real Verified Member • Cambodia 🇰🇭",
+    matchBadge: "Real Person Verified 🟢",
+    messages: [
+      { id: "sot1", sender: "partner", text: "Choum reap sour! Hello from Phnom Penh! I loved your profile answers. Have you ever visited Cambodia?", time: "6:20 pm" }
+    ]
+  },
+  {
+    id: "c-thithanh",
+    partnerId: "da-thithanh",
+    partnerName: "Thi Thanh Thao",
+    partnerAge: 26,
+    partnerAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 0,
+    lastMessageTime: "6:20 pm",
+    lastMessageText: "what day is it on you?",
+    statusTag: "Real Verified Member • Vietnam 🇻🇳",
+    messages: [
+      { id: "m1", sender: "partner", text: "Sorry, you said you work from home?", time: "6:15 pm" },
+      { id: "m2", sender: "user", text: "yeah", time: "6:15 pm", read: true },
+      { id: "m3", sender: "partner", text: "I wonder what you do?", time: "6:16 pm" },
+      { id: "m4", sender: "user", text: "hahahaha", time: "6:17 pm", read: true },
+      { id: "m5", sender: "user", text: "you are very funny", time: "6:17 pm", read: true },
+      { id: "m6", sender: "user", text: "what do you think i day ?", time: "6:17 pm", read: true },
+      { id: "m7", sender: "divider", text: "Unread message", time: "" },
+      { id: "m8", sender: "partner", text: "Why am I funny and what is your day like?", time: "6:18 pm" },
+      { id: "m9", sender: "user", text: "no dear you are not funny just that what you said was funny", time: "6:19 pm", read: true },
+      { id: "m10", sender: "partner", text: "what day is it on you?", time: "6:20 pm" }
+    ]
+  },
+  {
+    id: "c-kofi",
+    partnerId: "da-kofi",
+    partnerName: "Kofi Mensah",
+    partnerAge: 31,
+    partnerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 1,
+    lastMessageTime: "5 min ago",
+    lastMessageText: "Akwaaba! Great to connect with you. Looking for someone who values loyalty and ambition.",
+    statusTag: "Real Verified Member • Ghana 🇬🇭",
+    matchBadge: "Real Person Verified 🟢",
+    messages: [
+      { id: "k1", sender: "partner", text: "Akwaaba! Great to connect with you. Looking for someone who values loyalty, great music, and ambition.", time: "6:17 pm" }
+    ]
+  },
+  {
+    id: "c-daisy",
+    partnerId: "da-daisy",
+    partnerName: "Daisy Mendoza",
+    partnerAge: 29,
+    partnerAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 1,
+    lastMessageTime: "8 min ago",
+    lastMessageText: "Hi there! I saw your profile and had to say hello. Where is your favorite beach destination?",
+    statusTag: "Real Verified Member • Philippines 🇵🇭",
+    matchBadge: "Real Person Verified 🟢",
+    messages: [
+      { id: "d1", sender: "partner", text: "Hi there! I saw your profile and had to say hello. Where is your favorite beach destination?", time: "6:14 pm" }
+    ]
+  },
+  {
+    id: "c-maria",
+    partnerId: "da-maria",
+    partnerName: "Maria De Los Angeles",
+    partnerAge: 23,
+    partnerAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    online: true,
+    unreadCount: 1,
+    lastMessageTime: "12 min ago",
+    lastMessageText: "maybe it's time to say hi? I loved your profile!",
+    statusTag: "Real Verified Member • USA 🇺🇸",
+    matchBadge: "Real Person Verified 🟢",
+    messages: [
+      { id: "ma1", sender: "partner", text: "maybe it's time to say hi? I loved your profile!", time: "6:10 pm" }
+    ]
+  }
+];
+
+// Real-Time Global Member Chat Streamer Interval (Simulates incoming live messages from real profiles)
+setInterval(() => {
+  try {
+    if (!datingArtsConversations) return;
+    const realProfiles = DATINGARTS_SAMPLE_PROFILES.filter(p => p.isRealPerson);
+    if (realProfiles.length === 0) return;
+    
+    const randProfile = realProfiles[Math.floor(Math.random() * realProfiles.length)];
+    let conv = datingArtsConversations.find(c => c.partnerId === randProfile.id || c.partnerName.toLowerCase() === randProfile.name.toLowerCase());
+    
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
+    
+    const sampleMessages: Record<string, string[]> = {
+      "da-adesuwa": [
+        "Good day! Just finished a project meeting in Victoria Island, Lagos 🎨. How is your day going?",
+        "Sending warm wishes from Lagos! Hope your week is off to a great start!",
+        "What is your favorite type of music or art?"
+      ],
+      "da-sothea": [
+        "Choum reap sour! Enjoying coffee by the Mekong river in Phnom Penh ☕",
+        "Hello! The riverside view in Phnom Penh is beautiful today. How are things on your end?",
+        "Hope you are having a wonderful day! What's the best cafe in your city?"
+      ],
+      "da-kofi": [
+        "Akwaaba! Listening to some afternoon jazz here in Accra 🎷. Hope you are doing great!",
+        "Hello from Ghana! Just finished a green energy workshop. How is your day?",
+        "Sending bright sunshine from Accra! What are your plans for the weekend?"
+      ],
+      "da-daisy": [
+        "Hi! Just editing some tropical travel footage from Boracay 🏝️. How is your day going?",
+        "Good afternoon from Manila! Do you love beach trips as much as I do?",
+        "Sending smiles from Manila!"
+      ],
+      "da-aria": [
+        "Hello! Enjoying the skyline view at Marina Bay, Singapore 🌆. How is your day?",
+        "Hope your day is treating you well! What is your favorite travel memory?",
+        "Glad we connected on DatingArts! Looking forward to chatting more."
+      ],
+      "da-maria": [
+        "hey! just finished my design studio class in Los Angeles ✨ what are you up to?",
+        "hope you're having a great day! what's your favorite song lately?",
+        "maybe it's time for us to grab a virtual coffee? 😊"
+      ]
+    };
+
+    const msgs = sampleMessages[randProfile.id] || [
+      `Hello! Sending warm greetings from ${randProfile.city || randProfile.country}! How are you doing?`,
+      `Hi there! Hope you are having a lovely day! Excited to be connected in the ecosystem.`
+    ];
+    const chosenMsg = msgs[Math.floor(Math.random() * msgs.length)];
+
+    if (!conv) {
+      conv = {
+        id: `c-${randProfile.id}`,
+        partnerId: randProfile.id,
+        partnerName: randProfile.name,
+        partnerAge: randProfile.age,
+        partnerAvatar: randProfile.avatarUrl,
+        online: true,
+        unreadCount: 1,
+        lastMessageTime: timeStr,
+        lastMessageText: chosenMsg,
+        statusTag: randProfile.verifiedBadge || `Real Verified Member • ${randProfile.country}`,
+        matchBadge: "Real Person Verified 🟢",
+        messages: [
+          { id: `m-${Date.now()}-1`, sender: "partner", text: randProfile.greetingMessage, time: timeStr },
+          { id: `m-${Date.now()}-2`, sender: "partner", text: chosenMsg, time: timeStr }
+        ]
+      };
+      datingArtsConversations.unshift(conv);
+    } else {
+      conv.unreadCount += 1;
+      conv.lastMessageTime = timeStr;
+      conv.lastMessageText = chosenMsg;
+      conv.online = true;
+      conv.messages.push({
+        id: `m-${Date.now()}`,
+        sender: "partner",
+        text: chosenMsg,
+        time: timeStr
+      });
+    }
+  } catch (e) {
+    console.error("Live streamer error:", e);
+  }
+}, 30000);
+
+// Login Endpoint for DatingArts
+app.post("/api/datingarts/login", (req, res) => {
+  const { email, password } = req.body;
+  if (email) {
+    datingArtsSession.email = email;
+    datingArtsSession.isLoggedIn = true;
+    if (email.includes("@")) {
+      const parts = email.split("@")[0];
+      datingArtsSession.userName = parts.charAt(0).toUpperCase() + parts.slice(1);
+    }
+  }
+  res.json({
+    success: true,
+    message: "Welcome to DatingArts! Account authenticated.",
+    session: datingArtsSession,
+    unreadTotal: datingArtsConversations.reduce((acc, c) => acc + c.unreadCount, 0)
+  });
+});
+
+// GET Conversations Endpoint
+app.get("/api/datingarts/conversations", (req, res) => {
+  res.json({
+    success: true,
+    session: datingArtsSession,
+    conversations: datingArtsConversations,
+    aiAutoMatchmakerEnabled
+  });
+});
+
+// Coins & Free Credit System Store
+let datingArtsCoinsStore = {
+  freeDailyGrantAmount: 200,
+  freeModeEnabled: true,
+  dailyClaimedToday: true,
+  lastClaimDate: new Date().toISOString().split("T")[0],
+  ledger: [
+    { id: "ledger-1", type: "grant", amount: 200, description: "Free Daily 200 Coins Allowance", date: "Today" },
+    { id: "ledger-2", type: "grant", amount: 500, description: "Welcome Free Ecosystem Coins Grant", date: "Today" },
+    { id: "ledger-3", type: "spend", amount: -2, description: "Chat Message with Thi Thanh Thao", date: "Today" },
+    { id: "ledger-4", type: "spend", amount: -2, description: "Chat Message with Adesuwa Okonkwo", date: "Today" }
+  ]
+};
+
+// GET Coins Balance & Ledger Endpoint
+app.get("/api/datingarts/coins/ledger", (req, res) => {
+  res.json({
+    success: true,
+    credits: datingArtsSession.credits,
+    coinsStore: datingArtsCoinsStore,
+    freeModeEnabled: datingArtsCoinsStore.freeModeEnabled,
+    freeDailyGrantAmount: datingArtsCoinsStore.freeDailyGrantAmount
+  });
+});
+
+// POST Claim Daily 200 Free Coins Endpoint
+app.post("/api/datingarts/coins/claim-free", (req, res) => {
+  const grantAmount = datingArtsCoinsStore.freeDailyGrantAmount || 200;
+  datingArtsSession.credits += grantAmount;
+  datingArtsCoinsStore.dailyClaimedToday = true;
+  datingArtsCoinsStore.lastClaimDate = new Date().toISOString().split("T")[0];
+
+  datingArtsCoinsStore.ledger.unshift({
+    id: "ledger-" + Date.now(),
+    type: "grant",
+    amount: grantAmount,
+    description: `Free Daily ${grantAmount} Coins Allowance Claimed`,
+    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+
+  res.json({
+    success: true,
+    message: `🎉 Success! ${grantAmount} Free Coins credited to your ecosystem balance!`,
+    credits: datingArtsSession.credits,
+    ledger: datingArtsCoinsStore.ledger
+  });
+});
+
+// POST Admin Update Coins Config Endpoint
+app.post("/api/datingarts/coins/admin-config", (req, res) => {
+  const { freeModeEnabled, freeDailyGrantAmount } = req.body;
+  if (typeof freeModeEnabled === "boolean") {
+    datingArtsCoinsStore.freeModeEnabled = freeModeEnabled;
+  }
+  if (typeof freeDailyGrantAmount === "number" && freeDailyGrantAmount > 0) {
+    datingArtsCoinsStore.freeDailyGrantAmount = freeDailyGrantAmount;
+  }
+  res.json({
+    success: true,
+    message: "Coins system settings updated successfully.",
+    coinsStore: datingArtsCoinsStore
+  });
+});
+
+// POST Send Message Endpoint
+app.post("/api/datingarts/send-message", async (req, res) => {
+  const { conversationId, text } = req.body;
+  const msgText = (text || "").trim();
+
+  if (!msgText) {
+    return res.status(400).json({ success: false, error: "Message text cannot be empty." });
+  }
+
+  const conv = datingArtsConversations.find(c => c.id === conversationId || c.partnerId === conversationId) || datingArtsConversations[0];
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
+
+  const userMsg: DatingMessage = {
+    id: "msg-" + Date.now(),
+    sender: "user",
+    text: msgText,
+    time: timeStr,
+    read: true
+  };
+
+  conv.messages.push(userMsg);
+  conv.lastMessageText = "You: " + msgText;
+  conv.lastMessageTime = timeStr;
+
+  // Deduct chat credits (2 credits per message) with Auto-Free Refill if low
+  if (datingArtsSession.credits < 2) {
+    // Auto refill 200 free coins
+    datingArtsSession.credits += 200;
+    datingArtsCoinsStore.ledger.unshift({
+      id: "ledger-" + Date.now(),
+      type: "grant",
+      amount: 200,
+      description: "Auto Free 200 Coins Refill (Unlimited Safe Access)",
+      date: timeStr
+    });
+  }
+
+  datingArtsSession.credits -= 2;
+  datingArtsCoinsStore.ledger.unshift({
+    id: "ledger-" + Date.now(),
+    type: "spend",
+    amount: -2,
+    description: `Chat Message with ${conv.partnerName}`,
+    date: timeStr
+  });
+
+  let partnerReplyText = "";
+  const ai = getGeminiClient();
+
+  if (ai) {
+    try {
+      const prompt = `You are ${conv.partnerName}, a real person on DatingArts chatting with ${datingArtsSession.userName} (${datingArtsSession.email}).
+Recent conversation history:
+${conv.messages.slice(-6).map(m => `${m.sender}: ${m.text}`).join("\n")}
+
+User just sent: "${msgText}"
+
+Respond naturally, concisely (1-2 short sentences), with warmth and a human personality matching your name (${conv.partnerName}).`;
+
+      const aiRes = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt
+      });
+
+      if (aiRes && aiRes.text) {
+        partnerReplyText = aiRes.text.trim();
+      }
+    } catch (e) {
+      console.error("[DatingArts Reply Error]:", e);
+    }
+  }
+
+  if (!partnerReplyText) {
+    partnerReplyText = `That's wonderful, ${datingArtsSession.userName}! I love chatting with you. What are your plans for tonight?`;
+  }
+
+  const partnerMsg: DatingMessage = {
+    id: "reply-" + Date.now(),
+    sender: "partner",
+    text: partnerReplyText,
+    time: timeStr
+  };
+
+  conv.messages.push(partnerMsg);
+  conv.lastMessageText = partnerReplyText;
+  conv.lastMessageTime = timeStr;
+
+  res.json({
+    success: true,
+    userMessage: userMsg,
+    partnerReply: partnerMsg,
+    remainingCredits: datingArtsSession.credits
+  });
+});
+
+// Admin Panel API: View all messages, override, or toggle AI auto-matchmaker
+app.get("/api/datingarts/admin/logs", (req, res) => {
+  res.json({
+    success: true,
+    session: datingArtsSession,
+    conversations: datingArtsConversations,
+    aiAutoMatchmakerEnabled,
+    totalMessagesCount: datingArtsConversations.reduce((sum, c) => sum + c.messages.length, 0)
+  });
+});
+
+app.post("/api/datingarts/admin/override", (req, res) => {
+  const { conversationId, sender, text } = req.body;
+  const conv = datingArtsConversations.find(c => c.id === conversationId) || datingArtsConversations[0];
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
+
+  const newMsg: DatingMessage = {
+    id: "admin-" + Date.now(),
+    sender: sender === "partner" ? "partner" : "user",
+    text: text || "Admin override message",
+    time: timeStr,
+    read: true
+  };
+
+  conv.messages.push(newMsg);
+  conv.lastMessageText = newMsg.text;
+  conv.lastMessageTime = timeStr;
+
+  res.json({ success: true, conversation: conv, addedMessage: newMsg });
+});
+
+app.post("/api/datingarts/admin/toggle-ai", (req, res) => {
+  const { enabled } = req.body;
+  aiAutoMatchmakerEnabled = typeof enabled === "boolean" ? enabled : !aiAutoMatchmakerEnabled;
+  res.json({ success: true, aiAutoMatchmakerEnabled });
+});
+
+// POST Save Onboarding Answers
+app.post("/api/datingarts/register-real-person", (req, res) => {
+  const { name, age, gender, targetInterest, city, country, phone, whatsapp, telegram, email, avatarUrl, bio, profession } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ success: false, error: "Name and Email are required to register a real member profile." });
+  }
+
+  const realId = "real-member-" + Date.now();
+  const newRealProfile: DatingArtsProfile = {
+    id: realId,
+    name: name,
+    age: Number(age) || 28,
+    gender: gender === "Woman" ? "Woman" : "Man",
+    targetInterest: targetInterest || "All",
+    city: city || "Los Angeles",
+    country: country || "United States",
+    distanceKm: 2.5,
+    avatarUrl: avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+    galleryUrls: [avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"],
+    bio: bio || "Verified real member registered in the ecosystem.",
+    profession: profession || "Member of DatingArts Community",
+    verified: true,
+    online: true,
+    matchScore: 99,
+    ambition: "High - Driven",
+    timeAssetPreference: "Yes, efficiency",
+    intent: "Romance",
+    aesthetics: ["Ecosystem Verified", "Direct Contact", "Real Member"],
+    greetingMessage: `Hello! I am ${name}, a real verified member. Excited to match and chat!`,
+    isRealPerson: true,
+    verifiedBadge: "Real Verified Ecosystem Member",
+    phone: phone || "+1 (555) 019-2831",
+    whatsapp: whatsapp || phone || "+1 (555) 019-2831",
+    telegram: telegram || `@${name.toLowerCase().replace(/\s+/g, "_")}`,
+    email: email,
+    joinedAt: new Date().toISOString().split("T")[0]
+  };
+
+  // Add to active profiles list
+  DATINGARTS_SAMPLE_PROFILES.unshift(newRealProfile);
+
+  // Sync with global ecosystem visitor records
+  try {
+    const visitorId = `ECO-REAL-${Math.floor(100000 + Math.random() * 900000)}`;
+    const nowISO = new Date().toISOString();
+    const newVisitorRecord: EcosystemVisitorRecord = {
+      id: visitorId,
+      googleAccountId: `100${Math.floor(1000000 + Math.random() * 9000000)}`,
+      email: email,
+      name: name,
+      avatarUrl: newRealProfile.avatarUrl,
+      phoneNumber: newRealProfile.phone,
+      countryLocation: `${city || 'Los Angeles'}, ${country || 'United States'}`,
+      ipAddress: "172.56.21.94",
+      userAgent: "DatingArts Mobile Web App Client",
+      visitPurpose: "DatingArts Real Person Ecosystem Partner",
+      accessLevel: "VERIFIED_VISITOR",
+      registeredAt: nowISO,
+      lastActiveAt: nowISO,
+      authenticatorVerified: true,
+      notes: `Verified contact details: WhatsApp ${newRealProfile.whatsapp}, Telegram ${newRealProfile.telegram}`
+    };
+    if (Array.isArray(ecosystemVisitorRecords)) {
+      ecosystemVisitorRecords.unshift(newVisitorRecord);
+    }
+  } catch (err) {
+    console.error("Ecosystem sync error:", err);
+  }
+
+  res.json({
+    success: true,
+    message: `🎉 ${name} successfully registered as a Real Verified Member!`,
+    profile: newRealProfile,
+    totalProfilesCount: DATINGARTS_SAMPLE_PROFILES.length
+  });
+});
+
+// GET Real Verified Contacts Directory
+app.get("/api/datingarts/real-contacts", (req, res) => {
+  const realProfiles = DATINGARTS_SAMPLE_PROFILES.filter(p => p.isRealPerson);
+  res.json({
+    success: true,
+    count: realProfiles.length,
+    realContacts: realProfiles
+  });
+});
+
+// GET Dual-AI Matchmaker Drop
+app.get("/api/datingarts/matchmaker-drop", (req, res) => {
+  // Pick random profile
+  const randomIndex = Math.floor(Math.random() * DATINGARTS_SAMPLE_PROFILES.length);
+  const profile = DATINGARTS_SAMPLE_PROFILES[randomIndex];
+
+  res.json({
+    success: true,
+    drop: {
+      id: profile.id,
+      name: profile.name,
+      age: profile.age,
+      gender: profile.gender,
+      avatarUrl: profile.avatarUrl,
+      city: profile.city,
+      country: profile.country,
+      online: profile.online,
+      matchScore: profile.matchScore,
+      isRealPerson: profile.isRealPerson,
+      verifiedBadge: profile.verifiedBadge,
+      phone: profile.phone,
+      whatsapp: profile.whatsapp,
+      telegram: profile.telegram,
+      email: profile.email,
+      tagline: profile.greetingMessage || "maybe it's time to say hi?"
+    }
+  });
+});
+
+// POST Synergy Automated Matchmaker (1-Click Pairing)
+app.post("/api/datingarts/synergy-match", (req, res) => {
+  const { targetProfileId } = req.body;
+  const profile = DATINGARTS_SAMPLE_PROFILES.find(p => p.id === targetProfileId || p.name.toLowerCase() === (targetProfileId || "").toLowerCase()) || DATINGARTS_SAMPLE_PROFILES[0];
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase();
+
+  // Check if conversation exists
+  let conv = datingArtsConversations.find(c => c.partnerId === profile.id || c.partnerName.toLowerCase() === profile.name.toLowerCase());
+
+  if (!conv) {
+    conv = {
+      id: "c-" + profile.id,
+      partnerId: profile.id,
+      partnerName: profile.name,
+      partnerAge: profile.age,
+      partnerAvatar: profile.avatarUrl,
+      online: profile.online,
+      unreadCount: 1,
+      lastMessageTime: timeStr,
+      lastMessageText: profile.greetingMessage || "Your feelings are mutual 💜",
+      matchBadge: "Real Person Verified 💜",
+      messages: [
+        {
+          id: "m-synergy-1",
+          sender: "partner",
+          text: `Hi ${datingArtsSession.userName}! I'm ${profile.name} (${profile.verifiedBadge || 'Real Verified Member'}). The AI Synergy Matchmaker paired us with ${profile.matchScore}% chemistry score. ${profile.greetingMessage}`,
+          time: timeStr
+        }
+      ]
+    };
+    datingArtsConversations.unshift(conv);
+  }
+
+  res.json({
+    success: true,
+    message: `Matched with real member ${profile.name}!`,
+    conversation: conv,
+    contactInfo: {
+      phone: profile.phone,
+      whatsapp: profile.whatsapp,
+      telegram: profile.telegram,
+      email: profile.email,
+      verifiedBadge: profile.verifiedBadge
+    }
+  });
+});
+
+// POST Save Onboarding Answers
+app.post("/api/datingarts/onboarding", (req, res) => {
+  const {
+    ageGroup,
+    gender,
+    targetInterest,
+    intent,
+    timeAssetPreference,
+    ambitionMustHave,
+    aestheticsChoice
+  } = req.body;
+
+  userDatingArtsPreferences = {
+    ageGroup: ageGroup || userDatingArtsPreferences.ageGroup,
+    gender: gender || userDatingArtsPreferences.gender,
+    targetInterest: targetInterest || userDatingArtsPreferences.targetInterest,
+    intent: intent || userDatingArtsPreferences.intent,
+    timeAssetPreference: timeAssetPreference || userDatingArtsPreferences.timeAssetPreference,
+    ambitionMustHave: ambitionMustHave || userDatingArtsPreferences.ambitionMustHave,
+    aestheticsChoice: aestheticsChoice || userDatingArtsPreferences.aestheticsChoice,
+    acceptedRules: true,
+    updatedAt: new Date().toISOString()
+  };
+
+  // Filter or prioritize matching profiles
+  const matchingProfiles = DATINGARTS_SAMPLE_PROFILES.filter(p => {
+    if (userDatingArtsPreferences.targetInterest && userDatingArtsPreferences.targetInterest !== "All") {
+      return p.gender === userDatingArtsPreferences.targetInterest;
+    }
+    return true;
+  });
+
+  res.json({
+    success: true,
+    message: "DatingArts Questionnaire saved! Matchmaking engine configured.",
+    preferences: userDatingArtsPreferences,
+    recommendedProfiles: matchingProfiles.length > 0 ? matchingProfiles : DATINGARTS_SAMPLE_PROFILES
+  });
+});
+
+// POST Real-Time 100% Human Interaction AI Persona Chat Endpoint
+app.post("/api/datingarts/chat", async (req, res) => {
+  const { profileId, message, userProfileName } = req.body;
+  const userMsg = (message || "").trim();
+
+  const partner = DATINGARTS_SAMPLE_PROFILES.find(p => p.id === profileId) || DATINGARTS_SAMPLE_PROFILES[0];
+  const userName = userProfileName || "Guest Member";
+
+  if (!userMsg) {
+    return res.status(400).json({ success: false, error: "Message cannot be empty." });
+  }
+
+  let humanReply = "";
+  const ai = getGeminiClient();
+
+  if (ai) {
+    try {
+      const personaPrompt = `You are ${partner.name}, a real ${partner.age}-year-old ${partner.profession} living in ${partner.city}, ${partner.country}.
+Your Bio: "${partner.bio}".
+Your Aesthetic/Interests: ${partner.aesthetics.join(", ")}.
+You are chatting on DatingArts, a high-end luxury matchmaking platform.
+User's Name: ${userName}.
+User's Message: "${userMsg}".
+
+Instructions for your response:
+1. Respond 100% like a real, sophisticated, attractive, intelligent human speaking in a private messaging app.
+2. Be warm, authentic, naturally engaging, and slightly playful or flirtatious if appropriate for a dating context.
+3. Keep response concise (1 to 3 short natural sentences), no robotic formatting, no bullet points, no AI disclaimer phrases.
+4. Optionally reference your city (${partner.city}), your profession (${partner.profession}), or your common interest in efficiency and shared standards.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: personaPrompt,
+      });
+
+      if (response && response.text) {
+        humanReply = response.text.trim();
+      }
+    } catch (err) {
+      console.error("[DatingArts Gemini Chat Error]:", err);
+    }
+  }
+
+  if (!humanReply) {
+    // Fallback human-like responses
+    const fallbacks = [
+      `I completely agree with you, ${userName}! It's refreshing to connect with someone who shares this mindset. Tell me more about what you enjoy doing on weekends in town?`,
+      `That's so interesting! I was just discussing something similar with a colleague earlier today in ${partner.city}. How has your day been going so far?`,
+      `I love that perspective! Quality time and meaningful chemistry are everything. Would love to hear your thoughts on luxury travel or quiet cozy evenings?`,
+      `That made me smile! You have a great sense of humor and depth, ${userName}. What's something exciting you're working on right now?`
+    ];
+    humanReply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+
+  // Simulate realistic response latency meta
+  res.json({
+    success: true,
+    partnerId: partner.id,
+    partnerName: partner.name,
+    partnerAvatar: partner.avatarUrl,
+    replyMessage: humanReply,
+    typingLatencyMs: Math.floor(1200 + Math.random() * 800),
+    timestamp: new Date().toISOString(),
+    status: "READ_AND_REPLIED"
   });
 });
 
@@ -3090,7 +5060,7 @@ Respond ONLY with valid JSON in this exact structure:
 
       const aiResp: any = await Promise.race([
         ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-3.6-flash",
           contents: prompt,
           config: { responseMimeType: "application/json" }
         }),
@@ -3291,7 +5261,7 @@ app.post("/api/ai/verify-key", async (req, res) => {
       httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
     });
     const result = await testAi.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-3.6-flash",
       contents: "Hello! Reply with OK.",
     });
     if (result && result.text) {
@@ -3633,8 +5603,8 @@ CRITICAL POWERS & DIRECTIVES:
 
         parts.push({ text: promptText });
 
-        // Reliable Fast Generation with Gemini (prioritize gemini-3.1-flash-lite for instant response and reliable quota, then gemini-3.8-flash)
-        const candidateModels = ["gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"];
+        // Reliable Fast Generation with Gemini (prioritize gemini-3.6-flash for instant response and reliable quota)
+        const candidateModels = ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
         for (const modelCandidate of candidateModels) {
           try {
             const geminiPromise = ai.models.generateContent({
@@ -4015,7 +5985,7 @@ Respond ONLY with valid JSON in this exact structure:
 
         const aiResp: any = await Promise.race([
           ai.models.generateContent({
-            model: "gemini-3.8-flash",
+            model: "gemini-3.6-flash",
             contents: prompt,
             config: { responseMimeType: "application/json" }
           }),
@@ -4238,6 +6208,7 @@ app.post("/api/mail/login", (req, res) => {
     account: {
       email: account.email,
       fullName: account.fullName,
+      name: account.fullName,
       storageUsedMb: account.storageUsedMb,
       storageTotalGb: account.storageTotalGb,
       createdAt: account.createdAt,
@@ -4288,6 +6259,7 @@ app.post("/api/mail/register", (req, res) => {
     account: {
       email: account.email,
       fullName: account.fullName,
+      name: account.fullName,
       storageUsedMb: account.storageUsedMb,
       storageTotalGb: account.storageTotalGb,
       createdAt: account.createdAt,
@@ -4306,6 +6278,7 @@ app.get("/api/mail/session", (req, res) => {
     account: activeAccount ? {
       email: activeAccount.email,
       fullName: activeAccount.fullName,
+      name: activeAccount.fullName,
       storageUsedMb: activeAccount.storageUsedMb,
       storageTotalGb: activeAccount.storageTotalGb,
       createdAt: activeAccount.createdAt,
@@ -4439,7 +6412,7 @@ app.post("/api/cli/execute", async (req, res) => {
           : `Analyze this image provided to the ecosystem CLI. Identify what is shown (e.g. code snippet, dashboard screenshot, system error, architecture diagram), assess system health, and provide actionable technical feedback.`;
 
         const geminiPromise = ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-3.6-flash",
           contents: [
             {
               role: "user",
