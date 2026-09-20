@@ -28,6 +28,8 @@ import {
   Radio,
   Clock,
   Eye,
+  SkipBack,
+  SkipForward,
   EyeOff,
   FileVideo,
   HardDrive,
@@ -1000,42 +1002,38 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
         break;
       case "tiktok":
         safeCopyToClipboard(shareText);
-        window.open("https://www.tiktok.com/upload", "_blank");
-        setCopyFeedback("Copied video details to clipboard! Opening TikTok Uploader...");
+        setCopyFeedback("Copied video details to clipboard! Embedded in Sreymara Ecosystem.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "instagram":
         safeCopyToClipboard(shareText);
-        window.open("https://www.instagram.com/", "_blank");
-        setCopyFeedback("Copied video details to clipboard! Opening Instagram...");
+        setCopyFeedback("Copied video details to clipboard! Embedded in Sreymara Ecosystem.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "youtube":
         safeCopyToClipboard(shareText);
-        window.open("https://studio.youtube.com/", "_blank");
-        setCopyFeedback("Copied video details to clipboard! Opening YouTube Studio...");
+        setCopyFeedback("Copied video details to clipboard! Embedded in Sreymara Cinema Studio.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "discord":
         safeCopyToClipboard(shareText);
-        window.open("https://discord.com/app", "_blank");
-        setCopyFeedback("Copied video details to clipboard! Opening Discord...");
+        setCopyFeedback("Copied video details to clipboard! Embedded in Sreymara Ecosystem.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "snapchat":
         safeCopyToClipboard(shareText);
-        window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`, "_blank");
-        setCopyFeedback("Copied video details! Opening Snapchat...");
+        setCopyFeedback("Copied video details! Embedded in Sreymara Ecosystem.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "wechat":
         safeCopyToClipboard(shareText);
-        window.open("https://web.wechat.com/", "_blank");
-        setCopyFeedback("Copied video details! Opening WeChat...");
+        setCopyFeedback("Copied video details! Embedded in Sreymara Ecosystem.");
         setTimeout(() => setCopyFeedback(null), 3500);
         break;
       case "viber":
-        window.open(`viber://forward?text=${encodeURIComponent(shareText)}`, "_blank");
+        safeCopyToClipboard(shareText);
+        setCopyFeedback("Copied video details to clipboard!");
+        setTimeout(() => setCopyFeedback(null), 3000);
         break;
       default:
         safeCopyToClipboard(shareText);
@@ -1415,7 +1413,31 @@ export const YouTubeCinemaVideoSuite: React.FC = () => {
                       <Play size={18} className="text-amber-400 fill-current" />
                       <h3 className="font-serif font-black text-lg text-white">{activeVid.title}</h3>
                     </div>
-                    <div className="flex items-center gap-2 font-mono text-xs">
+                    <div className="flex items-center gap-2 font-mono text-xs flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentIdx = videoList.findIndex((v) => v.id === activeVid.id);
+                          const prevIdx = (currentIdx - 1 + videoList.length) % videoList.length;
+                          handlePreviewHD(videoList[prevIdx]);
+                        }}
+                        className="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer border border-stone-700"
+                        title="Play Previous Video Embeddedly"
+                      >
+                        <SkipBack size={12} /> Prev Video
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentIdx = videoList.findIndex((v) => v.id === activeVid.id);
+                          const nextIdx = (currentIdx + 1) % videoList.length;
+                          handlePreviewHD(videoList[nextIdx]);
+                        }}
+                        className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-lg text-xs font-black flex items-center gap-1 cursor-pointer shadow"
+                        title="Play Next Video Embeddedly"
+                      >
+                        Next Video <SkipForward size={12} />
+                      </button>
                       {isDownloaded && (
                         <span className="px-2.5 py-0.5 bg-pink-950 text-pink-300 border border-pink-600 rounded-full font-bold flex items-center gap-1">
                           <CheckCircle size={12} />

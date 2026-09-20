@@ -25,5 +25,12 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "migrations",
+    "tests",
+    "programs",
+    "node_modules",
+    "dist"
+  ]
 }

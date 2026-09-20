@@ -1481,6 +1481,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                         title={currentCh.title}
                         className="w-full h-full border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                         allowFullScreen
                       />
                     )}
@@ -1716,6 +1717,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                         allowFullScreen
                         className="w-full h-full border-0"
                       />
@@ -2033,6 +2035,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                           title={currentCh.title}
                           className="w-full h-full border-0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                           allowFullScreen
                         />
                       </div>

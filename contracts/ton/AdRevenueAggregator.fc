@@ -1,0 +1,133 @@
+#pragma version >=0.4.0;
+;; =====================================================================
+;; SREMARA QUANTUM ECOSYSTEM - TON AD REVENUE AGGREGATOR SMART CONTRACT
+;; Contract Address (Base64url): EQBvW8Z5huBkMJYdn30dcYfQHgShTDOx_wTX02AuZqjGYm4S
+;; Workchain: 0 (Basechain)
+;; USDT Jetton Master: EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs
+;; =====================================================================
+
+#include "stdlib.fc";
+
+;; Storage variables:
+;; - admin_address: MsgAddressInt
+;; - distribution_contract: MsgAddressInt
+;; - usdt_jetton_wallet: MsgAddressInt
+;; - total_aggregated_usdt: Coins (uint128)
+;; - total_withdrawn_usdt: Coins (uint128)
+;; - is_paused: int (1 bit)
+
+(slice, slice, slice, int, int, int) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_msg_addr(),   ;; admin_address
+        ds~load_msg_addr(),   ;; distribution_contract
+        ds~load_msg_addr(),   ;; usdt_jetton_wallet
+        ds~load_coins(),      ;; total_aggregated_usdt
+        ds~load_coins(),      ;; total_withdrawn_usdt
+        ds~load_uint(1)       ;; is_paused
+    );
+}
+
+() save_data(slice admin, slice dist, slice jetton_wallet, int agg, int with, int paused) impure inline {
+    set_data(begin_cell()
+        .store_slice(admin)
+        .store_slice(dist)
+        .store_slice(jetton_wallet)
+        .store_coins(agg)
+        .store_coins(with)
+        .store_uint(paused, 1)
+        .end_cell());
+}
+
+;; OP Codes
+const int op::deposit_ad_revenue = 0x7362d09c;  ;; Jetton transfer notification
+const int op::release_payout_pool = 0x5a12f9b1; ;; Only Distribution Contract can call
+const int op::set_distribution = 0x24a87c10;
+const int op::set_paused = 0x11223344;
+const int op::admin_emergency_drain = 0xffffffff;
+
+;; Error Codes
+const int err::unauthorized = 401;
+const int err::paused = 402;
+const int err::insufficient_pool = 403;
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { return (); } ;; ignore simple TON deposits
+
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { return (); } ;; ignore bounced messages
+    slice sender_address = cs~load_msg_addr();
+
+    (slice admin, slice dist, slice jetton_wallet, int agg, int with, int paused) = load_data();
+    int op = in_msg_body~load_uint(32);
+    int query_id = in_msg_body~load_uint(64);
+
+    ;; Deposit ad revenue via USDT Jetton transfer notification
+    if (op == op::deposit_ad_revenue) {
+        int amount = in_msg_body~load_coins();
+        agg += amount;
+        save_data(admin, dist, jetton_wallet, agg, with, paused);
+        return ();
+    }
+
+    ;; Release pool funds to user (invoked strictly by PayoutDistribution contract)
+    if (op == op::release_payout_pool) {
+        throw_if(err::paused, paused == 1);
+        throw_unless(err::unauthorized, equal_slices(sender_address, dist) | equal_slices(sender_address, admin));
+        
+        int payout_amount = in_msg_body~load_coins();
+        slice recipient = in_msg_body~load_msg_addr();
+
+        throw_if(err::insufficient_pool, (agg - with) < payout_amount);
+        with += payout_amount;
+        save_data(admin, dist, jetton_wallet, agg, with, paused);
+
+        ;; Emit outbound jetton transfer to recipient wallet
+        var msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(jetton_wallet)
+            .store_coins(50000000) ;; 0.05 TON forward fee
+            .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_ref(begin_cell()
+                .store_uint(0x0f8a7ea5, 32) ;; jetton transfer op
+                .store_uint(query_id, 64)
+                .store_coins(payout_amount)
+                .store_slice(recipient)
+                .store_slice(admin) ;; response_destination
+                .store_uint(0, 1)   ;; no custom payload
+                .store_coins(10000000) ;; forward ton amount 0.01 TON
+                .store_uint(0, 1)
+                .end_cell())
+            .end_cell();
+        send_raw_message(msg, 1);
+        return ();
+    }
+
+    ;; Admin configuration operations
+    if (equal_slices(sender_address, admin)) {
+        if (op == op::set_distribution) {
+            slice new_dist = in_msg_body~load_msg_addr();
+            save_data(admin, new_dist, jetton_wallet, agg, with, paused);
+            return ();
+        }
+        if (op == op::set_paused) {
+            int new_paused = in_msg_body~load_uint(1);
+            save_data(admin, dist, jetton_wallet, agg, with, new_paused);
+            return ();
+        }
+    }
+
+    throw(0xffff);
+}
+
+;; Get methods
+(int, int, int) get_pool_status() method_id {
+    (_, _, _, int agg, int with, int paused) = load_data();
+    return (agg, with, agg - with);
+}
+
+slice get_distribution_contract() method_id {
+    (_, slice dist, _, _, _, _) = load_data();
+    return dist;
+}

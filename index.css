@@ -58,3 +58,68 @@
   background-size: 200% 200%;
   animation: orbSphereTurn 2s ease infinite;
 }
+
+/* VIP Mini Cinema Ticker & Glowing LED Indicators */
+@keyframes newsTickerMarquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-news-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: newsTickerMarquee 58s linear infinite;
+}
+
+.animate-news-ticker:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ledBlinkFast {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.9));
+  }
+  50% {
+    opacity: 0.35;
+    filter: drop-shadow(0 0 1px rgba(34, 197, 94, 0.2));
+  }
+}
+
+.led-blink-green {
+  animation: ledBlinkFast 1.2s ease-in-out infinite;
+}
+
+@keyframes ledBlinkAmber {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9));
+  }
+  50% {
+    opacity: 0.3;
+    filter: drop-shadow(0 0 1px rgba(245, 158, 11, 0.2));
+  }
+}
+
+.led-blink-amber {
+  animation: ledBlinkAmber 1.6s ease-in-out infinite;
+}
+
+@keyframes ledBlinkCyan {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.9));
+  }
+  50% {
+    opacity: 0.25;
+    filter: drop-shadow(0 0 1px rgba(6, 182, 212, 0.2));
+  }
+}
+
+.led-blink-cyan {
+  animation: ledBlinkCyan 2s ease-in-out infinite;
+}

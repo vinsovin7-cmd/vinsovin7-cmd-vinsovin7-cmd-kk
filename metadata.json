@@ -1,6 +1,6 @@
 {
   "name": "AlphaQubit Quantum Research & Live Ecosystem",
-  "description": "Interactive AlphaQubit research platform integrated with Solscan.io Pro real-time Solana transaction pusher, Telegram @Wallet TON USDT balance, SCO worldwide omnichannel monetization, real blockchain rails (Solana, Base L2, TON), GitHub App webhooks, Shopify analytics, and Phantom wallet.",
+  "description": "AlphaQubit Research & Live Ecosystem featuring TON Ad Revenue Aggregator & Payout Distribution smart contracts, AdsGram rewarded video Telegram Mini App (TMA), Master Personal Admin Palace, Website to App Android converter, and Solscan.io Pro explorer.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

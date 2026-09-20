@@ -15,7 +15,11 @@ import { CloudflareDomainManager } from './components/CloudflareDomainManager';
 import { GoogleVisitorSignInModal, VisitorRecord } from './components/GoogleVisitorSignInModal';
 import { EcosystemVisitorRecordsSuite } from './components/EcosystemVisitorRecordsSuite';
 import { DatingArtsMatchmakingSuite } from './components/DatingArtsMatchmakingSuite';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart } from 'lucide-react';
+import { AndroidAppInstallerModal } from './components/AndroidAppInstallerModal';
+import { WebsiteToAppConverter } from './components/WebsiteToAppConverter';
+import { AdsGramTonPayoutSuite } from './components/AdsGramTonPayoutSuite';
+import { PortableMiniCinemaEcosystem } from './components/PortableMiniCinemaEcosystem';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -27,11 +31,25 @@ const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: 
   );
 };
 
+// 7 CELESTIAL STARS LUXURY MATRIX
+const SEVEN_COLOR_STARS = [
+  { id: "gold", name: "Solar Gold", color: "#FFD700", meaning: "Sovereign Treasury & Payout Security" },
+  { id: "ruby", name: "Kinetic Ruby", color: "#EF4444", meaning: "Real-time Verification & 80/20 Distribution" },
+  { id: "emerald", name: "Emerald TON", color: "#10B981", meaning: "TON Jetton & USDT Smart Contracts" },
+  { id: "sapphire", name: "Sapphire Azure", color: "#3B82F6", meaning: "Deep Quantum Ecosystem Stability" },
+  { id: "amethyst", name: "Amethyst Violet", color: "#A855F7", meaning: "Sreymara Palace Royalty & AI Guard" },
+  { id: "diamond", name: "Diamond Cyan", color: "#06B6D4", meaning: "Cryptographic Purity & 0.1% Fee Shield" },
+  { id: "topaz", name: "Imperial Topaz", color: "#F59E0B", meaning: "Infinite Yield Micro-Earnings Engine" }
+];
+
 const App: React.FC = () => {
-  const [activeMainTab, setActiveMainTab] = useState<"revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
+  const [selectedStar, setSelectedStar] = useState<typeof SEVEN_COLOR_STARS[0] | null>(null);
+  const [activeMainTab, setActiveMainTab] = useState<"web_to_app" | "adsgram_ton" | "revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.toLowerCase();
       const href = window.location.href.toLowerCase();
+      if (hash.includes("adsgram") || hash.includes("payout") || hash.includes("ton_payout")) return "adsgram_ton";
+      if (hash.includes("converter") || hash.includes("web_to_app") || hash.includes("admob") || hash.includes("apk")) return "web_to_app";
       if (hash.includes("dating") || hash.includes("matchmaking") || hash.includes("datingarts")) return "datingarts";
       if (hash.includes("visitor") || hash.includes("records") || hash.includes("google_signin")) return "visitor_records";
       if (hash.includes("cloudflare") || hash.includes("domain") || hash.includes("earnings")) return "cloudflare";
@@ -50,7 +68,7 @@ const App: React.FC = () => {
       const saved = localStorage.getItem("alphaqubit_active_main_tab");
       if (saved) return saved as any;
     }
-    return "revenue";
+    return "web_to_app";
   });
 
   const [isGuestLoveSuiteOnly, setIsGuestLoveSuiteOnly] = useState<boolean>(() => {
@@ -69,6 +87,7 @@ const App: React.FC = () => {
     return false;
   });
   const [showGoogleSignInModal, setShowGoogleSignInModal] = useState<boolean>(false);
+  const [showAndroidInstallerModal, setShowAndroidInstallerModal] = useState<boolean>(false);
   const [isTabHidden, setIsTabHidden] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("alphaqubit_is_tab_hidden") === "true";
@@ -101,16 +120,73 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "").toLowerCase();
-      if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") setActiveMainTab("ton_wallet");
+      const pathname = window.location.pathname.toLowerCase();
+      if (pathname.includes("/admin") || hash === "admin_palace" || hash === "admin" || hash === "palace" || hash === "master_admin") {
+        setActiveMainTab("admin_palace");
+        setIsTabHidden(false);
+      }
+      else if (hash === "adsgram_ton" || hash === "adsgram" || hash === "payout" || hash === "ton_payout") setActiveMainTab("adsgram_ton");
+      else if (hash === "web_to_app" || hash === "converter" || hash === "website_to_app" || hash === "admob" || hash === "apk") setActiveMainTab("web_to_app");
+      else if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") setActiveMainTab("ton_wallet");
       else if (hash === "external_api" || hash === "api" || hash === "external") setActiveMainTab("external_api");
       else if (hash === "telegram_auth" || hash === "telegram" || hash === "tg_auth") setActiveMainTab("telegram_auth");
       else if (hash === "solscan" || hash === "solana") setActiveMainTab("solscan");
       else if (hash === "mail_ai" || hash === "mail" || hash === "ai") setActiveMainTab("mail_ai");
+      else if (hash === "cinema_video" || hash === "cinema" || hash === "youtube") setActiveMainTab("cinema_video");
+      else if (hash === "cloudflare" || hash === "domain") setActiveMainTab("cloudflare");
+      else if (hash === "sreymara_appz" || hash === "appz" || hash === "apps") setActiveMainTab("sreymara_appz");
+      else if (hash === "datingarts" || hash === "dating") setActiveMainTab("datingarts");
+      else if (hash === "visitor_records" || hash === "records") setActiveMainTab("visitor_records");
+      else if (hash === "sco_monetization" || hash === "sco") setActiveMainTab("sco_monetization");
       else if (hash === "revenue" || hash === "dashboard") setActiveMainTab("revenue");
       else if (hash === "quantum") setActiveMainTab("quantum");
     };
+
+    // Check on initial mount as well
+    handleHashChange();
+
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  // BULLETPROOF INBUILD FRAME GUARD: Intercept all external link clicks so NOTHING opens outside
+  useEffect(() => {
+    const handleGlobalLinkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest("a") as HTMLAnchorElement | null;
+      if (anchor) {
+        const href = anchor.getAttribute("href") || "";
+        // If external link or target _blank, intercept and keep inside ecosystem!
+        if (anchor.target === "_blank" || href.startsWith("http://") || href.startsWith("https://")) {
+          // If anchor is inside an iframe, allow iframe internal handling
+          if (anchor.closest("iframe")) return;
+
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (href.includes("telegram") || href.includes("t.me")) {
+            setActiveMainTab("telegram_auth");
+            setIsTabHidden(false);
+          } else if (href.includes("solscan") || href.includes("solana")) {
+            setActiveMainTab("solscan");
+            setIsTabHidden(false);
+          } else if (href.includes("apk") || href.endsWith(".apk")) {
+            setShowAndroidInstallerModal(true);
+          } else if (href.includes("converter") || href.includes("webtoapp")) {
+            setActiveMainTab("web_to_app");
+            setIsTabHidden(false);
+          } else if (href.includes("adsgram") || href.includes("payout")) {
+            setActiveMainTab("adsgram_ton");
+            setIsTabHidden(false);
+          } else {
+            setActiveMainTab("sreymara_appz");
+            setIsTabHidden(false);
+          }
+        }
+      }
+    };
+    document.addEventListener("click", handleGlobalLinkClick, true);
+    return () => document.removeEventListener("click", handleGlobalLinkClick, true);
   }, []);
 
   useEffect(() => {
@@ -163,10 +239,58 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090A0E] text-stone-100 selection:bg-nobel-gold selection:text-black font-sans relative">
-      
-      {/* EXECUTIVE TOP NAVIGATION HEADER */}
-      <header className="sticky top-0 z-50 bg-[#090A0E]/95 backdrop-blur-md border-b border-stone-800 py-3.5 px-6 shadow-2xl">
+    <div className="min-h-screen bg-[#05060A] text-stone-100 selection:bg-nobel-gold selection:text-black font-sans relative p-1 sm:p-2.5">
+      {/* LUXURIOUS BOLD BUILD FRAME WITH 7-COLOR STARS */}
+      <div className="relative rounded-[24px] sm:rounded-[32px] border-[3px] sm:border-4 border-amber-500/50 shadow-[0_0_80px_rgba(245,158,11,0.22)] bg-[#090A0E] overflow-hidden min-h-[calc(100vh-1rem)] flex flex-col ring-1 ring-amber-400/20">
+        
+        {/* CELESTIAL CROWN WITH LUXURIOUS HIDDEN 7-COLOR STARS */}
+        <div className="w-full bg-gradient-to-r from-[#12072B] via-[#090A14] to-[#14082D] border-b border-amber-500/30 px-3 sm:px-6 py-2 flex items-center justify-between flex-wrap gap-2 text-xs select-none">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            </div>
+            <span className="font-serif font-black tracking-widest text-amber-300 text-[10px] sm:text-xs uppercase flex items-center gap-1.5">
+              <span>★ SREMARA LUXURY BUILD FRAME</span>
+              <span className="text-stone-600">•</span>
+              <span className="text-emerald-400 font-mono font-normal hidden sm:inline">BULLETPROOF INBUILD ECOSYSTEM</span>
+            </span>
+          </div>
+
+          {/* HIDDEN 7-COLOR CELESTIAL STARS */}
+          <div className="flex items-center gap-2 sm:gap-3 bg-black/70 px-3 py-1 rounded-full border border-amber-500/30 shadow-inner">
+            <span className="text-[10px] font-mono text-stone-400 uppercase hidden md:inline">7 Celestial Stars:</span>
+            {SEVEN_COLOR_STARS.map((star, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedStar(star)}
+                className="group relative flex items-center justify-center p-1 rounded-full hover:bg-white/10 transition-all cursor-pointer focus:outline-none"
+                title={`${star.name}: ${star.meaning} (Click to inspect star power)`}
+              >
+                <Star
+                  size={13}
+                  style={{ color: star.color, fill: star.color }}
+                  className="transition-transform group-hover:scale-135 drop-shadow-[0_0_6px_currentColor] animate-pulse"
+                />
+                {/* Reveal label */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/95 text-stone-200 border border-stone-700 px-2.5 py-1 rounded-lg text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none shadow-2xl font-mono">
+                  <div className="font-bold" style={{ color: star.color }}>{star.name}</div>
+                  <div className="text-stone-400 text-[9px]">{star.meaning}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 rounded text-[10px] font-mono font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>100% EMBEDDED ECOSYSTEM</span>
+            </span>
+          </div>
+        </div>
+
+        {/* EXECUTIVE TOP NAVIGATION HEADER */}
+        <header className="sticky top-0 z-40 bg-[#090A0E]/95 backdrop-blur-md border-b border-stone-800 py-3.5 px-6 shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           
           {/* Brand, Hide Tab Control & Live System Status */}
@@ -230,6 +354,44 @@ const App: React.FC = () => {
           ) : (
             /* EXPANDED VIEW: Full Navigation Banner carrying all 11 quick-access tabs + V Hide Button at the far right ending */
             <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800 flex-wrap relative shadow-2xl">
+              {/* Primary Google Play Website to App Converter Tab */}
+              <button
+                id="btn-nav-web-to-app"
+                onClick={() => {
+                  setActiveMainTab("web_to_app");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "web_to_app" && !isTabHidden
+                    ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white border-blue-400 ring-2 ring-blue-500/40"
+                    : "bg-blue-950/70 text-blue-300 hover:text-white border-blue-800/80"
+                }`}
+                title="Google Play Convert Website to App (com.webtoapp.converter) with AdMob & APK Generator"
+              >
+                <Globe size={14} className="text-blue-300" />
+                <span>Website to App</span>
+                <span className="px-1.5 py-0.2 bg-[#00C853] text-white rounded text-[9px] font-extrabold uppercase">PLAY STORE</span>
+              </button>
+
+              {/* AdsGram & TON Micro-Payouts Studio Tab (80/20 Split & 0.1% Fee) */}
+              <button
+                id="btn-nav-adsgram-ton"
+                onClick={() => {
+                  setActiveMainTab("adsgram_ton");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "adsgram_ton" && !isTabHidden
+                    ? "bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 text-white border-cyan-400 ring-2 ring-cyan-500/40"
+                    : "bg-emerald-950/70 text-emerald-300 hover:text-white border-emerald-800/80"
+                }`}
+                title="AdsGram SDK & TON Automated USDT Micro-Payouts (80/20 Split & 0.1% Fee)"
+              >
+                <Zap size={14} className="text-amber-400" />
+                <span>AdsGram & TON Payouts</span>
+                <span className="px-1.5 py-0.2 bg-emerald-500 text-stone-950 rounded text-[9px] font-extrabold uppercase">80/20 USDT</span>
+              </button>
+
               <button
                 onClick={() => {
                   setActiveMainTab("revenue");
@@ -315,37 +477,39 @@ const App: React.FC = () => {
                 <span className="px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded text-[9px] font-mono border border-sky-700 font-bold">CLIENT</span>
               </button>
 
-              {/* Dedicated "Launch Telegram Web" Quick-Access Button with Live Status Indicator */}
-              <a
+              {/* Bulletproof Embedded "Launch Telegram Web" Quick-Access Button */}
+              <button
                 id="btn-launch-telegram-web"
-                href="https://web.telegram.org/k/"
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
+                onClick={() => {
+                  setActiveMainTab("telegram_auth");
+                  setIsTabHidden(false);
+                }}
                 className="px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-sky-950/70 hover:bg-sky-900/90 text-sky-300 hover:text-white border border-sky-700/80 shadow-sm whitespace-nowrap"
-                title="Launch Official Telegram Web (Secure Browser Tab)"
+                title="Launch Official Telegram Web (Embedded In-Ecosystem Client)"
               >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
                 </span>
                 <span>Launch Telegram Web</span>
-                <ExternalLink size={12} className="text-sky-400" />
-              </a>
+                <span className="px-1.5 py-0.2 bg-sky-900 text-sky-200 rounded text-[9px] font-mono uppercase">IN-APP</span>
+              </button>
 
-              {/* Quick Access: Direct Telegram Android APK Download */}
-              <a
+              {/* Bulletproof Embedded Telegram Android APK Installer */}
+              <button
                 id="btn-nav-download-telegram-apk"
-                href={OFFICIAL_TELEGRAM_APK_URL}
-                download="Telegram.apk"
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
+                onClick={() => {
+                  setShowAndroidInstallerModal(true);
+                }}
                 className="px-3 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-500 text-stone-950 shadow-sm border border-amber-400 whitespace-nowrap"
-                title="Download Official Telegram Android APK (Direct CDN4 Node)"
+                title="Install Official Telegram Android APK (In-Ecosystem Android Runner)"
               >
                 <Download size={13} />
                 <span>Telegram APK</span>
-                <span className="px-1.5 py-0.2 bg-black/30 text-stone-100 rounded text-[9px] font-mono">72 MB</span>
-              </a>
+                <span className="px-1.5 py-0.2 bg-black/30 text-stone-100 rounded text-[9px] font-mono">EMBEDDED</span>
+              </button>
 
               <button
                 onClick={() => {
@@ -661,6 +825,20 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* VIEW: WEBSITE TO APP CONVERTER (com.webtoapp.converter from Google Play) */}
+        {!isTabHidden && activeMainTab === "web_to_app" && (
+          <div className="space-y-6 animate-fade-in flex flex-col items-center">
+            <WebsiteToAppConverter onClose={() => setActiveMainTab("revenue")} />
+          </div>
+        )}
+
+        {/* VIEW: ADSGAM & TON REVENUE AGGREGATOR & PAYOUT DISTRIBUTION SUITE */}
+        {!isTabHidden && activeMainTab === "adsgram_ton" && (
+          <div className="space-y-6 animate-fade-in flex flex-col items-center">
+            <AdsGramTonPayoutSuite onClose={() => setActiveMainTab("web_to_app")} />
+          </div>
+        )}
+
         {/* VIEW 1: SHOPIFY + TIDIO + PHANTOM REVENUE ENGINE (Rendered when not hidden) */}
         {!isTabHidden && activeMainTab === "revenue" && (
           <div className="space-y-6 animate-fade-in">
@@ -951,6 +1129,66 @@ const App: React.FC = () => {
           setActiveMainTab("visitor_records");
         }}
       />
+
+      {/* GLOBAL ANDROID APP INSTALLER MODAL (EMBEDDED IN-ECOSYSTEM APPS) */}
+      <AndroidAppInstallerModal
+        isOpen={showAndroidInstallerModal}
+        onClose={() => setShowAndroidInstallerModal(false)}
+      />
+
+      {/* EXTERNAL PORTABLE MINI CINEMA & NOTIFICATION BOARD DOCK (BOTTOM-RIGHT EDGE) */}
+      <PortableMiniCinemaEcosystem
+        onOpenInstaller={() => setShowAndroidInstallerModal(true)}
+        onNavigateToTab={(tab) => {
+          setActiveMainTab(tab as any);
+          setIsTabHidden(false);
+        }}
+      />
+
+      {/* CELESTIAL 7-COLOR STAR INSPECTOR MODAL */}
+      {selectedStar && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#0D081E] border-2 border-amber-500/80 rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
+            <div className="flex justify-between items-center border-b border-stone-800 pb-3">
+              <span className="text-xs font-mono text-stone-400">LUXURIOUS CELESTIAL STAR</span>
+              <button
+                onClick={() => setSelectedStar(null)}
+                className="text-stone-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="py-3 flex flex-col items-center">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-3 shadow-xl animate-pulse"
+                style={{ backgroundColor: `${selectedStar.color}20`, border: `2px solid ${selectedStar.color}` }}
+              >
+                <Star size={32} style={{ color: selectedStar.color, fill: selectedStar.color }} />
+              </div>
+              <h3 className="text-xl font-serif font-black" style={{ color: selectedStar.color }}>
+                {selectedStar.name}
+              </h3>
+              <p className="text-xs text-stone-300 font-mono mt-1 font-bold">
+                {selectedStar.meaning}
+              </p>
+            </div>
+
+            <p className="text-xs text-stone-400 leading-relaxed bg-black/50 p-3 rounded-2xl border border-stone-800 text-left font-mono">
+              The 7 hidden stars seal the Sreymara build frame with quantum integrity. Every user action, ad impression, 80/20 payout share, and transaction executes bulletproof inside this embedded ecosystem.
+            </p>
+
+            <button
+              onClick={() => setSelectedStar(null)}
+              className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 text-stone-950 font-black text-xs rounded-xl shadow-lg cursor-pointer hover:from-amber-500 hover:to-amber-600 transition-all"
+            >
+              Close Star Inspector
+            </button>
+          </div>
+        </div>
+      )}
+
+      </div> {/* CLOSE LUXURIOUS BOLD BUILD FRAME */}
     </div>
   );
 };

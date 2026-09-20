@@ -1,0 +1,21 @@
+[package]
+name = "alphaqubit_yield"
+version = "0.1.0"
+description = "AlphaQubit Quantum Ecosystem Solana SPL-USDT Yield Engine (80% Platform Reserve / 20% Direct User Yield Split)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "alphaqubit_yield"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"
+solana-program = "~1.17"

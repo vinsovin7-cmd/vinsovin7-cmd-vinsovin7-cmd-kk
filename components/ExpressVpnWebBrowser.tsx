@@ -930,16 +930,34 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
           </button>
         </form>
 
-        <a
-          href={addressBarInput.startsWith("http") ? addressBarInput : `https://${addressBarInput}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => {
+            let url = addressBarInput.trim();
+            if (!url) return;
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+              if (url.includes(".") && !url.includes(" ")) {
+                url = `https://${url}`;
+              } else {
+                executeSearch(url);
+                return;
+              }
+            }
+            setAddressBarInput(url);
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === activeTabId
+                  ? { ...t, url, title: url, activeView: "proxy_view", iconType: "generic" }
+                  : t
+              )
+            );
+          }}
           className="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-stone-700 transition-all shrink-0 cursor-pointer"
-          title="Open directly in new browser window"
+          title="Open embedded window inside ecosystem"
         >
           <ExternalLink size={13} className="text-sky-400" />
           <span className="hidden sm:inline">Direct Window</span>
-        </a>
+        </button>
       </div>
 
       {/* ==================== BROWSER VIEWPORT CANVASES ==================== */}
@@ -1384,7 +1402,20 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                                       )
                                     );
                                   } else {
-                                    window.open(res.url, "_blank", "noopener,noreferrer");
+                                    setAddressBarInput(res.url);
+                                    setTabs((prev) =>
+                                      prev.map((t) =>
+                                        t.id === activeTabId
+                                          ? {
+                                              ...t,
+                                              title: res.title || res.url,
+                                              url: res.url,
+                                              activeView: "proxy_view",
+                                              iconType: "generic",
+                                            }
+                                          : t
+                                      )
+                                    );
                                   }
                                 }}
                                 className="text-lg font-bold text-blue-800 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
@@ -1686,40 +1717,86 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
           </div>
         )}
 
-        {/* VIEW 5: PROXY VIEW / GENERIC EMBED WITH DIRECT PROXY FALLBACK */}
+        {/* VIEW 5: EMBEDDED LIVE PROXY WEB VIEWPORT */}
         {activeTab.activeView === "proxy_view" && (
-          <div className="w-full h-[560px] bg-[#0A0C10] flex flex-col items-center justify-center p-6 text-center text-white space-y-4">
-            <ShieldCheck size={48} className="text-emerald-400 animate-pulse" />
-            <h2 className="text-xl font-bold text-blue-400">US ExpressVPN Web Proxy Connected</h2>
-            <p className="text-xs text-stone-300 max-w-md leading-relaxed">
-              Target URL <code>{activeTab.url}</code> is currently routed via US Node:{" "}
-              <strong>{currentVpn.location}</strong>.
-            </p>
+          <div className="w-full h-[620px] bg-[#0A0C10] flex flex-col">
+            {/* Embedded Sub-Header / Control Strip */}
+            <div className="bg-[#121522] border-b border-stone-800 px-4 py-2 flex justify-between items-center flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2 text-stone-300 font-mono text-[11px] min-w-0">
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-600 rounded font-bold shrink-0">
+                  <ShieldCheck size={13} className="text-emerald-400" />
+                  <span>US PROXY ROUTED</span>
+                </div>
+                <span className="truncate text-stone-200 font-bold">{activeTab.url}</span>
+                <span className="text-stone-500 hidden sm:inline">• Node: {currentVpn.name} ({currentVpn.ip})</span>
+              </div>
 
-            <div className="flex gap-3">
-              <a
-                href={`/api/browser/proxy?url=${encodeURIComponent(activeTab.url)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg cursor-pointer flex items-center gap-1.5"
-              >
-                <ExternalLink size={14} /> Open via Backend Proxy Route
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setTabs((prev) =>
-                    prev.map((t) =>
-                      t.id === activeTabId
-                        ? { ...t, activeView: "google_search", title: "Google", url: "https://www.google.com" }
-                        : t
-                    )
-                  );
-                }}
-                className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs rounded-xl border border-stone-700 cursor-pointer"
-              >
-                Return to Google
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const iframe = document.getElementById(`proxy-iframe-${activeTab.id}`) as HTMLIFrameElement;
+                    if (iframe) iframe.src = `/api/browser/proxy?url=${encodeURIComponent(activeTab.url)}&t=${Date.now()}`;
+                  }}
+                  className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded text-[11px] font-bold flex items-center gap-1 border border-stone-700 cursor-pointer"
+                  title="Reload embedded web page"
+                >
+                  <RotateCw size={12} /> Reload
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(activeTab.url);
+                    setShowLocationToast(true);
+                    setTimeout(() => setShowLocationToast(false), 3000);
+                  }}
+                  className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded text-[11px] font-bold flex items-center gap-1 border border-stone-700 cursor-pointer"
+                  title="Copy URL"
+                >
+                  <Copy size={12} /> Copy URL
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabs((prev) =>
+                      prev.map((t) =>
+                        t.id === activeTabId
+                          ? { ...t, activeView: "google_search", title: "Google", url: "https://www.google.com" }
+                          : t
+                      )
+                    );
+                  }}
+                  className="px-2.5 py-1 bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-700 rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowLeft size={12} /> Back to Google
+                </button>
+              </div>
+            </div>
+
+            {/* Embedded Live Web Frame */}
+            <div className="flex-1 w-full relative bg-white overflow-hidden">
+              <iframe
+                id={`proxy-iframe-${activeTab.id}`}
+                src={`/api/browser/proxy?url=${encodeURIComponent(activeTab.url)}`}
+                title={activeTab.title || activeTab.url}
+                className="w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals allow-downloads"
+              />
+            </div>
+
+            {/* Bottom Status Ribbon */}
+            <div className="bg-[#0D0F17] border-t border-stone-800 px-4 py-1.5 flex justify-between items-center text-[10px] font-mono text-stone-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Embedded Ecosystem Browser • Encrypted SSL via {currentVpn.location}</span>
+              </div>
+              <div className="flex items-center gap-3 text-stone-500">
+                <span>Domain: {activeTab.url.replace(/^https?:\/\//, '').split('/')[0]}</span>
+                <span>•</span>
+                <span>256-bit Lightway UDP</span>
+              </div>
             </div>
           </div>
         )}
@@ -1818,15 +1895,31 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                   <Download size={14} />
                   <span>Full Size</span>
                 </a>
-                <a
-                  href={selectedImageModal.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sourceUrl = selectedImageModal.sourceUrl;
+                    setSelectedImageModal(null);
+                    setAddressBarInput(sourceUrl);
+                    setTabs((prev) =>
+                      prev.map((t) =>
+                        t.id === activeTabId
+                          ? {
+                              ...t,
+                              title: selectedImageModal.title || sourceUrl,
+                              url: sourceUrl,
+                              activeView: "proxy_view",
+                              iconType: "generic",
+                            }
+                          : t
+                      )
+                    );
+                  }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors shadow cursor-pointer"
                 >
                   <ExternalLink size={14} />
                   <span>Visit Website</span>
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={() => setSelectedImageModal(null)}

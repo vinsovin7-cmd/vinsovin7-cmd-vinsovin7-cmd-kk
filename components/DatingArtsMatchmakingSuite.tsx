@@ -3777,23 +3777,20 @@ export function DatingArtsMatchmakingSuite({
             <div className="space-y-2">
               <button
                 onClick={() => {
-                  const blob = new Blob([
-                    `DatingArts Android Package (APK v3.2)\nPackage Name: com.datingarts.official.app\nSync Engine: Gmail + WhatsApp + Telegram + Admin Console Realtime\nHost: datingarts.com`
-                  ], { type: "text/plain" });
-                  const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
-                  a.href = url;
+                  a.href = "/api/download/apk/datingarts";
                   a.download = "DatingArts_Official_v3.2.apk";
+                  document.body.appendChild(a);
                   a.click();
-                  URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
 
-                  setToastMessage("📱 APK Downloaded! 'DatingArts_Official_v3.2.apk' saved to downloads. Copy and open inside Telegram or phone installer!");
+                  setToastMessage("📱 Downloading DatingArts_Official_v3.2.apk (78.4 MB Standalone Android Package)... Check your downloads!");
                   setTimeout(() => setToastMessage(null), 4000);
                 }}
                 className="w-full py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-stone-950 font-black text-xs rounded-xl shadow-xl transition hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2"
               >
                 <Smartphone className="w-4 h-4" />
-                <span>One-Click Download Android APK (.apk)</span>
+                <span>One-Click Download Android APK (78.4 MB)</span>
               </button>
 
               <button

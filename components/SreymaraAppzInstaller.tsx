@@ -26,6 +26,8 @@ import {
   Check,
   Grid
 } from "lucide-react";
+import { WebsiteToAppConverter } from "./WebsiteToAppConverter";
+import { AdsGramTonPayoutSuite } from "./AdsGramTonPayoutSuite";
 
 export interface InstalledApp {
   id: string;
@@ -42,6 +44,30 @@ export interface InstalledApp {
 }
 
 const DEFAULT_ECOSYSTEM_APPS: InstalledApp[] = [
+  {
+    id: "app-webtoapp",
+    name: "Convert Website to App (Google Play)",
+    category: "Android & Monetization",
+    icon: "📱",
+    description: "Convert websites into Android apps with AdMob monetization, offline support, push notifications, and export APK & Android Studio ZIP.",
+    version: "v3.6.2",
+    type: "internal_suite",
+    internalTabKey: "web_to_app",
+    isInstalled: true,
+    installedAt: "2026-09-19"
+  },
+  {
+    id: "app-adsgram-ton",
+    name: "AdsGram & TON Micro-Payout Studio",
+    category: "Finance & Monetization",
+    icon: "💎",
+    description: "AdsGram SDK mini-app with TON Connect, 80/20 revenue split, 0.1% transaction fee, and automated USDT micro-payouts.",
+    version: "v4.0",
+    type: "internal_suite",
+    internalTabKey: "adsgram_ton",
+    isInstalled: true,
+    installedAt: "2026-09-19"
+  },
   {
     id: "app-mechat",
     name: "MeChat Global Matchmaker",
@@ -303,8 +329,16 @@ export const SreymaraAppzInstaller: React.FC<SreymaraAppzInstallerProps> = ({
             </button>
           </div>
 
-          <div className="w-full h-[620px] rounded-2xl border border-purple-900/80 overflow-hidden bg-black relative shadow-2xl">
-            {activeApp.type === "custom_embed" && activeApp.embedUrl ? (
+          <div className="w-full h-[700px] rounded-2xl border border-purple-900/80 overflow-hidden bg-black relative shadow-2xl">
+            {activeApp.internalTabKey === "web_to_app" ? (
+              <div className="w-full h-full overflow-y-auto p-2 bg-[#07090e]">
+                <WebsiteToAppConverter onClose={() => setActiveApp(null)} />
+              </div>
+            ) : activeApp.internalTabKey === "adsgram_ton" ? (
+              <div className="w-full h-full overflow-y-auto p-2 bg-[#07090e]">
+                <AdsGramTonPayoutSuite onClose={() => setActiveApp(null)} />
+              </div>
+            ) : activeApp.type === "custom_embed" && activeApp.embedUrl ? (
               <iframe
                 src={activeApp.embedUrl}
                 title={activeApp.name}
