@@ -615,8 +615,9 @@ export function getOrCreateMailAccount(email: string, password?: string, fullNam
   return account;
 }
 
-// Pre-seed the account entered in user screenshot (arthur20011043@mail.com)
+// Pre-seed the accounts entered in user screenshots
 getOrCreateMailAccount("arthur20011043@mail.com", "ArthurPass2026!", "Arthur");
+getOrCreateMailAccount("kansasnelly@mail.com", "KansasPass2026!", "Kansas Nelly");
 activeMailSessionEmail = "arthur20011043@mail.com";
 
 // Helper to calculate total active session duration & earnings
@@ -8327,6 +8328,35 @@ app.get("/api/browser/proxy", async (req, res) => {
   try {
     const urlObj = new URL(formattedUrl);
     const origin = urlObj.origin;
+
+    // earnings.ink is a Single Page Application (SPA). Proxying raw HTML can break client router path resolution (/api/browser/proxy -> 404).
+    // Serving it in a clean embedded direct portal maintains root '/' pathname, client routing, and interactive state.
+    if (urlObj.hostname.includes("earnings.ink")) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("X-ExpressVPN-Location", "New York, NY, United States");
+      res.removeHeader("X-Frame-Options");
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>earnings.ink - Live Embedded Ecosystem Portal</title>
+            <style>
+              html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0A0C10; }
+              iframe { width: 100%; height: 100%; border: none; display: block; }
+            </style>
+          </head>
+          <body>
+            <iframe 
+              src="${formattedUrl}" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
+            ></iframe>
+          </body>
+        </html>
+      `);
+    }
 
     const response = await fetch(formattedUrl, {
       headers: {

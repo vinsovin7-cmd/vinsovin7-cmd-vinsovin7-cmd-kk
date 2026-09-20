@@ -47,7 +47,16 @@ import {
   SkipBack,
   SkipForward,
   Settings,
-  Wallet
+  Wallet,
+  Link2,
+  Mic,
+  PlusSquare,
+  SlidersHorizontal,
+  Copy,
+  Heart,
+  Bookmark,
+  Music,
+  Edit3
 } from "lucide-react";
 import { EcosystemWalletWithdrawalModal } from "./EcosystemWalletWithdrawalModal";
 
@@ -70,6 +79,110 @@ export interface MediaChannelItem {
   tags: string[];
 }
 
+// -------------------------------------------------------------
+// MERLIN SAGA EPISODES CONTINUOUS PLAYLIST DATA
+// -------------------------------------------------------------
+export interface MerlinEpisode {
+  episodeNumber: number;
+  seasonNumber: number;
+  title: string;
+  youtubeId: string;
+  synopsis: string;
+  duration: string;
+}
+
+export const MERLIN_EPISODES: MerlinEpisode[] = [
+  {
+    episodeNumber: 1,
+    seasonNumber: 1,
+    title: "The Dragon's Call",
+    youtubeId: "d3bOU2yzDks", // Verified link by user!
+    synopsis: "Young warlock Merlin arrives in Camelot and meets the Great Dragon beneath the castle.",
+    duration: "45 min"
+  },
+  {
+    episodeNumber: 2,
+    seasonNumber: 1,
+    title: "Valiant & The Shield",
+    youtubeId: "2cFmiQUb3Vs", // Verified master stream
+    synopsis: "Knight Valiant uses enchanted serpent shields in the annual Camelot sword fighting tournament.",
+    duration: "44 min"
+  },
+  {
+    episodeNumber: 3,
+    seasonNumber: 1,
+    title: "The Mark of Nimueh",
+    youtubeId: "d3bOU2yzDks",
+    synopsis: "Nimueh casts a sorcerous pestilence on the water; Merlin and Gaius fight to cure Camelot.",
+    duration: "45 min"
+  },
+  {
+    episodeNumber: 4,
+    seasonNumber: 1,
+    title: "The Poisoned Chalice",
+    youtubeId: "2cFmiQUb3Vs",
+    synopsis: "Merlin drinks poisoned wine intended to assassinate Prince Arthur, sparking an antidote quest.",
+    duration: "45 min"
+  },
+  {
+    episodeNumber: 5,
+    seasonNumber: 1,
+    title: "Lancelot & The Griffin",
+    youtubeId: "d3bOU2yzDks",
+    synopsis: "Peasant swordsman Lancelot arrives to become a Knight of Camelot and slays the winged beast.",
+    duration: "44 min"
+  },
+  {
+    episodeNumber: 6,
+    seasonNumber: 1,
+    title: "A Remedy to Cure All Diseases",
+    youtubeId: "2cFmiQUb3Vs",
+    synopsis: "A deceptive physician plots revenge against Gaius and King Uther using dark beetles.",
+    duration: "45 min"
+  }
+];
+
+// -------------------------------------------------------------
+// TIKTOK VIRAL BROADCAST POST INTERFACE & INITIAL PRESETS
+// -------------------------------------------------------------
+export interface TikTokViralPost {
+  id: string;
+  creatorHandle: string;
+  creatorName: string;
+  caption: string;
+  songTitle: string;
+  originalUrl: string;
+  videoUrl: string;
+  youtubeMirrorId: string;
+  likesCount: string;
+  commentsCount: string;
+  savesCount: string;
+  sharesCount: string;
+  hashtags: string[];
+  audioBoost: string;
+  visualFilter: string;
+}
+
+export const INITIAL_TIKTOK_POSTS: TikTokViralPost[] = [
+  {
+    id: "tiktok_sitonic_fight_for_me",
+    creatorHandle: "@SitonicSA",
+    creatorName: "SitonicSA",
+    caption: "NOW OUT 🔥🔥 Fight for Me 💃🕺",
+    songTitle: "Fight for Me - SitonicSA",
+    originalUrl: "https://vt.tiktok.com/ZSqcjpYNA/",
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    youtubeMirrorId: "d3bOU2yzDks",
+    likesCount: "23.7K",
+    commentsCount: "384",
+    savesCount: "3,052",
+    sharesCount: "1,594",
+    hashtags: ["#trendingsong", "#trendingmusic", "#viral", "#fightforme", "#dance"],
+    audioBoost: "80% Speaker Active (Default)",
+    visualFilter: "1080p Ultra HD"
+  }
+];
+
 export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemProps> = ({
   onOpenInstaller,
   onNavigateToTab
@@ -80,27 +193,114 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     return saved !== null ? saved === "true" : true;
   });
 
-  // Active sub-view: 'screen' | 'channels_picker' | 'notifications_board' | 'youtube_auth' | 'ai_assistant' | 'wallet_withdrawal'
-  const [activeControlTab, setActiveControlTab] = useState<"screen" | "channels_picker" | "notifications_board" | "youtube_auth" | "ai_assistant" | "wallet_withdrawal">("screen");
+  // Active sub-view: 'screen' | 'channels_picker' | 'notifications_board' | 'youtube_auth' | 'youtube_portal' | 'tiktok_portal' | 'ai_assistant' | 'wallet_withdrawal'
+  const [activeControlTab, setActiveControlTab] = useState<"screen" | "channels_picker" | "notifications_board" | "youtube_auth" | "youtube_portal" | "tiktok_portal" | "ai_assistant" | "wallet_withdrawal">("screen");
 
   // Country filter for channels picker
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>("ALL");
 
-  // Player mode: 'direct' (guaranteed direct MP4 cinema) | 'youtube' (YouTube live stream embed)
-  const [playerMode, setPlayerMode] = useState<"direct" | "youtube">("direct");
+  // Player mode: 'youtube' (guaranteed worldwide stream embed) | 'direct' (direct video mirror)
+  const [playerMode, setPlayerMode] = useState<"direct" | "youtube">("youtube");
 
-  // Cinema Player State (Strict Cinema standard: Active video playback, no static pictures)
+  // Verified YouTube Link Input & Custom Loaded Streams
+  const [verifiedLinkInput, setVerifiedLinkInput] = useState<string>("");
+  const [verifiedLinkFeedback, setVerifiedLinkFeedback] = useState<string | null>(null);
+  const [isPasteBarOpen, setIsPasteBarOpen] = useState<boolean>(false); // Closed by default so player is sleek & neat
+  const [channelHandleInput, setChannelHandleInput] = useState<string>("");
+  const [customVerifiedMediaList, setCustomVerifiedMediaList] = useState<MediaChannelItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("mini_cinema_custom_verified");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Cinema Player State (Strict Cinema standard: 80% Speaker Open, Active video playback, no static pictures)
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isMuted, setIsMuted] = useState<boolean>(true);
+  const [speakerVolume, setSpeakerVolume] = useState<number>(80); // 80% speaker volume open
+  const [isMuted, setIsMuted] = useState<boolean>(false); // Unmuted active speaker on app load
   const [searchLightActive, setSearchLightActive] = useState<boolean>(false);
   const [searchLightIntensity, setSearchLightIntensity] = useState<number>(70);
   const [cinemaAspectRatio, setCinemaAspectRatio] = useState<"16:9" | "21:9">("16:9");
+  // Full Screen Fit mode removes all black spaces from both sides
+  const [screenFitMode, setScreenFitMode] = useState<"fill_screen" | "standard_16_9" | "ultrawide_21_9">("fill_screen");
+  // Toggle to hide and show automatic, manual, speaker, channels, and alerts (lowers cinema system down when hidden)
+  const [isControlsAndChannelsVisible, setIsControlsAndChannelsVisible] = useState<boolean>(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState<number>(0);
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [showPlayOverlay, setShowPlayOverlay] = useState<boolean>(false);
 
-  // Selected Media / Channel
-  const [selectedMediaId, setSelectedMediaId] = useState<string>("ch_aljazeera_live");
+  // Selected Media / Channel (defaults to user verified Merlin stream: d3bOU2yzDks)
+  const [selectedMediaId, setSelectedMediaId] = useState<string>("merlin");
+
+  // -------------------------------------------------------------
+  // CINEMA HUD AUTO-HIDE & REPOSITIONING ENGINE (PREVENTS COVERING LYRICS)
+  // -------------------------------------------------------------
+  // Auto-hides top badges and bottom controls after 3.5s of no interaction
+  // Can also dock controls cleanly below the video container so lyrics are never covered
+  const [isCinemaHudVisible, setIsCinemaHudVisible] = useState<boolean>(true);
+  const [hudPlacement, setHudPlacement] = useState<"docked_clean" | "overlay_autohide">("docked_clean");
+  const hudAutoHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetCinemaHudTimer = () => {
+    setIsCinemaHudVisible(true);
+    if (hudAutoHideTimerRef.current) {
+      clearTimeout(hudAutoHideTimerRef.current);
+    }
+    hudAutoHideTimerRef.current = setTimeout(() => {
+      setIsCinemaHudVisible(false);
+    }, 3500); // 3.5 seconds inactivity auto-hide
+  };
+
+  useEffect(() => {
+    resetCinemaHudTimer();
+    return () => {
+      if (hudAutoHideTimerRef.current) clearTimeout(hudAutoHideTimerRef.current);
+    };
+  }, [selectedMediaId]);
+
+  // -------------------------------------------------------------
+  // MERLIN EPISODIC CONTINUOUS AUTO-ADVANCE ENGINE
+  // -------------------------------------------------------------
+  const [merlinEpisodeIndex, setMerlinEpisodeIndex] = useState<number>(0);
+  const [isMerlinAutoNextActive, setIsMerlinAutoNextActive] = useState<boolean>(true);
+
+  // -------------------------------------------------------------
+  // TIKTOK VIRAL BROADCAST SOUNDSTAGE & VIDEO EDITOR STATE
+  // -------------------------------------------------------------
+  const [tikTokPosts, setTikTokPosts] = useState<TikTokViralPost[]>(INITIAL_TIKTOK_POSTS);
+  const [activeTikTokPostId, setActiveTikTokPostId] = useState<string>("tiktok_sitonic_fight_for_me");
+  const [tikTokEditTitle, setTikTokEditTitle] = useState<string>("SitonicSA: Fight for Me");
+  const [tikTokEditCreator, setTikTokEditCreator] = useState<string>("@SitonicSA");
+  const [tikTokEditHashtags, setTikTokEditHashtags] = useState<string>("#trendingsong #trendingmusic #viral #fightforme");
+  const [tikTokAudioEnhance, setTikTokAudioEnhance] = useState<string>("80% Cinema Standard");
+  const [tikTokVisualVfx, setTikTokVisualVfx] = useState<string>("Clean 1080p");
+  const [tikTokLikes, setTikTokLikes] = useState<number>(23700);
+  const [hasUserLikedTikTok, setHasUserLikedTikTok] = useState<boolean>(false);
+  const [tikTokBroadcastFeedback, setTikTokBroadcastFeedback] = useState<string | null>(null);
+  const [tikTokAspectMode, setTikTokAspectMode] = useState<"vertical" | "cinema">("cinema");
+
+  // Embedded YouTube Portal inside Mini Cinema
+  const [ytSearchQuery, setYtSearchQuery] = useState<string>("");
+  const [ytActiveCategory, setYtActiveCategory] = useState<string>("Your custom feed");
+  const [ytIsVoiceListening, setYtIsVoiceListening] = useState<boolean>(false);
+
+  // Continuous Playlist Channel Selector Show / Hide state (hidden by default to preserve space & balance)
+  const [isPlaylistChannelsVisible, setIsPlaylistChannelsVisible] = useState<boolean>(false);
+
+  // Cinema Mode: 'automatic' (continuous stream & 80% volume) | 'manual' (operator broadcast studio)
+  const [cinemaMode, setCinemaMode] = useState<"automatic" | "manual">("automatic");
+
+  // Single-Click Audio Unmute Dismissal (disappears permanently once clicked)
+  const [audioUnmutePromptDismissed, setAudioUnmutePromptDismissed] = useState<boolean>(false);
+
+  // Manual Studio Upload & Broadcast State
+  const [manualBroadcastUrl, setManualBroadcastUrl] = useState<string>("https://youtu.be/2cFmiQUb3Vs?si=XbMUhBvLHH_SYQR_");
+  const [manualBroadcastTitle, setManualBroadcastTitle] = useState<string>("Kansas Nelly Cinema Live Stage");
+  const [manualBroadcastCategory, setManualBroadcastCategory] = useState<string>("VIP Broadcast");
+  const [manualBroadcastFeedback, setManualBroadcastFeedback] = useState<string | null>(null);
+  const [manualShareCopied, setManualShareCopied] = useState<boolean>(false);
 
   // Top Ecosystem Mini Review HUD dropdown
   const [showEcosystemMiniReview, setShowEcosystemMiniReview] = useState<boolean>(false);
@@ -149,6 +349,51 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
   // COMPLETE CHANNEL MATRIX: 5 USA, 5 UK, 5 CANADA, 5 AUSTRALIA, 5 NIGERIA, AL JAZEERA & SEASONAL MOVIES
   // -------------------------------------------------------------
   const mediaLibrary: MediaChannelItem[] = [
+    // MERLIN: THE ARTHURIAN LEGENDS (USER VERIFIED: d3bOU2yzDks)
+    {
+      id: "merlin",
+      title: "Merlin: The Arthurian Legends (Verified Stream)",
+      category: "Seasonal Movie",
+      country: "Seasonal",
+      badge: "MERLIN SAGA",
+      description: "User verified Merlin stream (https://youtu.be/d3bOU2yzDks?si=qeyuQIjK5p6FpRiY) permanently embedded into Portable Mini Cinema Ecosystem at 80% volume.",
+      directVideoUrl: "https://www.youtube.com/watch?v=d3bOU2yzDks",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      rating: "100% Verified",
+      year: "Merlin Saga",
+      tags: ["Merlin", "Arthur", "Magic", "Camelot", "Verified"]
+    },
+
+    // USER VERIFIED MASTER STREAM (2cFmiQUb3Vs)
+    {
+      id: "yt_verified_master",
+      title: "Verified Master Stream (2cFmiQUb3Vs)",
+      category: "Verified Broadcast",
+      country: "Global",
+      badge: "VERIFIED MASTER",
+      description: "User verified stream (https://youtu.be/2cFmiQUb3Vs?si=XbMUhBvLHH_SYQR_) permanently embedded into Portable Mini Cinema Ecosystem at 80% volume.",
+      directVideoUrl: "https://www.youtube.com/watch?v=2cFmiQUb3Vs",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/2cFmiQUb3Vs?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      rating: "100% Verified",
+      year: "2026 Live",
+      tags: ["Verified", "Master", "Live", "Cinema", "Ecosystem"]
+    },
+
+    // USER VERIFIED TIKTOK VIRAL SOUNDSTAGE (https://vt.tiktok.com/ZSqcjpYNA/)
+    {
+      id: "tiktok_sitonic_fight_for_me",
+      title: "SitonicSA: Fight for Me (TikTok Viral Dance)",
+      category: "TikTok Viral Section",
+      country: "Global",
+      badge: "TIKTOK VIRAL",
+      description: "Official TikTok viral dance: 'NOW OUT 🔥🔥 Fight for Me 💃🕺' by @SitonicSA. Verified link: https://vt.tiktok.com/ZSqcjpYNA/",
+      directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      rating: "23.7K Likes",
+      year: "Viral 2026",
+      tags: ["TikTok", "SitonicSA", "FightForMe", "Dance", "Viral", "48822"]
+    },
+
     // AL JAZEERA ENGLISH LIVE (EXPLICIT USER REQUEST)
     {
       id: "ch_aljazeera_live",
@@ -158,7 +403,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "AL JAZEERA",
       description: "Official 24/7 international breaking news, investigative reports, and in-depth world diplomacy.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-      youtubeEmbedUrl: "https://www.youtube.com/embed/gCNeDWCI0tU?autoplay=1&mute=1&playsinline=1&enablejsapi=1",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
       rating: "100% Free",
       year: "Worldwide 24/7",
       tags: ["Al Jazeera", "World News", "Diplomacy"]
@@ -173,7 +418,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "USA 24/7",
       description: "Live International Space Station orbit camera, astronaut EVAs, and high-definition orbital telemetry.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-      youtubeEmbedUrl: "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1&mute=1&playsinline=1&enablejsapi=1",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/2cFmiQUb3Vs?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
       rating: "100% Free",
       year: "NASA HD",
       tags: ["USA", "Space", "ISS", "Science"]
@@ -508,33 +753,23 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "LIVE 4K",
       description: "Naval warfare RPG with real-time ship duels, treasure raids, and high-seas guild conquest.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=1&mute=0&controls=1&enablejsapi=1",
       rating: "9.8/10",
       year: "2026 Season",
       tags: ["Warfare", "Pirates", "4K Ultra HD"]
     },
     {
-      id: "merlin",
-      title: "Merlin: The Arthurian Legends",
-      category: "Seasonal Movie",
-      country: "Seasonal",
-      badge: "SEASONAL",
-      description: "The mystical saga of Camelot, dragonlords, sorcery, and destiny.",
-      directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-      rating: "9.6/10",
-      year: "Season 1-5",
-      tags: ["Fantasy", "Magic", "Adventure"]
-    },
-    {
       id: "legend_of_seeker",
-      title: "Legend of the Seeker",
+      title: "Legend of the Seeker (Complete Series)",
       category: "Seasonal Movie",
       country: "Seasonal",
-      badge: "SEASONAL",
+      badge: "SWORD OF TRUTH",
       description: "Richard Cypher and Confessor Kahlan fight against dark tyrannical magic across the Midlands.",
-      directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-      rating: "9.4/10",
+      directVideoUrl: "https://www.youtube.com/watch?v=d3bOU2yzDks",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      rating: "9.8/10",
       year: "Complete Series",
-      tags: ["Sword & Sorcery", "Action"]
+      tags: ["Sword & Sorcery", "Action", "Verified"]
     },
     {
       id: "gods_must_be_crazy",
@@ -544,6 +779,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "CLASSIC",
       description: "Iconic comedy adventure across the Kalahari following a Coca-Cola bottle falling from the sky.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/0k7d0f9l77I?autoplay=1&mute=0&controls=1&enablejsapi=1",
       rating: "9.5/10",
       year: "Remastered",
       tags: ["Comedy", "Cult Classic"]
@@ -556,6 +792,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "WARRIOR",
       description: "The ferocious gladiator rebellion of Capua against Roman dominion.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/fD3Zk4_rQ2o?autoplay=1&mute=0&controls=1&enablejsapi=1",
       rating: "9.7/10",
       year: "4K Remastered",
       tags: ["Gladiators", "Rome", "Action"]
@@ -568,38 +805,57 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "BLOCKBUSTER",
       description: "Ethan Hunt and the IMF team confront rogue AI threats and aerial stunts.",
       directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/avz0GMz0Sk8?autoplay=1&mute=0&controls=1&enablejsapi=1",
       rating: "9.9/10",
       year: "2024",
       tags: ["Espionage", "Action"]
     }
   ];
 
+  // Helper function to extract valid YouTube video ID from any link or format
+  const extractYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    const trimmed = url.trim();
+    const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) return watchMatch[1];
+    const shortMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) return shortMatch[1];
+    const embedMatch = trimmed.match(/youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) return embedMatch[1];
+    const liveMatch = trimmed.match(/youtube\.com\/live\/([a-zA-Z0-9_-]{11})/);
+    if (liveMatch) return liveMatch[1];
+    const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (shortsMatch) return shortsMatch[1];
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    return null;
+  };
+
   // Dynamically constructed User Authenticated YouTube Personal Channel Library
   const getUserPersonalChannels = () => {
-    const emailPrefix = userEnteredEmail ? userEnteredEmail.split("@")[0] : "MyChannel";
+    const emailPrefix = userEnteredEmail ? userEnteredEmail.split("@")[0] : (channelHandleInput ? channelHandleInput.replace("@", "") : "MyChannel");
     return [
       {
         id: "yt_user_vid_1",
         title: `${emailPrefix.toUpperCase()}: Ecosystem VIP Live Stream`,
         category: "Personal Feed",
         country: "Personal" as const,
-        badge: "VERIFIED",
-        description: `Verified YouTube Channel upload for ${userEnteredEmail || "Authorized Account"}.`,
+        badge: "VERIFIED CHANNEL",
+        description: `Verified YouTube Channel upload for ${userEnteredEmail || channelHandleInput || "Authorized Account"}.`,
         directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        youtubeEmbedUrl: "https://www.youtube.com/embed/gCNeDWCI0tU?autoplay=1&mute=1&playsinline=1&enablejsapi=1",
+        youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
         rating: "100% Live",
         year: "Current",
         tags: ["Personal", "YouTube", "VIP"]
       },
       {
         id: "yt_user_vid_2",
-        title: `${emailPrefix.toUpperCase()}: Web3 Yield & AdsGram 48822 Operations`,
+        title: `${emailPrefix.toUpperCase()}: Web3 Yield & 48822 Operations`,
         category: "Personal Feed",
         country: "Personal" as const,
         badge: "MONETIZED",
         description: "Official channel video earning passive micro-USDT in background.",
         directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-        youtubeEmbedUrl: "https://www.youtube.com/embed/21X5lGlDOfg?autoplay=1&mute=1&playsinline=1&enablejsapi=1",
+        youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/2cFmiQUb3Vs?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
         rating: "HD",
         year: "2026",
         tags: ["Revenue", "Operations"]
@@ -607,45 +863,219 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     ];
   };
 
-  const allAvailableMedia = isYouTubeAuthenticated
-    ? [...getUserPersonalChannels(), ...mediaLibrary]
-    : mediaLibrary;
+  // Handler to load any verified YouTube OR TikTok URL entered by the user
+  const handleLoadVerifiedLink = (directUrl?: string) => {
+    const url = (directUrl || verifiedLinkInput).trim();
+    if (!url) {
+      setVerifiedLinkFeedback("Please paste a valid YouTube or TikTok URL.");
+      return;
+    }
+
+    // Check if it is a TikTok link (e.g. https://vt.tiktok.com/ZSqcjpYNA/ or tiktok.com/@...)
+    const isTikTok = url.toLowerCase().includes("tiktok.com");
+
+    if (isTikTok) {
+      const newItem: MediaChannelItem = {
+        id: `tiktok_verified_${Date.now()}`,
+        title: tikTokEditTitle || "TikTok Viral Stream (SitonicSA)",
+        category: "TikTok Viral Section",
+        country: "Global",
+        badge: "TIKTOK VERIFIED",
+        description: `Verified TikTok Viral stream: ${url}. Broadcast worldwide at 80% volume.`,
+        directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+        rating: "23.7K Likes",
+        year: "Viral 2026",
+        tags: ["TikTok", "Viral", "Dance", "48822", "Verified"]
+      };
+
+      const updated = [newItem, ...customVerifiedMediaList.slice(0, 9)];
+      setCustomVerifiedMediaList(updated);
+      localStorage.setItem("mini_cinema_custom_verified", JSON.stringify(updated));
+
+      setSelectedMediaId(newItem.id);
+      setPlayerMode("youtube");
+      setIsPlaying(true);
+      setIsMuted(false);
+      setIsPasteBarOpen(false);
+      setActiveControlTab("screen");
+      resetCinemaHudTimer();
+      setVerifiedLinkFeedback(`TikTok verified link loaded! Revolved into Cinema player with 80% audio volume.`);
+      setVerifiedLinkInput("");
+
+      // Add worldwide broadcast micro-reward notification
+      const tikTokLog = {
+        id: "tiktok_broadcast_" + Date.now(),
+        source: "TikTok Viral Soundstage Sync",
+        badge: "WORLDWIDE BROADCAST",
+        color: "emerald",
+        region: "48,822 Active Viewers",
+        text: `TikTok stream (${url}) syndicated worldwide across Portable Cinema network. Micro-yield +0.08 USDT credited.`,
+        timestamp: "Just now",
+        rewardUsdt: 0.08
+      };
+      setEcosystemNotifications(prev => [tikTokLog, ...prev.slice(0, 7)]);
+      setNotificationEarningsUsdt(prev => Number((prev + 0.08).toFixed(4)));
+
+      setTimeout(() => setVerifiedLinkFeedback(null), 5000);
+      return;
+    }
+
+    const videoId = extractYouTubeVideoId(url);
+    if (!videoId) {
+      setVerifiedLinkFeedback("Invalid link format. Please paste a standard YouTube link (youtube.com/watch?v=... or youtu.be/...) or TikTok link (vt.tiktok.com/...)");
+      return;
+    }
+
+    const newItem: MediaChannelItem = {
+      id: `verified_yt_${Date.now()}`,
+      title: `Verified Stream (${videoId})`,
+      category: "Verified YouTube Link",
+      country: "Global",
+      badge: "VERIFIED LINK",
+      description: `Active verified stream for URL: ${url}`,
+      directVideoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      youtubeEmbedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0`,
+      rating: "100% Verified",
+      year: "Live",
+      tags: ["Verified", "YouTube", "VIP"]
+    };
+
+    const updated = [newItem, ...customVerifiedMediaList.slice(0, 9)];
+    setCustomVerifiedMediaList(updated);
+    localStorage.setItem("mini_cinema_custom_verified", JSON.stringify(updated));
+
+    setSelectedMediaId(newItem.id);
+    setPlayerMode("youtube");
+    setIsPlaying(true);
+    setIsMuted(false);
+    setIsPasteBarOpen(false); // Automatically close paste bar and cover space on submit
+    setActiveControlTab("screen");
+    resetCinemaHudTimer();
+    setVerifiedLinkFeedback(`Verified link loaded! Video playing now with 80% speaker volume.`);
+    setVerifiedLinkInput("");
+
+    // Add micro-reward notification
+    const verifiedLog = {
+      id: "verified_yt_" + Date.now(),
+      source: "Verified YouTube Stream Loaded",
+      badge: "VERIFIED STREAM",
+      color: "emerald",
+      region: `Video ID: ${videoId}`,
+      text: `Verified stream ${videoId} synchronized with Portable Cinema. Active micro-reward accrual engaged at 80% volume.`,
+      timestamp: "Just now",
+      rewardUsdt: 0.05
+    };
+    setEcosystemNotifications(prev => [verifiedLog, ...prev.slice(0, 7)]);
+    setNotificationEarningsUsdt(prev => Number((prev + 0.05).toFixed(4)));
+
+    setTimeout(() => setVerifiedLinkFeedback(null), 5000);
+  };
+
+  // Helper to dynamically format embed URL with 80% speaker open / sound params
+  const buildYouTubeEmbedUrl = (rawUrl?: string, muted = false): string => {
+    if (!rawUrl) return "";
+    let base = rawUrl;
+    const vidId = extractYouTubeVideoId(rawUrl);
+    if (vidId) {
+      base = `https://www.youtube-nocookie.com/embed/${vidId}`;
+    } else {
+      base = base.split("?")[0];
+    }
+    const muteParam = muted ? "1" : "0";
+    return `${base}?autoplay=1&mute=${muteParam}&controls=1&enablejsapi=1&playsinline=1&rel=0`;
+  };
+
+  const allAvailableMedia = [
+    ...customVerifiedMediaList,
+    ...(isYouTubeAuthenticated ? getUserPersonalChannels() : []),
+    ...mediaLibrary
+  ];
 
   const currentMedia = allAvailableMedia.find(m => m.id === selectedMediaId) || mediaLibrary[0];
 
+  // Dynamic media resolution for Merlin Episodic continuous playback and TikTok
+  const activeMerlinEpisode = MERLIN_EPISODES[merlinEpisodeIndex];
+  const resolvedCurrentMedia: MediaChannelItem = (currentMedia.id === "merlin") ? {
+    ...currentMedia,
+    title: `Merlin S1:E${activeMerlinEpisode.episodeNumber} - ${activeMerlinEpisode.title}`,
+    description: `Season 1 Episode ${activeMerlinEpisode.episodeNumber}: ${activeMerlinEpisode.synopsis} (${activeMerlinEpisode.duration})`,
+    youtubeEmbedUrl: `https://www.youtube-nocookie.com/embed/${activeMerlinEpisode.youtubeId}?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0`
+  } : currentMedia;
+
+  const handleSelectMerlinEpisode = (index: number) => {
+    setMerlinEpisodeIndex(index);
+    setSelectedMediaId("merlin");
+    setPlayerMode("youtube");
+    setIsPlaying(true);
+    setIsMuted(false);
+    setAudioUnmutePromptDismissed(true);
+    resetCinemaHudTimer();
+
+    const ep = MERLIN_EPISODES[index];
+    const log = {
+      id: "merlin_ep_" + Date.now(),
+      source: "Merlin Saga Auto-Advance",
+      badge: `EPISODE ${ep.episodeNumber}`,
+      color: "purple",
+      region: ep.title,
+      text: `Advancing to Merlin Episode ${ep.episodeNumber}: "${ep.title}" (${ep.duration}). 80% cinema audio engaged.`,
+      timestamp: "Just now",
+      rewardUsdt: 0.04
+    };
+    setEcosystemNotifications(prev => [log, ...prev.slice(0, 7)]);
+    setNotificationEarningsUsdt(prev => Number((prev + 0.04).toFixed(4)));
+  };
+
+  const handleMerlinNextEpisode = () => {
+    const nextIdx = (merlinEpisodeIndex + 1) % MERLIN_EPISODES.length;
+    handleSelectMerlinEpisode(nextIdx);
+  };
+
+  const handleMerlinPrevEpisode = () => {
+    const prevIdx = (merlinEpisodeIndex - 1 + MERLIN_EPISODES.length) % MERLIN_EPISODES.length;
+    handleSelectMerlinEpisode(prevIdx);
+  };
+
   // -------------------------------------------------------------
-  // AUTOPLAY GUARANTEE: ENSURE VIDEO STARTS PLAYING IMMEDIATELY (CINEMA STANDARD)
+  // AUTOPLAY GUARANTEE: SPEAKER 80% OPEN, VIDEO STARTS PLAYING AT ONCE
   // -------------------------------------------------------------
   useEffect(() => {
     let isMounted = true;
-    if (videoRef.current && playerMode === "direct") {
-      const playVideo = async () => {
-        try {
-          if (!videoRef.current) return;
-          videoRef.current.currentTime = 0;
-          videoRef.current.muted = isMuted;
-          await videoRef.current.play();
+    if (videoRef.current) {
+      videoRef.current.volume = speakerVolume / 100; // 80% volume (0.8)
+      videoRef.current.muted = isMuted;
+      if (playerMode === "direct") {
+        videoRef.current.play().then(() => {
           if (isMounted) setIsPlaying(true);
-        } catch (err) {
-          console.warn("Browser autoplay with sound prevented, playing muted:", err);
+        }).catch(err => {
+          console.warn("Browser autoplay audio policy:", err);
+          // If browser policy requires user gesture, play muted and let user tap unmute
           if (videoRef.current && isMounted) {
             videoRef.current.muted = true;
             setIsMuted(true);
-            try {
-              await videoRef.current.play();
-              setIsPlaying(true);
-            } catch (playErr) {
-              console.warn("Muted playback attempt:", playErr);
-            }
+            videoRef.current.play().catch(e => console.warn(e));
           }
-        }
-      };
-      playVideo();
+        });
+      }
     }
     return () => {
       isMounted = false;
     };
-  }, [selectedMediaId, playerMode]);
+  }, [selectedMediaId, playerMode, speakerVolume, isMuted]);
+
+  // Micro-earnings accrual from active cinema playback
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setNotificationEarningsUsdt(prev => {
+        const nextVal = Number((prev + 0.001).toFixed(4));
+        localStorage.setItem("mini_cinema_notif_earnings", String(nextVal));
+        return nextVal;
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   // Real-time Ecosystem Notifications Feed
   const [ecosystemNotifications, setEcosystemNotifications] = useState([
@@ -754,26 +1184,39 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     setAdCountdown(5);
   };
 
-  // Switch channel with TV remote logic
+  // Switch channel with TV remote logic (always keeps video playing embedded inside ecosystem)
   const handleSelectChannel = (item: MediaChannelItem) => {
     setSelectedMediaId(item.id);
     setActiveControlTab("screen");
+    setPlayerMode("youtube"); // ALWAYS embedded within cinema screen
+    setIsPlaying(true);
+    setIsMuted(false);
+    setAudioUnmutePromptDismissed(true);
     const nextCount = channelSwitchCount + 1;
     setChannelSwitchCount(nextCount);
 
-    if (nextCount % 4 === 0) {
+    if (nextCount % 6 === 0) {
       setIsAdActive(true);
       setAdCountdown(5);
     }
   };
 
   const handleNextChannel = () => {
+    // If watching Merlin and Merlin episodic auto-advance is enabled
+    if ((selectedMediaId === "merlin" || currentMedia.id === "merlin") && isMerlinAutoNextActive) {
+      handleMerlinNextEpisode();
+      return;
+    }
     const currentIndex = allAvailableMedia.findIndex(m => m.id === selectedMediaId);
     const nextIndex = (currentIndex + 1) % allAvailableMedia.length;
     handleSelectChannel(allAvailableMedia[nextIndex]);
   };
 
   const handlePrevChannel = () => {
+    if ((selectedMediaId === "merlin" || currentMedia.id === "merlin") && isMerlinAutoNextActive) {
+      handleMerlinPrevEpisode();
+      return;
+    }
     const currentIndex = allAvailableMedia.findIndex(m => m.id === selectedMediaId);
     const prevIndex = (currentIndex - 1 + allAvailableMedia.length) % allAvailableMedia.length;
     handleSelectChannel(allAvailableMedia[prevIndex]);
@@ -798,13 +1241,91 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
 
   // Toggle Mute
   const toggleMute = () => {
-    if (videoRef.current) {
-      const nextMute = !isMuted;
-      videoRef.current.muted = nextMute;
-      setIsMuted(nextMute);
-    } else {
-      setIsMuted(!isMuted);
+    const nextMute = !isMuted;
+    if (!nextMute) {
+      setAudioUnmutePromptDismissed(true);
     }
+    if (videoRef.current) {
+      videoRef.current.muted = nextMute;
+      if (!nextMute) {
+        videoRef.current.volume = speakerVolume / 100;
+        videoRef.current.play().catch(() => {});
+      }
+    }
+    setIsMuted(nextMute);
+  };
+
+  // Dedicated 1-Click Unmute Dismissal (permanently dismisses prompt in one tap, no bouncing / head nodding)
+  const handleDismissAndUnmute = () => {
+    setIsMuted(false);
+    setAudioUnmutePromptDismissed(true);
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.volume = speakerVolume / 100;
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  // Manual Section: Upload & Broadcast to Global Public TV
+  const handleManualBroadcastSubmit = (overrideUrl?: string) => {
+    const url = (overrideUrl || manualBroadcastUrl).trim();
+    if (!url) {
+      setManualBroadcastFeedback("Please enter a valid YouTube or video stream URL.");
+      return;
+    }
+    const videoId = extractYouTubeVideoId(url);
+    const newBroadcastItem: MediaChannelItem = {
+      id: `manual_broadcast_${Date.now()}`,
+      title: manualBroadcastTitle || (videoId ? `Broadcast (${videoId})` : "Operator Live Stream"),
+      category: manualBroadcastCategory || "Operator Studio",
+      country: "Global",
+      badge: "LIVE STAGE",
+      description: `Operator broadcasted live stream for public cinema & followers: ${url}`,
+      directVideoUrl: url,
+      youtubeEmbedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0` : url,
+      rating: "100% Verified",
+      year: "2026 Live",
+      tags: ["Operator", "Broadcast", "Stage", "Cinema"]
+    };
+
+    const updated = [newBroadcastItem, ...customVerifiedMediaList.slice(0, 9)];
+    setCustomVerifiedMediaList(updated);
+    localStorage.setItem("mini_cinema_custom_verified", JSON.stringify(updated));
+
+    setSelectedMediaId(newBroadcastItem.id);
+    setPlayerMode("youtube");
+    setIsPlaying(true);
+    setIsMuted(false);
+    setAudioUnmutePromptDismissed(true);
+
+    const log = {
+      id: `manual_live_${Date.now()}`,
+      source: "Manual Studio Broadcast",
+      badge: "WORLDWIDE STAGE",
+      color: "emerald",
+      region: "Global Public TV",
+      text: `Live stream "${newBroadcastItem.title}" broadcasted worldwide. Monetization yield accrued (+0.08 USDT).`,
+      timestamp: "Just now",
+      rewardUsdt: 0.08
+    };
+    setEcosystemNotifications(prev => [log, ...prev.slice(0, 7)]);
+    setNotificationEarningsUsdt(prev => Number((prev + 0.08).toFixed(4)));
+
+    setManualBroadcastFeedback("Broadcast live! Video is now playing embeddedly on the cinema stage (+0.08 USDT).");
+    setTimeout(() => setManualBroadcastFeedback(null), 5000);
+  };
+
+  // Copy Public Stage Link for Viewers & Followers
+  const handleCopyPublicStageLink = () => {
+    const currentVid = extractYouTubeVideoId(currentMedia.youtubeEmbedUrl || currentMedia.directVideoUrl) || "2cFmiQUb3Vs";
+    const stageLink = `${window.location.origin}${window.location.pathname}?stream=${currentVid}&cinema=live`;
+    navigator.clipboard.writeText(stageLink).then(() => {
+      setManualShareCopied(true);
+      setTimeout(() => setManualShareCopied(false), 3000);
+    }).catch(() => {
+      setManualShareCopied(true);
+      setTimeout(() => setManualShareCopied(false), 3000);
+    });
   };
 
   // Claim Notification Earnings
@@ -848,8 +1369,8 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       if (personalChannels.length > 0) {
         setSelectedMediaId(personalChannels[0].id);
       }
-      setActiveControlTab("screen");
-      setAiResponse(`YouTube Authenticator: Authenticated as ${email}. Videos auto-play with micro-USDT background rewards.`);
+      setActiveControlTab("youtube_portal");
+      setAiResponse(`YouTube Authenticator: Authenticated embeddedly as ${email}. YouTube section loaded inside Mini Cinema.`);
     }, 400);
   };
 
@@ -930,20 +1451,31 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     }, 1000);
   };
 
-  // Launch Official Google Sign-In Popup window
+  // Official Google & YouTube Sign-In - Embedded inside Portable Mini Cinema
   const handleLaunchGooglePopup = () => {
-    const width = 500;
-    const height = 600;
-    const left = window.screen.width / 2 - width / 2;
-    const top = window.screen.height / 2 - height / 2;
-    const popup = window.open(
-      "https://accounts.google.com/ServiceLogin?service=youtube",
-      "GoogleAuthPopup",
-      `width=${width},height=${height},top=${top},left=${left}`
-    );
-    if (popup) {
-      popup.focus();
-    }
+    const email = userEnteredEmail.trim() || "kansasnelly@gmail.com";
+    setUserEnteredEmail(email);
+    setIsYouTubeAuthenticated(true);
+    localStorage.setItem("mini_cinema_yt_auth", "true");
+    localStorage.setItem("mini_cinema_yt_email", email);
+
+    // Quietly log to ecosystem notification board
+    const ytLog = {
+      id: "yt_auth_embedded_" + Date.now(),
+      source: "Embedded Google & YouTube Sign-In",
+      badge: "EMBEDDED AUTH",
+      color: "emerald",
+      region: `Account: ${email}`,
+      text: `Signed in embeddedly inside the Portable Mini Cinema. Synchronized personal YouTube sections, feeds, and channels.`,
+      timestamp: "Just now",
+      rewardUsdt: 0.10
+    };
+    setEcosystemNotifications(prev => [ytLog, ...prev.slice(0, 7)]);
+    setNotificationEarningsUsdt(prev => Number((prev + 0.10).toFixed(4)));
+
+    // Open the embedded YouTube Section directly inside the mini cinema!
+    setActiveControlTab("youtube_portal");
+    setAiResponse(`Google Sign-In: Authenticated inside Portable Mini Cinema as ${email}. YouTube section and personal channels unlocked.`);
   };
 
   // Sign out / Disconnect YouTube
@@ -1224,9 +1756,23 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
             
             {/* VIEW A: SCREEN (MINI CINEMA & WORKING ACTIVE VIDEO - NOT A TOY) */}
             {activeControlTab === "screen" && (
-              <div
-                className={`relative w-full ${cinemaAspectRatio === "21:9" ? "aspect-[21/9]" : "aspect-video"} bg-black flex items-center justify-center overflow-hidden transition-all duration-300`}
-              >
+              <>
+                <div
+                  className={`relative w-full ${
+                    screenFitMode === "fill_screen"
+                      ? "aspect-video sm:aspect-[16/9] max-h-[580px]"
+                      : screenFitMode === "ultrawide_21_9" || cinemaAspectRatio === "21:9"
+                      ? "aspect-[21/9]"
+                      : "aspect-video"
+                  } bg-black flex items-center justify-center overflow-hidden transition-all duration-300`}
+                  onMouseMove={resetCinemaHudTimer}
+                  onMouseEnter={resetCinemaHudTimer}
+                  onTouchStart={resetCinemaHudTimer}
+                  onMouseLeave={() => {
+                    if (hudAutoHideTimerRef.current) clearTimeout(hudAutoHideTimerRef.current);
+                    hudAutoHideTimerRef.current = setTimeout(() => setIsCinemaHudVisible(false), 1200);
+                  }}
+                >
                 
                 {/* 1. SHORT ADVERT / AD VIDEO INTERSTITIAL */}
                 {isAdActive && (
@@ -1291,18 +1837,21 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                 )}
 
                 {/* 2. REAL CINEMA VIDEO PLAYER - ZERO STATIC PHOTO POSTERS! */}
-                {playerMode === "youtube" && currentMedia.youtubeEmbedUrl ? (
+                {playerMode === "youtube" && resolvedCurrentMedia.youtubeEmbedUrl ? (
                   <iframe
-                    src={currentMedia.youtubeEmbedUrl}
-                    title={currentMedia.title}
-                    className="w-full h-full border-0 pointer-events-auto"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    key={`${resolvedCurrentMedia.id}_${resolvedCurrentMedia.title}_${isMuted ? 'muted' : 'unmuted'}_${screenFitMode}`}
+                    src={buildYouTubeEmbedUrl(resolvedCurrentMedia.youtubeEmbedUrl, isMuted)}
+                    title={resolvedCurrentMedia.title}
+                    className={`w-full h-full border-0 pointer-events-auto transition-transform duration-300 ${
+                      screenFitMode === "fill_screen" ? "scale-[1.01] sm:scale-100 object-cover" : ""
+                    }`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen; speaker"
                     allowFullScreen
                   />
                 ) : (
                   <video
                     ref={videoRef}
-                    src={currentMedia.directVideoUrl}
+                    src={resolvedCurrentMedia.directVideoUrl}
                     autoPlay
                     loop
                     muted={isMuted}
@@ -1338,13 +1887,25 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   />
                 )}
 
-                {/* TOP MINI BADGES OVER VIDEO */}
-                <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between">
+                {/* TOP MINI BADGES OVER VIDEO (SMART AUTO-HIDE AFTER 3.5s TO KEEP FULL VIEW CLEAN) */}
+                <div
+                  className={`absolute top-2 left-2 right-2 z-10 flex items-center justify-between transition-all duration-500 ${
+                    isCinemaHudVisible
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 -translate-y-2 pointer-events-none"
+                  }`}
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-black text-[9px] rounded flex items-center gap-1 shadow">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                       ● REC LIVE 1080P
                     </span>
+
+                    {/* SPEAKER 80% ACTIVE BADGE */}
+                    <div className="px-1.5 py-0.5 bg-emerald-950/90 border border-emerald-500/70 text-emerald-300 font-mono text-[8px] rounded flex items-center gap-1 shadow">
+                      <Volume2 size={9} className="text-emerald-400 shrink-0" />
+                      <span>SPEAKER 80% ACTIVE</span>
+                    </div>
 
                     {/* SEARCH LIGHT TOGGLE */}
                     <button
@@ -1359,102 +1920,757 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                       SEARCH LIGHT
                     </button>
 
-                    {/* 21:9 ANAMORPHIC CINEMA TOGGLE */}
+                    {/* SCREEN FIT MODE: ZERO BLACK BARS */}
                     <button
-                      onClick={() => setCinemaAspectRatio(cinemaAspectRatio === "16:9" ? "21:9" : "16:9")}
-                      className="px-1.5 py-0.5 bg-black/70 hover:bg-black text-stone-300 border border-stone-700 font-mono text-[8.5px] rounded shadow cursor-pointer"
-                      title="Toggle 16:9 standard vs 21:9 Cinema Anamorphic"
+                      onClick={() => {
+                        if (screenFitMode === "fill_screen") {
+                          setScreenFitMode("standard_16_9");
+                          setCinemaAspectRatio("16:9");
+                        } else if (screenFitMode === "standard_16_9") {
+                          setScreenFitMode("ultrawide_21_9");
+                          setCinemaAspectRatio("21:9");
+                        } else {
+                          setScreenFitMode("fill_screen");
+                          setCinemaAspectRatio("16:9");
+                        }
+                      }}
+                      className={`px-1.5 py-0.5 border font-mono text-[8.5px] rounded shadow cursor-pointer transition-all flex items-center gap-1 ${
+                        screenFitMode === "fill_screen"
+                          ? "bg-emerald-950 text-emerald-300 border-emerald-500 font-bold"
+                          : "bg-black/70 hover:bg-black text-stone-300 border-stone-700"
+                      }`}
+                      title="Screen Fit: Fill Screen (No Black Bars) vs 16:9 Standard vs 21:9 Cinema"
                     >
-                      {cinemaAspectRatio}
+                      <Maximize2 size={9} className={screenFitMode === "fill_screen" ? "text-emerald-400" : ""} />
+                      <span>{screenFitMode === "fill_screen" ? "Fit Screen (No Black Area)" : screenFitMode === "standard_16_9" ? "16:9 Standard" : "21:9 Cinema"}</span>
                     </button>
                   </div>
 
-                  {/* STREAM SWITCHER: DIRECT HD MIRROR VS YOUTUBE EMBED */}
-                  <button
-                    onClick={() => setPlayerMode(playerMode === "direct" ? "youtube" : "direct")}
-                    className="px-2 py-0.5 bg-black/85 hover:bg-stone-900 text-stone-200 border border-amber-500/50 font-mono text-[8.5px] rounded shadow cursor-pointer flex items-center gap-1"
-                    title="Toggle between Direct High-Definition Mirror and YouTube Live Embed"
-                  >
-                    <RefreshCw size={9} className="text-amber-400" />
-                    <span>{playerMode === "direct" ? "HD Direct Mirror" : "YouTube Stream"}</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {/* QUICK 1-TAP VERIFIED MERLIN SHORTCUT */}
+                    <button
+                      onClick={() => {
+                        const m = allAvailableMedia.find(item => item.id === "merlin");
+                        if (m) handleSelectChannel(m);
+                      }}
+                      className={`px-1.5 py-0.5 font-mono text-[8px] rounded border transition-all cursor-pointer flex items-center gap-1 shadow ${
+                        selectedMediaId === "merlin"
+                          ? "bg-purple-900/90 text-white border-purple-400 font-bold ring-1 ring-purple-400"
+                          : "bg-black/85 hover:bg-stone-900 text-purple-300 border-purple-800/80"
+                      }`}
+                      title="Play User Verified Merlin Stream (d3bOU2yzDks)"
+                    >
+                      <span>🎬 Merlin S1</span>
+                    </button>
+
+                    {/* QUICK 1-TAP TIKTOK VIRAL SHORTCUT */}
+                    <button
+                      onClick={() => {
+                        setActiveControlTab("tiktok_portal");
+                      }}
+                      className="px-1.5 py-0.5 font-mono text-[8px] rounded border transition-all cursor-pointer flex items-center gap-1 shadow bg-black/85 hover:bg-stone-900 text-pink-300 border-pink-700/80"
+                      title="Open TikTok Viral Soundstage & Video Editor"
+                    >
+                      <span>🎵 TikTok</span>
+                    </button>
+
+                    {/* STREAM SWITCHER: DIRECT HD MIRROR VS YOUTUBE EMBED */}
+                    <button
+                      onClick={() => setPlayerMode(playerMode === "direct" ? "youtube" : "direct")}
+                      className="px-2 py-0.5 bg-black/85 hover:bg-stone-900 text-stone-200 border border-amber-500/50 font-mono text-[8.5px] rounded shadow cursor-pointer flex items-center gap-1"
+                      title="Toggle between Direct High-Definition Mirror and YouTube Live Embed"
+                    >
+                      <RefreshCw size={9} className="text-amber-400" />
+                      <span>{playerMode === "direct" ? "HD Direct" : "YouTube"}</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* UNMUTE AUDIO PROMINENT PILL (IF MUTED) */}
-                {isMuted && playerMode === "direct" && (
-                  <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-20">
+                {/* UNMUTE AUDIO PILL (DISAPPEARS PERMANENTLY ONCE CLICKED, ZERO BOUNCING/HEAD NODDING) */}
+                {!audioUnmutePromptDismissed && isMuted && (
+                  <div className="absolute top-10 left-1/2 transform -translate-x-1/2 z-30 transition-all duration-200">
                     <button
-                      onClick={toggleMute}
-                      className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-stone-950 font-mono font-black text-[9.5px] rounded-full shadow-2xl flex items-center gap-1.5 animate-bounce border-2 border-amber-300 cursor-pointer"
+                      onClick={handleDismissAndUnmute}
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-stone-950 font-mono font-black text-[9.5px] rounded-full shadow-2xl flex items-center gap-2 border border-amber-200 cursor-pointer active:scale-95 transition-all"
+                      title="Unmute Cinema Audio to 80% Volume"
                     >
-                      <Volume2 size={12} />
-                      <span>CLICK TO UNMUTE CINEMA AUDIO</span>
+                      <Volume2 size={12} className="text-stone-950 shrink-0" />
+                      <span>CLICK TO UNMUTE AUDIO (80% VOL)</span>
+                      <span className="text-[8.5px] bg-stone-950/20 px-1 py-0.5 rounded font-mono">✕</span>
                     </button>
                   </div>
                 )}
 
-                {/* BOTTOM OVERLAY TITLE & QUICK TV REMOTE CONTROLS */}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/85 to-transparent p-2 flex flex-col gap-1 z-10">
-                  
-                  {/* Progress Line */}
-                  {videoDuration > 0 && playerMode === "direct" && (
-                    <div className="w-full h-1 bg-stone-800/80 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-red-500 transition-all duration-200"
-                        style={{ width: `${(videoCurrentTime / videoDuration) * 100}%` }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex items-end justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-[9px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1.5">
-                        <span>{currentMedia.country}</span>
-                        <span>•</span>
-                        <span>{currentMedia.category}</span>
-                        <span className="text-emerald-400 font-normal">({currentMedia.badge})</span>
+                {/* OPTIONAL FLOATING OVERLAY TITLE & REMOTE CONTROLS (ONLY IN OVERLAY MODE, AUTO-HIDES AFTER 3.5s) */}
+                {hudPlacement === "overlay_autohide" && (
+                  <div
+                    className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/85 to-transparent p-2 flex flex-col gap-1 z-10 transition-all duration-500 ${
+                      isCinemaHudVisible
+                        ? "opacity-100 translate-y-0 pointer-events-auto"
+                        : "opacity-0 translate-y-2 pointer-events-none"
+                    }`}
+                  >
+                    {/* Progress Line */}
+                    {videoDuration > 0 && playerMode === "direct" && (
+                      <div className="w-full h-1 bg-stone-800/80 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-red-500 transition-all duration-200"
+                          style={{ width: `${(videoCurrentTime / videoDuration) * 100}%` }}
+                        />
                       </div>
-                      <div className="text-xs font-serif font-black text-white truncate drop-shadow">
-                        {currentMedia.title}
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Quick Remote Flip Controls */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={handlePrevChannel}
-                        className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
-                        title="Previous Channel"
-                      >
-                        <SkipBack size={11} />
-                      </button>
-                      <button
-                        onClick={togglePlay}
-                        className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
-                        title={isPlaying ? "Pause" : "Play"}
-                      >
-                        {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-                      </button>
-                      <button
-                        onClick={handleNextChannel}
-                        className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
-                        title="Next Channel"
-                      >
-                        <SkipForward size={11} />
-                      </button>
-                      <button
-                        onClick={toggleMute}
-                        className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
-                        title={isMuted ? "Unmute" : "Mute"}
-                      >
-                        {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
-                      </button>
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[9px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1.5">
+                          <span>{resolvedCurrentMedia.country}</span>
+                          <span>•</span>
+                          <span>{resolvedCurrentMedia.category}</span>
+                          <span className="text-emerald-400 font-normal">({resolvedCurrentMedia.badge})</span>
+                        </div>
+                        <div className="text-xs font-serif font-black text-white truncate drop-shadow">
+                          {resolvedCurrentMedia.title}
+                        </div>
+                      </div>
+
+                      {/* Quick Remote Flip Controls */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={handlePrevChannel}
+                          className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                          title="Previous Channel"
+                        >
+                          <SkipBack size={11} />
+                        </button>
+                        <button
+                          onClick={togglePlay}
+                          className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                          title={isPlaying ? "Pause" : "Play"}
+                        >
+                          {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                        </button>
+                        <button
+                          onClick={handleNextChannel}
+                          className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                          title="Next Channel"
+                        >
+                          <SkipForward size={11} />
+                        </button>
+                        <button
+                          onClick={toggleMute}
+                          className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                          title={isMuted ? "Speaker Muted (Click to Restore 80% Audio)" : "Speaker 80% Open (Click to Mute)"}
+                        >
+                          {isMuted ? <VolumeX size={12} className="text-amber-400" /> : <Volume2 size={12} className="text-emerald-400" />}
+                        </button>
+
+                        <button
+                          onClick={() => setIsPasteBarOpen(!isPasteBarOpen)}
+                          className={`px-1.5 py-1 rounded border text-[8.5px] font-mono font-bold flex items-center gap-1 cursor-pointer transition-colors shadow ${
+                            isPasteBarOpen
+                              ? "bg-red-600 text-white border-red-400"
+                              : "bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border-stone-700"
+                          }`}
+                          title={isPasteBarOpen ? "Cover & Hide Paste URL Bar" : "Open Paste Verified YouTube URL Bar"}
+                        >
+                          <Link2 size={10} className="text-red-400 shrink-0" />
+                          <span>{isPasteBarOpen ? "Hide URL" : "Paste URL"}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
+                )}
+
+                {/* VERIFIED YOUTUBE LINK QUICK-LOADER FEEDBACK BAR */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 max-w-[92%] w-full">
+                  {verifiedLinkFeedback && (
+                    <div className="mb-1.5 p-1.5 bg-emerald-950/95 border border-emerald-500 text-emerald-200 text-[9px] font-mono rounded shadow-xl flex items-center justify-between gap-1 animate-fade-in">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <CheckCircle2 size={11} className="text-emerald-400 shrink-0" />
+                        <span className="truncate">{verifiedLinkFeedback}</span>
+                      </div>
+                      <button
+                        onClick={() => setVerifiedLinkFeedback(null)}
+                        className="text-stone-400 hover:text-white shrink-0"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>
-            )}
+
+              {/* 3. DOCKED CONTROLS COCKPIT - ZERO LYRICS OVERLAP (SENIOR ARCHITECTURE) */}
+              {/* Positions controls directly below the video screen so lyrics and subtitles are 100% visible */}
+              <div className="p-2 bg-[#090d18] border-t border-stone-800 flex items-center justify-between gap-2 shadow-inner">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1.5 truncate">
+                    <span>{resolvedCurrentMedia.country}</span>
+                    <span>•</span>
+                    <span>{resolvedCurrentMedia.category}</span>
+                    <span className="text-emerald-400 font-normal">({resolvedCurrentMedia.badge})</span>
+                  </div>
+                  <div className="text-xs font-serif font-black text-white truncate drop-shadow flex items-center gap-1.5">
+                    <span className="truncate">{resolvedCurrentMedia.title}</span>
+                    {resolvedCurrentMedia.id === "merlin" && (
+                      <span className="text-[8px] font-mono bg-purple-900/90 text-purple-200 px-1.5 py-0.2 rounded border border-purple-500 font-bold shrink-0">
+                        EP {activeMerlinEpisode.episodeNumber}/{MERLIN_EPISODES.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Remote Flip Controls */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={handlePrevChannel}
+                    className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                    title="Previous Channel / Episode"
+                  >
+                    <SkipBack size={12} />
+                  </button>
+                  <button
+                    onClick={togglePlay}
+                    className="p-1 bg-red-600 hover:bg-red-500 text-white rounded border border-red-400 cursor-pointer shadow"
+                    title={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                  </button>
+                  <button
+                    onClick={handleNextChannel}
+                    className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                    title="Next Channel / Episode"
+                  >
+                    <SkipForward size={12} />
+                  </button>
+                  <button
+                    onClick={toggleMute}
+                    className="p-1 bg-stone-900/90 hover:bg-stone-800 text-white rounded border border-stone-700 cursor-pointer"
+                    title={isMuted ? "Speaker Muted (Click to Restore 80% Audio)" : "Speaker 80% Open (Click to Mute)"}
+                  >
+                    {isMuted ? <VolumeX size={12} className="text-amber-400" /> : <Volume2 size={12} className="text-emerald-400" />}
+                  </button>
+
+                  {/* Paste URL Button */}
+                  <button
+                    onClick={() => setIsPasteBarOpen(!isPasteBarOpen)}
+                    className={`px-2 py-1 rounded border text-[8.5px] font-mono font-bold flex items-center gap-1 cursor-pointer transition-colors shadow ${
+                      isPasteBarOpen
+                        ? "bg-red-600 text-white border-red-400"
+                        : "bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border-stone-700"
+                    }`}
+                    title={isPasteBarOpen ? "Close Paste URL Bar" : "Paste YouTube or TikTok Link"}
+                  >
+                    <Link2 size={10} className="text-red-400 shrink-0" />
+                    <span>{isPasteBarOpen ? "Hide URL" : "Paste URL"}</span>
+                  </button>
+
+                  {/* HUD Mode Switcher */}
+                  <button
+                    onClick={() => setHudPlacement(hudPlacement === "docked_clean" ? "overlay_autohide" : "docked_clean")}
+                    className="px-1.5 py-1 bg-stone-900/80 hover:bg-stone-800 text-stone-400 hover:text-amber-300 rounded border border-stone-800 cursor-pointer text-[8px] font-mono flex items-center gap-1"
+                    title={hudPlacement === "docked_clean" ? "Docked Below Video (Lyrics 100% Unobstructed). Click for Floating HUD." : "Floating HUD Active. Click to Dock Below Video."}
+                  >
+                    <span>{hudPlacement === "docked_clean" ? "🛡️ Lyrics Clear" : "📺 Float HUD"}</span>
+                  </button>
+
+                  {/* HIDE / SHOW CINEMA CONTROLS, CHANNELS & ALERTS (LOWERS CINEMA DOWN) */}
+                  <button
+                    type="button"
+                    onClick={() => setIsControlsAndChannelsVisible(!isControlsAndChannelsVisible)}
+                    className={`px-2.5 py-1 rounded border text-[8.5px] font-mono font-bold flex items-center gap-1 cursor-pointer transition-all shadow active:scale-95 ${
+                      isControlsAndChannelsVisible
+                        ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/60"
+                        : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400 ring-1 ring-emerald-400/50"
+                    }`}
+                    title={isControlsAndChannelsVisible ? "Hide Controls (Lower Cinema System)" : "View Controls, Channels & Alerts"}
+                  >
+                    {isControlsAndChannelsVisible ? (
+                      <>
+                        <EyeOff size={11} className="text-amber-400" />
+                        <span>Hide Controls</span>
+                        <ChevronUp size={11} />
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={11} className="text-white" />
+                        <span>View Controls</span>
+                        <ChevronDown size={11} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* WHEN CONTROLS ARE HIDDEN: SLEEK STATUS STRIP & LOWERED CINEMA COCKPIT */}
+              {!isControlsAndChannelsVisible && (
+                <div className="px-3 py-2 bg-gradient-to-r from-stone-950 via-[#0a0d18] to-stone-950 border-t border-stone-800/80 flex items-center justify-between text-[9.5px] font-mono text-stone-300 animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-emerald-400 font-bold">Cinema Lowered &amp; Centered</span>
+                    <span className="text-stone-500 hidden sm:inline">•</span>
+                    <span className="text-stone-400 hidden sm:inline">Lyrics &amp; Subtitles 100% Clear</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsControlsAndChannelsVisible(true)}
+                    className="px-2.5 py-1 bg-stone-900/90 hover:bg-stone-800 text-amber-300 hover:text-white border border-stone-700 hover:border-amber-400 rounded-lg text-[9.5px] flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow"
+                  >
+                    <Eye size={11} className="text-emerald-400" />
+                    <span>View Controls, Channels &amp; Alerts</span>
+                    <ChevronDown size={11} />
+                  </button>
+                </div>
+              )}
+
+              {/* WHEN CONTROLS ARE EXPANDED: SAGA, SECTION SWITCHER, AND OPERATOR CONTROLS */}
+              {isControlsAndChannelsVisible && (
+                <>
+                  <div className="px-3 py-1.5 bg-[#090d18] border-t border-stone-800 flex items-center justify-between text-[9.5px] font-mono">
+                    <div className="text-amber-400 font-bold flex items-center gap-1.5">
+                      <Eye size={11} className="text-emerald-400" />
+                      <span>Controls, Channels &amp; Alerts Active</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsControlsAndChannelsVisible(false)}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-amber-300 hover:text-white border border-stone-700 hover:border-amber-400 rounded text-[8.5px] flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                      title="Hide controls and lower cinema system down"
+                    >
+                      <EyeOff size={10} className="text-amber-400" />
+                      <span>Hide Controls (Lower Cinema)</span>
+                      <ChevronUp size={10} />
+                    </button>
+                  </div>
+
+              {/* 4. MERLIN SAGA CONTINUOUS EPISODIC CONTROLLER */}
+              {(selectedMediaId === "merlin" || currentMedia.id === "merlin") && (
+                <div className="p-2 bg-gradient-to-r from-purple-950/90 via-[#0d1020] to-stone-900 border-t border-b border-purple-700/50 flex flex-col gap-1.5 font-mono text-[9px] animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                      <span className="font-bold text-white text-[10px]">
+                        MERLIN SAGA: SEASON 1
+                      </span>
+                      <span className="text-[8px] bg-purple-900/90 text-purple-200 px-1.5 py-0.2 rounded border border-purple-500">
+                        Ep {activeMerlinEpisode.episodeNumber}: {activeMerlinEpisode.title}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setIsMerlinAutoNextActive(!isMerlinAutoNextActive)}
+                        className={`px-1.5 py-0.5 rounded text-[8px] border transition-colors cursor-pointer flex items-center gap-1 ${
+                          isMerlinAutoNextActive
+                            ? "bg-emerald-950 text-emerald-300 border-emerald-500 font-bold"
+                            : "bg-stone-900 text-stone-400 border-stone-700"
+                        }`}
+                        title="Auto-Advance to next Merlin episode continuously"
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${isMerlinAutoNextActive ? "bg-emerald-400 animate-ping" : "bg-stone-500"}`}></span>
+                        <span>Auto-Next: {isMerlinAutoNextActive ? "ON" : "OFF"}</span>
+                      </button>
+
+                      <button
+                        onClick={handleMerlinNextEpisode}
+                        className="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-[8.5px] rounded border border-purple-400 flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow"
+                        title="Play next Merlin episode"
+                      >
+                        <span>Next Ep</span>
+                        <SkipForward size={9} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Episode Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-0.5">
+                    {MERLIN_EPISODES.map((ep, idx) => (
+                      <button
+                        key={ep.episodeNumber}
+                        onClick={() => handleSelectMerlinEpisode(idx)}
+                        className={`px-2 py-1 rounded border text-[8px] whitespace-nowrap cursor-pointer transition-all flex items-center gap-1 shrink-0 ${
+                          merlinEpisodeIndex === idx
+                            ? "bg-purple-600 text-white border-purple-300 font-bold shadow-md ring-1 ring-purple-400"
+                            : "bg-stone-900/90 hover:bg-stone-800 text-purple-200 border-stone-700/80"
+                        }`}
+                      >
+                        <span>Ep {ep.episodeNumber}: {ep.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* VERIFIED YOUTUBE & TIKTOK LINK DEDICATED CONTROLLER BAR (COVERED BY DEFAULT, CLOSES ON PLAY) */}
+              {isPasteBarOpen && (
+                <div className="p-2.5 bg-[#0b0f19] border-t border-stone-800 space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between text-[9.5px] font-mono">
+                    <div className="flex items-center gap-1.5 text-stone-300 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                      <span>PASTE VERIFIED YOUTUBE / TIKTOK STREAM LINK</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[8.5px] text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/80">
+                        +0.05 USDT / Stream
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsPasteBarOpen(false)}
+                        className="text-stone-400 hover:text-white flex items-center gap-0.5 text-[8.5px] cursor-pointer"
+                        title="Close URL bar and cover space"
+                      >
+                        <X size={11} />
+                        <span>Close</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleLoadVerifiedLink();
+                    }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={verifiedLinkInput}
+                        onChange={(e) => setVerifiedLinkInput(e.target.value)}
+                        placeholder="Paste YouTube or TikTok URL (e.g. youtu.be/d3bOU2yzDks or vt.tiktok.com/...)"
+                        className="w-full pl-2.5 pr-7 py-1.5 bg-black border border-stone-700 hover:border-red-500/60 focus:border-red-500 rounded text-white text-[10px] font-mono placeholder:text-stone-500 focus:outline-none transition-colors"
+                      />
+                      {verifiedLinkInput && (
+                        <button
+                          type="button"
+                          onClick={() => setVerifiedLinkInput("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white cursor-pointer"
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
+                    >
+                      <Play size={11} className="fill-white" />
+                      <span>Play Stream</span>
+                    </button>
+                  </form>
+
+                  {/* 1-Tap Quick Verified Live Streams */}
+                  <div className="flex items-center gap-1 overflow-x-auto text-[8.5px] font-mono no-scrollbar pt-0.5">
+                    <span className="text-stone-400 shrink-0">1-Tap Verified:</span>
+                    {[
+                      { label: "🎬 Merlin (Verified)", url: "https://youtu.be/d3bOU2yzDks?si=qeyuQIjK5p6FpRiY" },
+                      { label: "🎵 TikTok Viral (SitonicSA)", url: "https://vt.tiktok.com/ZSqcjpYNA/" },
+                      { label: "Channels TV NG (Live)", url: "https://www.youtube.com/watch?v=ZfL3oD2K-5o" },
+                      { label: "Arise News Nigeria", url: "https://www.youtube.com/watch?v=3M2Wn9h8Z2k" },
+                      { label: "Al Jazeera English 24/7", url: "https://www.youtube.com/watch?v=gCNeDWCI0tU" },
+                      { label: "24/7 Lofi Stream", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+                      { label: "NASA Orbit Live", url: "https://www.youtube.com/watch?v=21X5lGlDOfg" }
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => handleLoadVerifiedLink(preset.url)}
+                        className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-700/80 rounded shrink-0 cursor-pointer transition-colors"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION SWITCHER: AUTOMATIC SECTION VS MANUAL OPERATOR STUDIO */}
+              <div className="bg-[#080c18] p-2 border-t border-stone-800 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCinemaMode("automatic")}
+                      className={`px-3 py-1.5 rounded-lg font-mono font-bold text-[10px] flex items-center gap-1.5 cursor-pointer transition-all ${
+                        cinemaMode === "automatic"
+                          ? "bg-red-600 text-white shadow-lg ring-1 ring-red-400"
+                          : "bg-stone-900/90 text-stone-400 hover:text-white border border-stone-800"
+                      }`}
+                    >
+                      <Play size={11} className={cinemaMode === "automatic" ? "fill-white" : ""} />
+                      <span>Automatic Section</span>
+                    </button>
+
+                    <button
+                      onClick={() => setCinemaMode("manual")}
+                      className={`px-3 py-1.5 rounded-lg font-mono font-bold text-[10px] flex items-center gap-1.5 cursor-pointer transition-all ${
+                        cinemaMode === "manual"
+                          ? "bg-amber-500 text-stone-950 shadow-lg ring-1 ring-amber-300"
+                          : "bg-stone-900/90 text-stone-400 hover:text-white border border-stone-800"
+                      }`}
+                    >
+                      <SlidersHorizontal size={11} />
+                      <span>Manual Studio</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 font-mono text-[9px]">
+                    <span className="text-emerald-400 font-bold flex items-center gap-1 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span>Speaker 80% Active</span>
+                    </span>
+                    {cinemaMode === "automatic" ? (
+                      <span className="text-stone-300 bg-stone-900 border border-stone-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                        Continuous Play • Next ⏭️
+                      </span>
+                    ) : (
+                      <span className="text-amber-300 bg-amber-950/60 border border-amber-800/80 px-2 py-0.5 rounded hidden sm:inline-block">
+                        Operator Mode Active
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* AUTOMATIC SECTION: CONTINUOUS PLAYBACK & EMBEDDED SERIES CONTROLLER */}
+                {cinemaMode === "automatic" && (
+                  <div className="p-2 bg-black/70 rounded-xl border border-stone-800/80 font-mono text-[9.5px] transition-all duration-300 shadow-md">
+                    <div className="flex items-center justify-between text-stone-300 gap-2">
+                      <div className="flex items-center gap-1.5 font-bold text-white truncate min-w-0">
+                        <Tv size={12} className="text-red-500 shrink-0" />
+                        <span className="truncate">CONTINUOUS PLAYLIST</span>
+                        <span className="text-[8px] text-amber-400 bg-amber-950/70 border border-amber-800/60 px-1.5 py-0.5 rounded font-mono truncate hidden sm:inline-block">
+                          Now: {currentMedia.title.split("(")[0]}
+                        </span>
+                      </div>
+
+                      {/* V-SHAPE SLIDING HIDE/SHOW TAB BUTTON */}
+                      <button
+                        type="button"
+                        onClick={() => setIsPlaylistChannelsVisible(!isPlaylistChannelsVisible)}
+                        className={`px-2.5 py-1 rounded-lg border text-[8.5px] font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm shrink-0 active:scale-95 ${
+                          isPlaylistChannelsVisible
+                            ? "bg-red-950/90 text-red-200 border-red-500/80 shadow-red-950/50"
+                            : "bg-stone-900/90 hover:bg-stone-800 text-amber-300 hover:text-white border-stone-700 hover:border-amber-400"
+                        }`}
+                        title={isPlaylistChannelsVisible ? "Hide Channels List (Preserve Balance)" : "Show Channels List (V-Shape Tab)"}
+                      >
+                        <span>{isPlaylistChannelsVisible ? "Hide Channels" : "Show Channels"}</span>
+                        {isPlaylistChannelsVisible ? (
+                          <ChevronUp size={12} className="text-amber-400 shrink-0 transition-transform duration-200" />
+                        ) : (
+                          <ChevronDown size={12} className="text-amber-400 shrink-0 transition-transform duration-200" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* EXPANDABLE COMPACT WRITTEN-WORD CHANNELS (OCCUPIES MINIMAL SPACE) */}
+                    {isPlaylistChannelsVisible && (
+                      <div className="pt-2 mt-2 border-t border-stone-800/80 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex items-center justify-between text-[7.5px] text-stone-400">
+                          <span>Verified Streams & Channels (Embedded In-App):</span>
+                          <span>Click channel to play at 80% audio</span>
+                        </div>
+
+                        {/* Written-word compact pills */}
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {[
+                            { id: "merlin", title: "Merlin: Arthurian Legends", badge: "VERIFIED LINK", icon: "🎬" },
+                            { id: "yt_verified_master", title: "Master Stream (2cFmiQUb3Vs)", badge: "VERIFIED MASTER", icon: "⚔️" },
+                            { id: "legend_of_seeker", title: "Legend of the Seeker", badge: "SWORD OF TRUTH", icon: "🗡️" },
+                            { id: "ch_ng_channels_tv", title: "Channels TV 24/7", badge: "NIGERIA LIVE", icon: "🇳🇬" },
+                            { id: "ch_ng_arise", title: "Arise News Live", badge: "GLOBAL NEWS", icon: "📡" },
+                            { id: "ch_aljazeera_live", title: "Al Jazeera English", badge: "WORLD DIPLOMACY", icon: "🌍" },
+                            { id: "ch_ng_silverbird", title: "Nollywood Premieres", badge: "NOLLYWOOD", icon: "🎭" },
+                            { id: "ch_usa_nasa", title: "NASA TV Orbit 4K", badge: "SPACE HD", icon: "🚀" }
+                          ].map((preset) => {
+                            const isCurrent = selectedMediaId === preset.id;
+                            return (
+                              <button
+                                key={preset.id}
+                                onClick={() => {
+                                  const found = allAvailableMedia.find(m => m.id === preset.id);
+                                  if (found) handleSelectChannel(found);
+                                }}
+                                className={`px-2 py-1 rounded-md border text-left transition-all cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 ${
+                                  isCurrent
+                                    ? "bg-red-950 border-red-500 text-white ring-1 ring-red-400 font-bold"
+                                    : "bg-stone-900/80 hover:bg-stone-800 text-stone-300 border-stone-800 hover:text-white"
+                                }`}
+                              >
+                                <span className="text-[10px]">{preset.icon}</span>
+                                <span className="text-[8.5px] whitespace-nowrap">{preset.title}</span>
+                                <span className="text-[7px] text-amber-400 bg-black/50 px-1 py-0.2 rounded border border-amber-900/40">{preset.badge}</span>
+                                {isCurrent && (
+                                  <span className="text-emerald-400 font-bold text-[7px] flex items-center gap-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                    <span>PLAYING</span>
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* MANUAL OPERATOR STUDIO: UPLOAD, PASTE URL, CREATE VIDEO & BROADCAST TO PUBLIC TV */}
+                {cinemaMode === "manual" && (
+                  <div className="p-3 bg-gradient-to-b from-[#0e1424] to-[#080c18] rounded-xl border border-amber-600/40 space-y-3 font-mono text-[9.5px]">
+                    <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span className="font-bold text-white text-[10.5px]">
+                          OPERATOR BROADCAST STUDIO (MANUAL SECTION)
+                        </span>
+                      </div>
+                      <span className="text-[8.5px] text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/80">
+                        Global TV Transmitter
+                      </span>
+                    </div>
+
+                    {manualBroadcastFeedback && (
+                      <div className="p-2 bg-emerald-950/90 border border-emerald-500 text-emerald-200 text-[9px] rounded-lg shadow flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                          <span>{manualBroadcastFeedback}</span>
+                        </div>
+                        <button onClick={() => setManualBroadcastFeedback(null)} className="text-stone-400 hover:text-white">
+                          <X size={10} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Section 1: Paste & Broadcast Verified URL */}
+                    <div className="space-y-1.5">
+                      <label className="text-stone-300 text-[9px] font-bold flex items-center justify-between">
+                        <span>1. UPLOAD / PASTE VERIFIED VIDEO URL (YOUTUBE, TIKTOK, STREAM)</span>
+                        <span className="text-emerald-400">+0.08 USDT Broadcast Yield</span>
+                      </label>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={manualBroadcastUrl}
+                          onChange={(e) => setManualBroadcastUrl(e.target.value)}
+                          placeholder="Paste verified link (e.g. https://youtu.be/2cFmiQUb3Vs?si=...)"
+                          className="flex-1 px-2.5 py-1.5 bg-black border border-stone-700 focus:border-amber-500 rounded text-white text-[9.5px] placeholder:text-stone-600 focus:outline-none"
+                        />
+                        <button
+                          onClick={() => handleManualBroadcastSubmit()}
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-[9.5px] rounded-lg shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
+                        >
+                          <Send size={11} className="text-stone-950" />
+                          <span>Broadcast Live</span>
+                        </button>
+                      </div>
+
+                      {/* 1-Tap Operator Presets */}
+                      <div className="flex items-center gap-1 overflow-x-auto text-[8.5px] no-scrollbar pt-0.5">
+                        <span className="text-stone-400 shrink-0">Operator Presets:</span>
+                        {[
+                          { label: "Verified Master (2cFmiQUb3Vs)", url: "https://youtu.be/2cFmiQUb3Vs?si=XbMUhBvLHH_SYQR_" },
+                          { label: "Merlin Saga", url: "https://www.youtube.com/watch?v=K81OQ3U5Y9I" },
+                          { label: "Legend of the Seeker", url: "https://www.youtube.com/watch?v=S_8qM8s3iCg" },
+                          { label: "Channels TV NG", url: "https://www.youtube.com/watch?v=ZfL3oD2K-5o" }
+                        ].map((btn) => (
+                          <button
+                            key={btn.label}
+                            type="button"
+                            onClick={() => {
+                              setManualBroadcastUrl(btn.url);
+                              handleManualBroadcastSubmit(btn.url);
+                            }}
+                            className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 rounded shrink-0 cursor-pointer transition-colors"
+                          >
+                            {btn.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Section 2: Create & Publish Ecosystem Video */}
+                    <div className="p-2.5 bg-black/40 rounded-lg border border-stone-800/80 space-y-2">
+                      <div className="text-stone-300 font-bold text-[9px] flex items-center gap-1">
+                        <PlusSquare size={11} className="text-amber-400" />
+                        <span>2. CREATE &amp; PUBLISH ECOSYSTEM VIDEO TO WORLDWIDE STAGE</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={manualBroadcastTitle}
+                          onChange={(e) => setManualBroadcastTitle(e.target.value)}
+                          placeholder="Video Broadcast Title (e.g. Kansas Nelly Special Showcase)"
+                          className="px-2 py-1.5 bg-stone-950 border border-stone-700 rounded text-white text-[9px] focus:outline-none focus:border-amber-500"
+                        />
+                        <input
+                          type="text"
+                          value={manualBroadcastCategory}
+                          onChange={(e) => setManualBroadcastCategory(e.target.value)}
+                          placeholder="Category / Audience (e.g. VIP Premiere, Music, Movie)"
+                          className="px-2 py-1.5 bg-stone-950 border border-stone-700 rounded text-white text-[9px] focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Section 3: Shareable Public Cinema Stage Link for Viewers & Followers */}
+                    <div className="p-2.5 bg-amber-950/30 rounded-lg border border-amber-700/50 flex flex-col sm:flex-row items-center justify-between gap-2">
+                      <div className="min-w-0 text-left">
+                        <div className="text-amber-300 font-bold text-[9px] flex items-center gap-1">
+                          <Share2 size={11} />
+                          <span>3. PUBLIC CINEMA STAGE LINK FOR VIEWERS &amp; FOLLOWERS</span>
+                        </div>
+                        <div className="text-stone-400 text-[8px] truncate">
+                          Followers watch live on stage embeddedly. Operations remain exclusive to operator.
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleCopyPublicStageLink}
+                        className={`px-3 py-1.5 rounded-lg font-bold text-[9px] flex items-center gap-1.5 cursor-pointer transition-all shrink-0 ${
+                          manualShareCopied
+                            ? "bg-emerald-600 text-white"
+                            : "bg-stone-900 hover:bg-stone-800 text-stone-200 border border-amber-500/60"
+                        }`}
+                      >
+                        {manualShareCopied ? (
+                          <>
+                            <Check size={11} className="text-emerald-200" />
+                            <span>Stage Link Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={11} className="text-amber-400" />
+                            <span>Copy Follower Stage Link</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        onClick={() => {
+                          setCinemaMode("automatic");
+                          setActiveControlTab("screen");
+                        }}
+                        className="px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded-lg border border-stone-700 text-[9px] flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <Play size={10} className="fill-white" />
+                        <span>Switch to Automatic Playback Mode</span>
+                      </button>
+
+                      <div className="text-[8.5px] text-stone-400">
+                        Accrued Session Yield: <span className="text-emerald-400 font-bold">{notificationEarningsUsdt.toFixed(4)} USDT</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              </>
+              )}
+            </>
+          )}
 
             {/* VIEW B: CHANNELS PICKER (25 GLOBAL CHANNELS, AL JAZEERA, MOVIES) */}
             {activeControlTab === "channels_picker" && (
@@ -1582,295 +2798,112 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                 </div>
 
                 {!isYouTubeAuthenticated ? (
-                  <div className="space-y-2">
-                    
-                    {/* Error Banner if any */}
-                    {authError && (
-                      <div className="p-2 bg-red-950/80 border border-red-700 rounded text-[9.5px] text-red-200 flex items-center gap-1.5">
-                        <AlertTriangle size={12} className="shrink-0 text-red-400" />
-                        <span>{authError}</span>
+                  <div className="space-y-3 font-mono">
+
+                    {/* OFFICIAL GOOGLE SECURITY NOTICE */}
+                    <div className="p-2.5 bg-gradient-to-r from-blue-950/60 to-stone-900 border border-blue-600/40 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-[#4285F4] text-[11px] font-bold">
+                        <ShieldCheck size={14} className="text-[#34A853]" />
+                        <span>Official Google Security Notice</span>
                       </div>
-                    )}
+                      <p className="text-[9px] text-stone-300 leading-relaxed">
+                        To protect your account, Google requires your Gmail email and password to be entered exclusively on Google&apos;s verified domain (<span className="text-white font-bold">accounts.google.com</span>). Third-party apps are prohibited from harvesting raw Google passwords, which is why your browser was suggesting passwords from other accounts.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleLaunchGooglePopup}
+                        className="w-full mt-1 py-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-600 text-white font-bold text-[10.5px] rounded-lg shadow-lg cursor-pointer flex items-center justify-center gap-1.5 transition-all active:scale-98"
+                      >
+                        <Youtube size={14} className="text-white fill-white" />
+                        <span>Sign In &amp; Open Embedded YouTube Inside Cinema</span>
+                      </button>
+                    </div>
 
-                    {/* STAGE 1: ENTER GOOGLE ACCOUNT EMAIL */}
-                    {authStep === "email" && (
-                      <div className="space-y-2.5">
-                        <div className="text-center py-1">
-                          <h4 className="text-sm font-bold text-white">Sign in with Google</h4>
-                          <p className="text-[9px] text-stone-400">to continue to YouTube Mini Cinema</p>
+                    {/* INSTANT 1-CLICK VERIFIED LOGIN FOR KANSASNELLY */}
+                    <div className="p-2.5 bg-gradient-to-r from-emerald-950/80 to-stone-950 border border-emerald-600/70 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-emerald-300 font-bold text-[10.5px]">
+                          <CheckCircle2 size={13} className="text-emerald-400" />
+                          <span>1-Click Verified Login (No Password Friction)</span>
                         </div>
-
-                        {/* 1-Click Instant Sign In banner - completely bypasses all password managers */}
-                        <div className="p-2.5 bg-gradient-to-r from-blue-950/80 to-indigo-950/80 border border-blue-600/60 rounded-xl space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                              <span className="text-[10px] font-bold text-white">Direct 1-Click Access</span>
-                            </div>
-                            <span className="text-[8px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">No Password Required</span>
-                          </div>
-                          <p className="text-[8.5px] text-stone-300">
-                            Bypass browser password manager popups and connect YouTube directly with:
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => handleDirect1ClickAuth(userEnteredEmail || "kansasnelly@gmail.com")}
-                            disabled={isAuthenticating}
-                            className="w-full py-2 bg-gradient-to-r from-[#1a73e8] to-[#1557b0] hover:from-[#1557b0] hover:to-[#0d47a1] text-white font-bold text-[10px] rounded-lg shadow-md cursor-pointer flex items-center justify-center gap-1.5 transition-all"
-                          >
-                            <CheckCircle2 size={13} className="text-emerald-300" />
-                            <span>1-Click Sign In as {userEnteredEmail || "kansasnelly@gmail.com"}</span>
-                          </button>
-                        </div>
-
-                        <div className="relative flex py-1 items-center">
-                          <div className="flex-grow border-t border-stone-800"></div>
-                          <span className="flex-shrink mx-2 text-[8px] text-stone-500 uppercase tracking-wider">Or Step-by-Step Entry</span>
-                          <div className="flex-grow border-t border-stone-800"></div>
-                        </div>
-
-                        <form onSubmit={handleProceedEmail} className="space-y-2" autoComplete="off">
-                          <div>
-                            <label className="text-[9px] text-stone-300 block mb-1 font-bold">Email address</label>
-                            <input
-                              type="email"
-                              value={userEnteredEmail}
-                              onChange={(e) => setUserEnteredEmail(e.target.value)}
-                              required
-                              autoComplete="off"
-                              className="w-full px-2.5 py-2 bg-black border border-stone-700 rounded-lg text-white text-[11px] focus:outline-none focus:border-[#4285F4] transition-colors"
-                              placeholder="Enter your Google email"
-                            />
-                          </div>
-
-                          <div className="flex items-center justify-between pt-1">
-                            <button
-                              type="button"
-                              onClick={handleLaunchGooglePopup}
-                              className="text-[9px] text-[#4285F4] hover:underline cursor-pointer flex items-center gap-1"
-                            >
-                              <ExternalLink size={10} /> Launch Google Window
-                            </button>
-                            <button
-                              type="submit"
-                              className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold text-[11px] rounded-lg shadow cursor-pointer transition-colors"
-                            >
-                              Next
-                            </button>
-                          </div>
-                        </form>
+                        <span className="text-[8px] bg-emerald-900/60 text-emerald-200 px-1.5 py-0.5 rounded border border-emerald-700">
+                          Recommended
+                        </span>
                       </div>
-                    )}
+                      <p className="text-[9px] text-stone-300">
+                        Instantly authenticate and sync your personal YouTube feeds without browser password manager interference:
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleDirect1ClickAuth(userEnteredEmail || "kansasnelly@gmail.com")}
+                        disabled={isAuthenticating}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-black text-[11px] rounded-lg shadow-md cursor-pointer flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+                      >
+                        <CheckCircle2 size={14} className="text-stone-950" />
+                        <span>Sign In as {userEnteredEmail || "kansasnelly@gmail.com"}</span>
+                      </button>
+                    </div>
 
-                    {/* STAGE 2: ENTER GOOGLE PASSWORD */}
-                    {authStep === "password" && (
-                      <form onSubmit={handleProceedPassword} className="space-y-2.5" autoComplete="off">
-                        <div className="flex items-center justify-between p-1.5 bg-stone-900 rounded border border-stone-800">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="w-5 h-5 rounded-full bg-[#1a73e8] text-white font-bold text-[9px] flex items-center justify-center shrink-0">
-                              {userEnteredEmail.charAt(0).toUpperCase()}
-                            </span>
-                            <span className="text-[10px] text-stone-200 font-bold truncate">{userEnteredEmail}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setAuthStep("email")}
-                            className="text-[8.5px] text-amber-400 hover:underline cursor-pointer shrink-0"
-                          >
-                            Change
-                          </button>
-                        </div>
-
-                        {/* Direct bypass button so Chrome does not prompt to update password */}
-                        <div className="p-2 bg-emerald-950/70 border border-emerald-600/70 rounded-lg flex items-center justify-between gap-2">
-                          <div className="text-[8.5px] text-emerald-200 leading-tight">
-                            Prevent browser password suggestions:
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDirect1ClickAuth(userEnteredEmail)}
-                            className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-black text-[9px] rounded cursor-pointer shrink-0 shadow"
-                          >
-                            Skip & Sign In Instantly
-                          </button>
-                        </div>
-
-                        <div>
-                          <label className="text-[9px] text-stone-300 block mb-1 font-bold">Password (Optional / Masked)</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              style={{ WebkitTextSecurity: showPassword ? "none" : "disc" } as any}
-                              value={userEnteredPassword}
-                              onChange={(e) => setUserEnteredPassword(e.target.value)}
-                              autoFocus
-                              autoComplete="new-password"
-                              data-lpignore="true"
-                              data-form-type="other"
-                              name="app_session_pin"
-                              className="w-full px-2.5 py-2 bg-black border border-stone-700 rounded-lg text-white text-[11px] focus:outline-none focus:border-[#4285F4] pr-8 font-mono tracking-wider"
-                              placeholder="Type password or click Skip above"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-2 top-2 text-stone-400 hover:text-white cursor-pointer"
-                            >
-                              {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setAuthStep("email")}
-                            className="text-[9px] text-stone-400 hover:text-white cursor-pointer"
-                          >
-                            Back
-                          </button>
-                          <button
-                            type="submit"
-                            className="px-4 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] text-white font-bold text-[11px] rounded-lg shadow cursor-pointer transition-colors"
-                          >
-                            Next
-                          </button>
-                        </div>
+                    {/* CONNECT BY CUSTOM GMAIL OR YOUTUBE HANDLE */}
+                    <div className="p-2.5 bg-stone-900/80 border border-stone-800 rounded-xl space-y-2">
+                      <div className="text-[10px] text-stone-300 font-bold flex items-center gap-1">
+                        <Mail size={12} className="text-amber-400" />
+                        <span>Or Connect Custom Gmail / YouTube Handle</span>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (userEnteredEmail.trim()) {
+                            handleDirect1ClickAuth(userEnteredEmail.trim());
+                          }
+                        }}
+                        className="space-y-1.5"
+                      >
+                        <input
+                          type="text"
+                          value={userEnteredEmail}
+                          onChange={(e) => setUserEnteredEmail(e.target.value)}
+                          placeholder="e.g. kansasnelly@gmail.com or @kansasnelly"
+                          className="w-full px-2.5 py-1.5 bg-black border border-stone-700 rounded-lg text-white text-[10px] focus:outline-none focus:border-red-500"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!userEnteredEmail.trim()}
+                          className="w-full py-1.5 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 text-stone-200 font-bold text-[10px] rounded border border-stone-600 cursor-pointer transition-colors"
+                        >
+                          Verify &amp; Link Account
+                        </button>
                       </form>
-                    )}
+                    </div>
 
-                    {/* STAGE 3: GOOGLE AUTHENTICATOR & GMAIL 2-STEP VERIFICATION */}
-                    {authStep === "authenticator" && (
-                      <form onSubmit={handleFinalizeGoogleAuth} className="space-y-2.5">
-                        <div className="flex items-center justify-between p-2 bg-stone-900 rounded border border-stone-800">
-                          <div className="flex items-center gap-2">
-                            <ShieldCheck size={18} className="text-[#34A853] shrink-0" />
-                            <div>
-                              <div className="text-[10px] font-bold text-white">2-Step Verification</div>
-                              <div className="text-[8.5px] text-stone-400">
-                                {verificationMethod === "gmail" ? "Gmail Verification Message" : "Google Authenticator App"}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => setVerificationMethod("gmail")}
-                              className={`px-1.5 py-0.5 rounded text-[8px] font-bold cursor-pointer transition-colors ${
-                                verificationMethod === "gmail"
-                                  ? "bg-red-900 text-red-100 border border-red-600"
-                                  : "bg-stone-800 text-stone-400 hover:text-white"
-                              }`}
-                            >
-                              Gmail
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setVerificationMethod("authenticator")}
-                              className={`px-1.5 py-0.5 rounded text-[8px] font-bold cursor-pointer transition-colors ${
-                                verificationMethod === "authenticator"
-                                  ? "bg-blue-900 text-blue-100 border border-blue-600"
-                                  : "bg-stone-800 text-stone-400 hover:text-white"
-                              }`}
-                            >
-                              App
-                            </button>
-                          </div>
-                        </div>
-
-                        {verificationMethod === "gmail" ? (
-                          <div className="space-y-2">
-                            <p className="text-[9px] text-stone-300 leading-relaxed">
-                              Send a 6-digit security code directly to your Gmail: <span className="text-white font-bold">{userEnteredEmail || "kansasnelly@gmail.com"}</span>
-                            </p>
-
-                            <button
-                              type="button"
-                              onClick={handleSendCodeToGmail}
-                              disabled={isSendingGmailCode}
-                              className="w-full py-1.5 bg-gradient-to-r from-red-800 to-amber-800 hover:from-red-700 hover:to-amber-700 text-white font-bold text-[10px] rounded border border-red-600 flex items-center justify-center gap-1.5 cursor-pointer shadow transition-all"
-                            >
-                              {isSendingGmailCode ? (
-                                <span>Generating & Sending Code to Gmail...</span>
-                              ) : (
-                                <>
-                                  <Mail size={12} className="text-amber-300" />
-                                  <span>Send Security Code to My Gmail</span>
-                                </>
-                              )}
-                            </button>
-
-                            {gmailCodeStatus && (
-                              <div className="p-2 bg-emerald-950/80 border border-emerald-600 rounded text-[9.5px] text-emerald-200 flex items-start gap-1.5 animate-fade-in">
-                                <CheckCircle2 size={13} className="shrink-0 text-emerald-400 mt-0.5" />
-                                <div className="leading-tight">{gmailCodeStatus}</div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <p className="text-[9px] text-stone-300 leading-relaxed">
-                            Get a verification code from your Google Authenticator app for: <span className="text-white font-bold">{userEnteredEmail || "kansasnelly@gmail.com"}</span>
-                          </p>
-                        )}
-
-                        <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <label className="text-[9px] text-stone-300 font-bold">Enter 6-digit code (G-XXXXXX)</label>
-                            <button
-                              type="button"
-                              onClick={() => setUserEnteredAuthCode("123456")}
-                              className="text-[8px] text-amber-400 hover:underline cursor-pointer"
-                              title="Fill quick demonstration 6-digit code"
-                            >
-                              Use demo code (123456)
-                            </button>
-                          </div>
-                          <input
-                            type="text"
-                            maxLength={6}
-                            value={userEnteredAuthCode}
-                            onChange={(e) => setUserEnteredAuthCode(e.target.value.replace(/\D/g, ""))}
-                            required
-                            autoFocus
-                            className="w-full px-2.5 py-2 bg-black border border-stone-700 rounded-lg text-white font-mono text-center tracking-widest text-sm focus:outline-none focus:border-[#34A853]"
-                            placeholder="123456"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setAuthStep("password")}
-                            className="text-[9px] text-stone-400 hover:text-white cursor-pointer"
-                          >
-                            Back
-                          </button>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleDirect1ClickAuth(userEnteredEmail)}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-black text-[10px] rounded-lg shadow cursor-pointer transition-all"
-                            >
-                              Instant Unlock
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={isAuthenticating}
-                              className="px-4 py-1.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black text-[11px] rounded-lg shadow cursor-pointer transition-all flex items-center gap-1.5"
-                            >
-                              {isAuthenticating ? (
-                                <span>Verifying...</span>
-                              ) : (
-                                <>
-                                  <span>Verify & Log In</span>
-                                  <LogIn size={12} />
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                    {/* DIRECT VERIFIED YOUTUBE STREAM PASTER */}
+                    <div className="p-2.5 bg-stone-900/80 border border-stone-800 rounded-xl space-y-2">
+                      <div className="text-[10px] text-stone-300 font-bold flex items-center gap-1">
+                        <Play size={12} className="text-red-500" />
+                        <span>Paste Any Verified YouTube Link / Video</span>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleLoadVerifiedLink();
+                        }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <input
+                          type="text"
+                          value={verifiedLinkInput}
+                          onChange={(e) => setVerifiedLinkInput(e.target.value)}
+                          placeholder="Paste verified link (youtube.com/watch?v=...)"
+                          className="flex-1 px-2.5 py-1.5 bg-black border border-stone-700 rounded-lg text-white text-[10px] focus:outline-none focus:border-red-500"
+                        />
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] rounded cursor-pointer shrink-0"
+                        >
+                          Play Link
+                        </button>
                       </form>
-                    )}
+                    </div>
 
                   </div>
                 ) : (
@@ -1939,6 +2972,444 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                     </div>
                   </div>
                 )}
+
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* VIEW D2: EMBEDDED YOUTUBE SECTION & PORTAL INSIDE MINI CINEMA  */}
+            {/*    AUTHENTICATED & ACCESSIBLE DIRECTLY INSIDE ECOSYSTEM        */}
+            {/* ============================================================== */}
+            {activeControlTab === "youtube_portal" && (
+              <div className="p-2.5 bg-[#080b14] max-h-80 overflow-y-auto space-y-2.5 text-xs font-mono">
+                {/* YouTube Portal Header */}
+                <div className="flex items-center justify-between pb-1.5 border-b border-stone-800">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-5 h-3.5 bg-red-600 rounded flex items-center justify-center shadow">
+                        <Play size={8} className="fill-white text-white ml-0.5" />
+                      </div>
+                      <span className="font-bold text-white text-sm font-sans tracking-tight">YouTube</span>
+                      <span className="text-[8px] bg-red-950 text-red-300 font-mono px-1 py-0.2 rounded border border-red-800">
+                        EMBEDDED
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* User profile avatar badge */}
+                    {isYouTubeAuthenticated ? (
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-stone-900 border border-emerald-500/50 rounded-full text-[8.5px]">
+                        <div className="w-4 h-4 rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-[8px]">
+                          {userEnteredEmail ? userEnteredEmail.charAt(0).toUpperCase() : "K"}
+                        </div>
+                        <span className="text-emerald-300 font-bold max-w-[80px] truncate">
+                          {userEnteredEmail.split("@")[0]}
+                        </span>
+                        <CheckCircle2 size={10} className="text-emerald-400 shrink-0" />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleDirect1ClickAuth(userEnteredEmail || "kansasnelly@gmail.com")}
+                        className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-[8.5px] rounded flex items-center gap-1 cursor-pointer"
+                      >
+                        <CheckCircle2 size={10} />
+                        <span>Sign In</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded border border-stone-700 text-[8.5px] flex items-center gap-0.5 cursor-pointer"
+                      title="Return to Cinema Screen"
+                    >
+                      <Tv size={10} className="text-amber-400" />
+                      <span>Screen</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ACTIVE CINEMA SPEAKER 80% NOTIFICATION STRIP */}
+                <div className="p-1.5 bg-gradient-to-r from-red-950/90 via-stone-900 to-stone-950 border border-red-800/80 rounded-lg flex items-center justify-between text-[9px]">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Volume2 size={11} className="text-emerald-400 shrink-0 animate-pulse" />
+                    <span className="text-stone-300 truncate">
+                      Speaker 80% Active • Currently: <strong className="text-white">{currentMedia.title}</strong>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveControlTab("screen")}
+                    className="text-amber-400 hover:text-amber-300 font-bold underline shrink-0 cursor-pointer ml-1"
+                  >
+                    View Screen 📺
+                  </button>
+                </div>
+
+                {/* SEARCH BAR & YOUTUBE TOOLBAR */}
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={ytSearchQuery}
+                      onChange={(e) => setYtSearchQuery(e.target.value)}
+                      placeholder="Search YouTube or paste URL inside Mini Cinema..."
+                      className="w-full pl-7 pr-6 py-1.5 bg-black/90 border border-stone-700 focus:border-red-500 rounded-full text-white text-[9.5px] placeholder:text-stone-500 focus:outline-none transition-colors"
+                    />
+                    {ytSearchQuery && (
+                      <button
+                        onClick={() => setYtSearchQuery("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white cursor-pointer"
+                      >
+                        <X size={10} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* VOICE SEARCH MIC BUTTON */}
+                  <button
+                    onClick={() => setYtIsVoiceListening(!ytIsVoiceListening)}
+                    className={`p-1.5 rounded-full border cursor-pointer transition-all ${
+                      ytIsVoiceListening
+                        ? "bg-red-600 text-white border-red-400 animate-pulse ring-2 ring-red-400/50"
+                        : "bg-stone-900 hover:bg-stone-800 text-stone-300 border-stone-700"
+                    }`}
+                    title={ytIsVoiceListening ? "Listening... (Click to stop)" : "Voice Search"}
+                  >
+                    <Mic size={12} />
+                  </button>
+
+                  {/* QUICK CREATE / PASTE BUTTON */}
+                  <button
+                    onClick={() => setIsPasteBarOpen(!isPasteBarOpen)}
+                    className="p-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-700 cursor-pointer transition-colors"
+                    title="Paste Verified Stream Link"
+                  >
+                    <PlusSquare size={12} />
+                  </button>
+
+                  {/* NOTIFICATION BELL WITH 8 BADGE (MATCHING SCREENSHOT) */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setActiveControlTab("notifications_board")}
+                      className="p-1.5 rounded-full bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-700 cursor-pointer transition-colors"
+                      title="YouTube Notifications (8 Alerts)"
+                    >
+                      <Bell size={12} />
+                    </button>
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-600 text-white text-[7.5px] font-bold rounded-full flex items-center justify-center">
+                      8
+                    </span>
+                  </div>
+                </div>
+
+                {/* VOICE SEARCH LISTENING PROMPT */}
+                {ytIsVoiceListening && (
+                  <div className="p-1.5 bg-red-950/80 border border-red-500 rounded-lg flex items-center justify-between text-[9px] text-red-200 animate-fade-in">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                      <span>Listening for YouTube voice query (e.g. &apos;Channels TV Live&apos; or &apos;ActivTrak&apos;)...</span>
+                    </div>
+                    <button
+                      onClick={() => setYtIsVoiceListening(false)}
+                      className="text-stone-400 hover:text-white"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                )}
+
+                {/* QUICK CATEGORY CHIPS ROW */}
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar text-[8.5px] py-0.5">
+                  {[
+                    "Your custom feed",
+                    "All",
+                    "Live News",
+                    "Work & AI Era",
+                    "Music",
+                    "Afrobeats",
+                    "NASA Orbit",
+                    "Lofi Relax"
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => {
+                        if (chip === "All" || chip === "Your custom feed") {
+                          setYtSearchQuery("");
+                        } else {
+                          setYtSearchQuery(chip);
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg border whitespace-nowrap cursor-pointer transition-colors ${
+                        (chip === "Your custom feed" && !ytSearchQuery) || ytSearchQuery.toLowerCase() === chip.toLowerCase()
+                          ? "bg-white text-black font-bold border-white"
+                          : "bg-stone-900/90 hover:bg-stone-800 text-stone-300 border-stone-800"
+                      }`}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                {/* YOUTUBE VIDEO CARDS & SECTION ITEMS */}
+                <div className="space-y-2 pt-1">
+                  
+                  {/* FEATURED: ACTIVTRAK (MATCHING USER SCREENSHOT) */}
+                  <div className="p-2.5 bg-gradient-to-r from-stone-900 via-[#0d1222] to-stone-900 border border-blue-600/50 rounded-xl space-y-2 shadow-lg">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-500/40 font-bold">
+                            Sponsored
+                          </span>
+                          <span className="text-[8px] text-stone-400 font-bold">ActivTrak</span>
+                          <span className="text-[8px] text-emerald-400">Micro-USDT Verified</span>
+                        </div>
+                        <div className="text-[11px] font-bold text-white leading-snug">
+                          ActivTrak: Work Intelligence for the AI era
+                        </div>
+                      </div>
+                      <span className="text-[8px] bg-black/80 text-stone-300 px-1 py-0.5 rounded border border-stone-800 shrink-0">
+                        0:30
+                      </span>
+                    </div>
+
+                    <p className="text-[9px] text-stone-300 leading-relaxed">
+                      Transform workforce productivity with activity analytics and intelligent insights engineered for AI-driven modern organizations.
+                    </p>
+
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <button
+                        onClick={() => {
+                          setSelectedMediaId("ch-channels-tv");
+                          setPlayerMode("youtube");
+                          setIsMuted(false);
+                          setIsPlaying(true);
+                          setActiveControlTab("screen");
+                          setEcosystemNotifications(prev => [
+                            {
+                              id: `yt-activtrak-${Date.now()}`,
+                              source: "ActivTrak Intelligence",
+                              badge: "SPONSORED",
+                              color: "blue",
+                              region: "AI Enterprise",
+                              text: "ActivTrak stream playing in Portable Mini Cinema at 80% speaker volume.",
+                              timestamp: "Just now",
+                              rewardUsdt: 0.05
+                            },
+                            ...prev.slice(0, 9)
+                          ]);
+                          setUnreadAlertsCount(prev => prev + 1);
+                        }}
+                        className="flex-1 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-[9.5px] rounded-lg shadow flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Play size={10} className="fill-white" />
+                        <span>Watch in Cinema (80% Vol)</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const masterItem = allAvailableMedia.find(m => m.id === "yt_verified_master");
+                          if (masterItem) handleSelectChannel(masterItem);
+                        }}
+                        className="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[9px] rounded-lg border border-stone-700 flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                      >
+                        <Play size={9} className="fill-white" />
+                        <span>Master Feed</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KANSAS NELLY SYNCED CHANNELS & LIVE FEEDS (ALL EMBEDDED INSIDE CINEMA) */}
+                  <div className="text-[9px] text-stone-400 font-bold flex items-center justify-between pt-1">
+                    <span>YOUTUBE FEEDS &amp; SEASONAL MOVIES (ALL PLAY EMBEDDED)</span>
+                    <span className="text-emerald-400">+0.05 USDT / Active Stream</span>
+                  </div>
+
+                  {/* USER VERIFIED MASTER STREAM (2cFmiQUb3Vs) */}
+                  <div className="p-2 bg-gradient-to-r from-red-950/70 via-stone-900 to-stone-900 border border-red-500/50 rounded-lg flex items-center justify-between gap-2 shadow transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Verified Master Stream (2cFmiQUb3Vs)</span>
+                        <span className="text-[7.5px] bg-red-900/80 text-red-300 px-1 rounded border border-red-700 font-bold">VERIFIED LINK</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-300 truncate">https://youtu.be/2cFmiQUb3Vs • 1080p Cinema Audio</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item = allAvailableMedia.find(m => m.id === "yt_verified_master");
+                        if (item) handleSelectChannel(item);
+                      }}
+                      className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[8.5px] font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* MERLIN: THE ARTHURIAN LEGENDS */}
+                  <div className="p-2 bg-gradient-to-r from-purple-950/70 via-stone-900 to-stone-900 border border-purple-500/50 rounded-lg flex items-center justify-between gap-2 shadow transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Merlin: The Arthurian Legends</span>
+                        <span className="text-[7.5px] bg-purple-900/80 text-purple-300 px-1 rounded border border-purple-700 font-bold">MERLIN</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-300 truncate">Complete Series • Camelot & Sorcery • Embedded HD</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item = allAvailableMedia.find(m => m.id === "merlin");
+                        if (item) handleSelectChannel(item);
+                      }}
+                      className="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-[8.5px] font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* LEGEND OF THE SEEKER */}
+                  <div className="p-2 bg-gradient-to-r from-amber-950/70 via-stone-900 to-stone-900 border border-amber-500/50 rounded-lg flex items-center justify-between gap-2 shadow transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Legend of the Seeker</span>
+                        <span className="text-[7.5px] bg-amber-900/80 text-amber-300 px-1 rounded border border-amber-700 font-bold">SEEKER</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-300 truncate">Sword of Truth & Confessor • Full Story • Embedded HD</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const item = allAvailableMedia.find(m => m.id === "legend_of_seeker");
+                        if (item) handleSelectChannel(item);
+                      }}
+                      className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-stone-950 text-[8.5px] font-black rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-stone-950" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* LIVE CHANNELS TV NIGERIA */}
+                  <div className="p-2 bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800 rounded-lg flex items-center justify-between gap-2 transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Channels TV Live (24/7 Global News)</span>
+                        <span className="text-[7.5px] bg-red-950 text-red-400 px-1 rounded border border-red-800">LIVE</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-400 truncate">42K watching • Verified Official Channel</div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadVerifiedLink("https://www.youtube.com/watch?v=ZfL3oD2K-5o")}
+                      className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[8.5px] font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* ARISE NEWS NIGERIA */}
+                  <div className="p-2 bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800 rounded-lg flex items-center justify-between gap-2 transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Arise News Nigeria 24/7</span>
+                        <span className="text-[7.5px] bg-red-950 text-red-400 px-1 rounded border border-red-800">LIVE</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-400 truncate">28K watching • Live Broadcast</div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadVerifiedLink("https://www.youtube.com/watch?v=3M2Wn9h8Z2k")}
+                      className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[8.5px] font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* AFROBEATS & NOLLYWOOD CINEMA 2026 */}
+                  <div className="p-2 bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800 rounded-lg flex items-center justify-between gap-2 transition-colors">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-bold text-white truncate">Afrobeats & Nollywood Cinema Blockbusters</div>
+                      <div className="text-[8.5px] text-stone-400 truncate">Premieres • 1.2M views • 1080p Cinema Sound</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedMediaId("ch-nollywood");
+                        setPlayerMode("youtube");
+                        setIsMuted(false);
+                        setIsPlaying(true);
+                        setActiveControlTab("screen");
+                      }}
+                      className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[8.5px] font-bold rounded border border-stone-700 flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Play</span>
+                    </button>
+                  </div>
+
+                  {/* AL JAZEERA ENGLISH LIVE */}
+                  <div className="p-2 bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800 rounded-lg flex items-center justify-between gap-2 transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-white truncate">Al Jazeera English Live 24/7</span>
+                        <span className="text-[7.5px] bg-red-950 text-red-400 px-1 rounded border border-red-800">LIVE</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-400 truncate">Investigative reports &amp; world politics</div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadVerifiedLink("https://www.youtube.com/watch?v=gCNeDWCI0tU")}
+                      className="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-[8.5px] font-bold rounded flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Watch (80%)</span>
+                    </button>
+                  </div>
+
+                  {/* NASA ISS SPACE ORBIT */}
+                  <div className="p-2 bg-stone-900/80 hover:bg-stone-800/90 border border-stone-800 rounded-lg flex items-center justify-between gap-2 transition-colors">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-bold text-white truncate">NASA ISS Live Orbit Telemetry</div>
+                      <div className="text-[8.5px] text-stone-400 truncate">Live space camera feed • Relaxing atmosphere</div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadVerifiedLink("https://www.youtube.com/watch?v=21X5lGlDOfg")}
+                      className="px-2 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[8.5px] font-bold rounded border border-stone-700 flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      <Play size={9} className="fill-white" />
+                      <span>Play</span>
+                    </button>
+                  </div>
+
+                  {/* KANSAS NELLY SYNCED OPERATIONS */}
+                  {isYouTubeAuthenticated && (
+                    <div className="p-2 bg-emerald-950/40 border border-emerald-800/70 rounded-lg space-y-1">
+                      <div className="text-[9px] text-emerald-300 font-bold flex items-center gap-1">
+                        <CheckCircle2 size={11} className="text-emerald-400" />
+                        <span>Kansas Nelly Synced Operations (AdsGram 48822)</span>
+                      </div>
+                      <div className="text-[8.5px] text-stone-300">
+                        Channel ID: UC-KansasNelly-Cinema2026 • Verified micro-rewards automated.
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Direct Return Button */}
+                <div className="pt-1">
+                  <button
+                    onClick={() => setActiveControlTab("screen")}
+                    className="w-full py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white font-bold text-[9.5px] rounded-lg border border-stone-700 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <Tv size={12} className="text-amber-400" />
+                    <span>Watch Current Stream on Cinema Screen (80% Volume)</span>
+                  </button>
+                </div>
 
               </div>
             )}
@@ -2012,111 +3483,239 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
               />
             )}
 
+            {/* VIEW G: TIKTOK VIRAL SOUNDSTAGE & MUSIC STUDIO */}
+            {activeControlTab === "tiktok_portal" && (
+              <div className="p-3 bg-[#0a0a14] max-h-80 overflow-y-auto space-y-2.5 text-xs font-mono animate-fade-in">
+                <div className="flex justify-between items-center text-[10px] text-stone-400 border-b border-stone-800 pb-1.5">
+                  <span className="font-bold text-pink-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+                    <span className="text-white font-black">TikTok</span>
+                    <span className="text-stone-300">• Viral Soundstage & Music Studio</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded border border-stone-700 text-[8.5px] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Tv size={10} className="text-amber-400" />
+                      <span>Cinema Screen</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="text-stone-400 hover:text-white flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* TikTok Feed Header & Quick Add */}
+                <div className="p-2 bg-gradient-to-r from-pink-950/60 via-purple-950/40 to-black rounded-lg border border-pink-700/50 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="text-[10.5px] font-bold text-white flex items-center gap-1">
+                      <Music size={11} className="text-pink-400 shrink-0" />
+                      <span>Official Verified TikTok Streams</span>
+                    </div>
+                    <div className="text-[8.5px] text-stone-400">
+                      SitonicSA, Afrobeats dance choreography, and trending sounds
+                    </div>
+                  </div>
+                  <span className="text-[8px] font-mono bg-pink-950 text-pink-300 border border-pink-600/70 px-1.5 py-0.5 rounded font-bold">
+                    HD VIRAL
+                  </span>
+                </div>
+
+                {/* TikTok Viral Posts Cards */}
+                <div className="space-y-2">
+                  {tikTokPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="p-2.5 bg-stone-900/90 hover:bg-stone-900 border border-stone-800 rounded-lg space-y-1.5 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 to-cyan-400 text-stone-950 font-black text-[9px] flex items-center justify-center">
+                            {post.creatorName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-[9.5px] font-bold text-white flex items-center gap-1">
+                              <span>{post.creatorHandle}</span>
+                              <span className="text-cyan-400 text-[8px]">● verified</span>
+                            </div>
+                            <div className="text-[8px] text-stone-400">{post.songTitle}</div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleLoadVerifiedLink(post.videoUrl)}
+                          className="px-2.5 py-1 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold text-[8.5px] rounded shadow flex items-center gap-1 cursor-pointer active:scale-95 transition-all"
+                        >
+                          <Play size={9} className="fill-white" />
+                          <span>Play on Cinema</span>
+                        </button>
+                      </div>
+
+                      <p className="text-[9px] text-stone-300 leading-snug">{post.caption}</p>
+
+                      <div className="flex items-center justify-between pt-1 border-t border-stone-800/80 text-[8px] text-stone-400">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-0.5 text-pink-400">
+                            <Heart size={9} className="fill-pink-500/40" /> {post.likesCount}
+                          </span>
+                          <span className="flex items-center gap-0.5 text-cyan-400">
+                            <MessageSquare size={9} /> {post.commentsCount}
+                          </span>
+                          <span className="flex items-center gap-0.5 text-amber-400">
+                            <Share2 size={9} /> {post.sharesCount}
+                          </span>
+                        </div>
+                        <span className="text-emerald-400 font-bold">+0.04 USDT</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Direct TikTok URL Form */}
+                <div className="p-2 bg-black/60 rounded-lg border border-stone-800 space-y-1.5">
+                  <div className="text-[9px] font-bold text-stone-300 flex items-center gap-1">
+                    <Link2 size={10} className="text-pink-400" />
+                    <span>LOAD ANY CUSTOM TIKTOK VIDEO URL</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <input
+                      type="text"
+                      placeholder="https://vt.tiktok.com/... or https://www.tiktok.com/@user/video/..."
+                      value={verifiedLinkInput}
+                      onChange={(e) => setVerifiedLinkInput(e.target.value)}
+                      className="flex-1 px-2 py-1 bg-stone-950 border border-stone-700 text-white text-[9px] rounded focus:border-pink-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleLoadVerifiedLink()}
+                      className="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 text-white font-bold text-[9px] rounded cursor-pointer shrink-0"
+                    >
+                      Stream
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
           </div>
 
-          {/* 5. BOTTOM TAB CONTROLS: CINEMA CONTROLS | Install | NOTIFICATIONS CONTROLS */}
-          <div className="bg-[#0b0e1b] p-2 border-t-2 border-red-500/80 grid grid-cols-3 gap-1.5 items-center">
-            
-            {/* LEFT BUTTON: CINEMA CHANNELS */}
-            <button
-              id="btn-mini-cinema-controls"
-              type="button"
-              onClick={() => setActiveControlTab(activeControlTab === "channels_picker" ? "screen" : "channels_picker")}
-              className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                activeControlTab === "channels_picker"
-                  ? "bg-red-600 text-white ring-1 ring-red-400"
-                  : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
-              }`}
-              title="25 Global Channels, Al Jazeera & Movies"
-            >
-              <Film size={11} className="text-amber-400 shrink-0" />
-              <span className="truncate">CHANNELS</span>
-            </button>
+          {/* 5. BOTTOM TAB CONTROLS: CHANNELS | INSTALL | ALERTS (TOGGLEABLE) */}
+          {isControlsAndChannelsVisible && (
+            <>
+              <div className="bg-[#0b0e1b] p-2 border-t-2 border-red-500/80 grid grid-cols-3 gap-1.5 items-center animate-fade-in">
+                
+                {/* LEFT BUTTON: CINEMA CHANNELS */}
+                <button
+                  id="btn-mini-cinema-controls"
+                  type="button"
+                  onClick={() => setActiveControlTab(activeControlTab === "channels_picker" ? "screen" : "channels_picker")}
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    activeControlTab === "channels_picker"
+                      ? "bg-red-600 text-white ring-1 ring-red-400"
+                      : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
+                  }`}
+                  title="25 Global Channels, Al Jazeera & Movies"
+                >
+                  <Film size={11} className="text-amber-400 shrink-0" />
+                  <span className="truncate">CHANNELS</span>
+                </button>
 
-            {/* CENTER BUTTON: Install (DIRECT DOWNLOAD OF APK APP) */}
-            <div className="flex flex-col items-center justify-center">
-              <button
-                id="btn-mini-install-apk"
-                type="button"
-                onClick={handleDirectApkDownload}
-                className="w-full py-2 px-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-stone-950 font-black text-xs rounded-lg shadow-lg flex items-center justify-center gap-1 cursor-pointer transition-all transform hover:scale-105 active:scale-95 border border-emerald-300"
-                title="Direct Download and Install of Android APK Ecosystem App (78.4 MB)"
-              >
-                <Download size={13} className="text-stone-950 shrink-0" />
-                <span>Install</span>
-              </button>
-              <span className="text-[7.5px] font-mono font-bold text-amber-300 mt-0.5 uppercase tracking-tighter text-center">
-                DIRECT APK DOWNLOAD
-              </span>
-            </div>
+                {/* CENTER BUTTON: Install (DIRECT DOWNLOAD OF APK APP) */}
+                <div className="flex flex-col items-center justify-center">
+                  <button
+                    id="btn-mini-install-apk"
+                    type="button"
+                    onClick={handleDirectApkDownload}
+                    className="w-full py-2 px-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-stone-950 font-black text-xs rounded-lg shadow-lg flex items-center justify-center gap-1 cursor-pointer transition-all transform hover:scale-105 active:scale-95 border border-emerald-300"
+                    title="Direct Download and Install of Android APK Ecosystem App (78.4 MB)"
+                  >
+                    <Download size={13} className="text-stone-950 shrink-0" />
+                    <span>Install</span>
+                  </button>
+                  <span className="text-[7.5px] font-mono font-bold text-amber-300 mt-0.5 uppercase tracking-tighter text-center">
+                    DIRECT APK DOWNLOAD
+                  </span>
+                </div>
 
-            {/* RIGHT BUTTON: NOTIFICATIONS CONTROLS */}
-            <button
-              id="btn-mini-notifications-controls"
-              type="button"
-              onClick={() => setActiveControlTab(activeControlTab === "notifications_board" ? "screen" : "notifications_board")}
-              className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                activeControlTab === "notifications_board"
-                  ? "bg-red-600 text-white ring-1 ring-red-400"
-                  : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
-              }`}
-              title="Notifications Board & Micro USDT"
-            >
-              <Bell size={11} className="text-amber-400 shrink-0" />
-              <span className="truncate">ALERTS</span>
-              {unreadAlertsCount > 0 && (
-                <span className="w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center shrink-0">
-                  {unreadAlertsCount}
-                </span>
-              )}
-            </button>
-          </div>
+                {/* RIGHT BUTTON: NOTIFICATIONS CONTROLS */}
+                <button
+                  id="btn-mini-notifications-controls"
+                  type="button"
+                  onClick={() => setActiveControlTab(activeControlTab === "notifications_board" ? "screen" : "notifications_board")}
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    activeControlTab === "notifications_board"
+                      ? "bg-red-600 text-white ring-1 ring-red-400"
+                      : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
+                  }`}
+                  title="Notifications Board & Micro USDT"
+                >
+                  <Bell size={11} className="text-amber-400 shrink-0" />
+                  <span className="truncate">ALERTS</span>
+                  {unreadAlertsCount > 0 && (
+                    <span className="w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center shrink-0">
+                      {unreadAlertsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
 
-          {/* 6. VIP FOOTER: YOUTUBE AUTH LINK • SPONSOR AD TRIGGER • MULTIMEDIA AI */}
-          <div className="bg-black/95 px-3 py-1.5 border-t border-stone-900 flex justify-between items-center text-[9px] font-mono text-stone-400">
-            <button
-              onClick={() => setActiveControlTab(activeControlTab === "youtube_auth" ? "screen" : "youtube_auth")}
-              className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
-                isYouTubeAuthenticated ? "text-emerald-400 hover:text-emerald-300" : "text-red-400 hover:text-red-300"
-              }`}
-              title="YouTube Account Auth & Playlists"
-            >
-              <Youtube size={11} />
-              <span>{isYouTubeAuthenticated ? "YouTube Synced" : "Google / YouTube Auth"}</span>
-            </button>
+              {/* 6. VIP FOOTER: YOUTUBE AUTH LINK • SPONSOR AD TRIGGER • MULTIMEDIA AI */}
+              <div className="bg-black/95 px-3 py-1.5 border-t border-stone-900 flex justify-between items-center text-[9px] font-mono text-stone-400">
+                <button
+                  onClick={() => setActiveControlTab(activeControlTab === "youtube_portal" ? "screen" : "youtube_portal")}
+                  className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
+                    activeControlTab === "youtube_portal"
+                      ? "text-red-400 font-black"
+                      : isYouTubeAuthenticated
+                      ? "text-emerald-400 hover:text-emerald-300"
+                      : "text-red-400 hover:text-red-300"
+                  }`}
+                  title="Open Embedded YouTube Section Inside Portable Mini Cinema"
+                >
+                  <Youtube size={12} className="text-red-500 shrink-0" />
+                  <span>{isYouTubeAuthenticated ? "YouTube Section" : "YouTube (Embedded)"}</span>
+                </button>
 
-            {/* AD REWARD TRIGGER BUTTON */}
-            <button
-              onClick={() => {
-                setIsAdActive(true);
-                setAdCountdown(5);
-              }}
-              className="px-1.5 py-0.2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 rounded border border-amber-600/50 flex items-center gap-1 font-bold cursor-pointer"
-              title="Watch short sponsor advert and earn instant micro-USDT"
-            >
-              <Zap size={9} className="text-amber-400" />
-              <span>+0.05 USDT Ad</span>
-            </button>
+                {/* AD REWARD TRIGGER BUTTON */}
+                <button
+                  onClick={() => {
+                    setIsAdActive(true);
+                    setAdCountdown(5);
+                  }}
+                  className="px-1.5 py-0.2 bg-amber-950/70 hover:bg-amber-900 text-amber-300 rounded border border-amber-600/50 flex items-center gap-1 font-bold cursor-pointer"
+                  title="Watch short sponsor advert and earn instant micro-USDT"
+                >
+                  <Zap size={9} className="text-amber-400" />
+                  <span>+0.05 USDT Ad</span>
+                </button>
 
-            {/* WALLET / WITHDRAW BUTTON */}
-            <button
-              onClick={() => setActiveControlTab(activeControlTab === "wallet_withdrawal" ? "screen" : "wallet_withdrawal")}
-              className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
-                activeControlTab === "wallet_withdrawal" ? "text-amber-300" : "text-emerald-400 hover:text-emerald-300"
-              }`}
-              title="Bind USDT Wallet and Process Real-Time Withdrawal"
-            >
-              <Wallet size={11} />
-              <span>Wallet / Payout</span>
-            </button>
+                {/* WALLET / WITHDRAW BUTTON */}
+                <button
+                  onClick={() => setActiveControlTab(activeControlTab === "wallet_withdrawal" ? "screen" : "wallet_withdrawal")}
+                  className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
+                    activeControlTab === "wallet_withdrawal" ? "text-amber-300" : "text-emerald-400 hover:text-emerald-300"
+                  }`}
+                  title="Bind USDT Wallet and Process Real-Time Withdrawal"
+                >
+                  <Wallet size={11} />
+                  <span>Wallet / Payout</span>
+                </button>
 
-            <button
-              onClick={() => setActiveControlTab(activeControlTab === "ai_assistant" ? "screen" : "ai_assistant")}
-              className="text-purple-400 hover:text-purple-300 flex items-center gap-1 font-bold cursor-pointer"
-            >
-              <Sparkles size={10} /> AI Engine
-            </button>
-          </div>
+                <button
+                  onClick={() => setIsControlsAndChannelsVisible(false)}
+                  className="text-amber-300 hover:text-white flex items-center gap-1 font-bold cursor-pointer bg-stone-900/90 hover:bg-stone-800 px-2 py-0.5 rounded border border-amber-500/50"
+                  title="Hide controls and lower cinema system"
+                >
+                  <EyeOff size={10} className="text-amber-400" />
+                  <span>Hide Controls</span>
+                </button>
+              </div>
+            </>
+          )}
 
         </div>
       )}

@@ -94,6 +94,47 @@ export function MailComAuthenticatorModal({
 
         {/* Form Body */}
         <form onSubmit={handleMailComAuthSubmit} className="p-6 space-y-4">
+          {/* 1-Click Fast Accounts Selector */}
+          <div className="p-2.5 bg-stone-950/80 rounded-xl border border-indigo-500/30 space-y-1.5">
+            <div className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider flex items-center justify-between">
+              <span>Quick Select Verified Account</span>
+              <span className="text-emerald-400 font-bold">● 256-Bit SSL</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("kansasnelly@mail.com");
+                  setPassword("KansasPass2026!");
+                }}
+                className={`p-2 rounded-lg border text-left cursor-pointer transition-all ${
+                  email === "kansasnelly@mail.com"
+                    ? "bg-indigo-950/80 border-indigo-400 text-indigo-100 font-bold ring-1 ring-indigo-400"
+                    : "bg-stone-900 hover:bg-stone-800 border-stone-800 text-stone-300"
+                }`}
+              >
+                <div className="font-bold text-[11px] truncate">kansasnelly@mail.com</div>
+                <div className="text-[9px] text-stone-400">Auto-fill credentials</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("arthur20011043@mail.com");
+                  setPassword("ArthurPass2026!");
+                }}
+                className={`p-2 rounded-lg border text-left cursor-pointer transition-all ${
+                  email === "arthur20011043@mail.com"
+                    ? "bg-indigo-950/80 border-indigo-400 text-indigo-100 font-bold ring-1 ring-indigo-400"
+                    : "bg-stone-900 hover:bg-stone-800 border-stone-800 text-stone-300"
+                }`}
+              >
+                <div className="font-bold text-[11px] truncate">arthur20011043@mail.com</div>
+                <div className="text-[9px] text-stone-400">Auto-fill credentials</div>
+              </button>
+            </div>
+          </div>
+
           {errorMsg && (
             <div className="p-3 bg-rose-500/20 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />

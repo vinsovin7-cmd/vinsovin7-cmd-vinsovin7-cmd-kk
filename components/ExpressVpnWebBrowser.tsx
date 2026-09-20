@@ -960,6 +960,74 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
         </button>
       </div>
 
+      {/* Quick Navigation Bookmarks Bar */}
+      <div className="bg-[#10131e] border-b border-stone-800 px-3 py-1.5 flex items-center gap-2 overflow-x-auto text-[11px] font-mono">
+        <span className="text-stone-500 text-[10px] uppercase font-bold shrink-0">Bookmarks:</span>
+        <button
+          type="button"
+          onClick={() => {
+            const url = "https://earnings.ink";
+            setAddressBarInput(url);
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === activeTabId
+                  ? { ...t, url, title: "earnings.ink", activeView: "proxy_view", iconType: "generic" }
+                  : t
+              )
+            );
+          }}
+          className="px-2 py-0.5 bg-gradient-to-r from-emerald-950 to-teal-950 hover:from-emerald-900 hover:to-teal-900 text-emerald-300 border border-emerald-700/60 rounded flex items-center gap-1 font-bold cursor-pointer shrink-0"
+        >
+          <span>💎 earnings.ink</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            const url = "https://www.mail.com";
+            setAddressBarInput(url);
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === activeTabId
+                  ? { ...t, url, title: "Mail.com Webmail (US)", activeView: "mail_com", iconType: "mail" }
+                  : t
+              )
+            );
+          }}
+          className="px-2 py-0.5 bg-blue-950/70 hover:bg-blue-900 text-blue-300 border border-blue-700/60 rounded flex items-center gap-1 font-bold cursor-pointer shrink-0"
+        >
+          <span>📧 mail.com</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            const url = "https://www.google.com";
+            setAddressBarInput(url);
+            setTabs((prev) =>
+              prev.map((t) =>
+                t.id === activeTabId
+                  ? { ...t, url, title: "Google", activeView: "google_search", iconType: "google", searchQuery: "" }
+                  : t
+              )
+            );
+          }}
+          className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-700/70 rounded flex items-center gap-1 cursor-pointer shrink-0"
+        >
+          <span>🔍 Google</span>
+        </button>
+
+        <a
+          href="https://earnings.ink"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-600/50 rounded flex items-center gap-1 text-[10px] ml-auto shrink-0"
+          title="Open earnings.ink in a new browser tab"
+        >
+          <span>Open earnings.ink ↗</span>
+        </a>
+      </div>
+
       {/* ==================== BROWSER VIEWPORT CANVASES ==================== */}
       <div className="w-full min-h-[560px] bg-white text-stone-900 overflow-y-auto">
         {/* VIEW 1: GOOGLE SEARCH ENGINE INTERFACE (EXACT MATCH FOR SCREENSHOT 3 & 4) */}
@@ -1612,6 +1680,47 @@ export const ExpressVpnWebBrowser: React.FC<ExpressVpnWebBrowserProps> = ({
                           {mailAuthMsg.text}
                         </div>
                       )}
+
+                      {/* Quick Select Pre-authorized Verified Accounts */}
+                      <div className="p-2 bg-stone-100 rounded-lg border border-stone-200 space-y-1.5">
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider flex items-center justify-between">
+                          <span>1-Click Saved Accounts</span>
+                          <span className="text-emerald-600 font-bold">● US East SSL</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMailEmail("kansasnelly@mail.com");
+                              setMailPassword("KansasPass2026!");
+                            }}
+                            className={`p-1.5 rounded border text-[10.5px] font-mono text-left cursor-pointer transition-all ${
+                              mailEmail === "kansasnelly@mail.com"
+                                ? "bg-blue-50 border-blue-500 text-blue-900 font-bold ring-1 ring-blue-400"
+                                : "bg-white hover:bg-stone-50 border-stone-300 text-stone-800"
+                            }`}
+                          >
+                            <div className="font-bold truncate text-[11px]">kansasnelly@mail.com</div>
+                            <div className="text-[9px] text-stone-500">Auto-fill Password</div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMailEmail("arthur20011043@mail.com");
+                              setMailPassword("ArthurPass2026!");
+                            }}
+                            className={`p-1.5 rounded border text-[10.5px] font-mono text-left cursor-pointer transition-all ${
+                              mailEmail === "arthur20011043@mail.com"
+                                ? "bg-blue-50 border-blue-500 text-blue-900 font-bold ring-1 ring-blue-400"
+                                : "bg-white hover:bg-stone-50 border-stone-300 text-stone-800"
+                            }`}
+                          >
+                            <div className="font-bold truncate text-[11px]">arthur20011043@mail.com</div>
+                            <div className="text-[9px] text-stone-500">Auto-fill Password</div>
+                          </button>
+                        </div>
+                      </div>
 
                       <div>
                         <label className="block font-bold text-stone-700 mb-1">Email Address</label>
