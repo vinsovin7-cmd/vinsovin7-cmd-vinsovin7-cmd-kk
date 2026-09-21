@@ -19,7 +19,8 @@ import { AndroidAppInstallerModal } from './components/AndroidAppInstallerModal'
 import { WebsiteToAppConverter } from './components/WebsiteToAppConverter';
 import { AdsGramTonPayoutSuite } from './components/AdsGramTonPayoutSuite';
 import { PortableMiniCinemaEcosystem } from './components/PortableMiniCinemaEcosystem';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star } from 'lucide-react';
+import { SreymaraQueenConversationalAI } from './components/SreymaraQueenConversationalAI';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star, Mic, Bot } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -100,6 +101,7 @@ const App: React.FC = () => {
     }
     return false;
   });
+  const [isSreymaraAgentOpen, setIsSreymaraAgentOpen] = useState<boolean>(true);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -354,6 +356,24 @@ const App: React.FC = () => {
           ) : (
             /* EXPANDED VIEW: Full Navigation Banner carrying all 11 quick-access tabs + V Hide Button at the far right ending */
             <div className="flex items-center gap-2 bg-[#12151E] p-1.5 rounded-xl border border-stone-800 flex-wrap relative shadow-2xl">
+              {/* Sreymara Queen Live Conversational AI Agent (Vertex AI & Gemini SDK) */}
+              <button
+                id="btn-nav-sreymara-conversational"
+                onClick={() => {
+                  setIsSreymaraAgentOpen(true);
+                  setIsTabHidden(false);
+                }}
+                className="px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 text-white border-sky-300 ring-2 ring-sky-400/50 hover:brightness-110 animate-pulse"
+                title="Open Sreymara Queen Live Conversational Agent with Vertex AI & Gemini Mic Speech Sync"
+              >
+                <Crown size={14} className="text-amber-300" />
+                <span>Sreymara Queen AI</span>
+                <span className="px-1.5 py-0.2 bg-emerald-400 text-stone-950 rounded text-[9px] font-black uppercase flex items-center gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-stone-950 animate-ping" />
+                  LIVE MIC
+                </span>
+              </button>
+
               {/* Primary Google Play Website to App Converter Tab */}
               <button
                 id="btn-nav-web-to-app"
@@ -1143,6 +1163,14 @@ const App: React.FC = () => {
           setActiveMainTab(tab as any);
           setIsTabHidden(false);
         }}
+        onOpenTelegram={() => {
+          setActiveMainTab("telegram_auth");
+          setIsTabHidden(false);
+        }}
+        onOpenWhatsapp={() => {
+          setActiveMainTab("datingarts");
+          setIsTabHidden(false);
+        }}
       />
 
       {/* CELESTIAL 7-COLOR STAR INSPECTOR MODAL */}
@@ -1186,6 +1214,43 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* SREYMARA QUEEN CONVERSATIONAL AI FLOATING WIDGET */}
+      <SreymaraQueenConversationalAI
+        isOpen={isSreymaraAgentOpen}
+        onClose={() => setIsSreymaraAgentOpen(false)}
+        isFloating={true}
+      />
+
+      {/* FLOATING TRIGGER ICON WHEN COLLAPSED */}
+      {!isSreymaraAgentOpen && (
+        <button
+          id="btn-floating-sreymara-agent"
+          onClick={() => setIsSreymaraAgentOpen(true)}
+          className="fixed bottom-5 right-5 z-50 p-2 bg-gradient-to-tr from-[#0b1329] via-[#091522] to-sky-950 text-white rounded-full border-2 border-sky-400/80 shadow-2xl hover:scale-105 transition-all flex items-center gap-2.5 cursor-pointer group hover:ring-4 hover:ring-sky-500/40"
+          title="Talk to Sreymara Queen (Vertex AI Live Conversational Agent)"
+        >
+          <div className="relative w-11 h-11 rounded-full overflow-hidden border-2 border-amber-400 shadow-lg">
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+              alt="Sreymara Queen"
+              className="w-full h-full object-cover object-top"
+              referrerPolicy="no-referrer"
+            />
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-black animate-pulse" />
+          </div>
+          <div className="hidden sm:flex flex-col text-left pr-2">
+            <div className="flex items-center gap-1 font-extrabold text-xs text-white">
+              <span>Sreymara Queen</span>
+              <Crown size={11} className="text-amber-400" />
+            </div>
+            <span className="text-[9.5px] text-rose-300 font-mono flex items-center gap-1">
+              <Mic size={9} className="text-rose-400" />
+              <span>Sweet Voice • 10 Workflows</span>
+            </span>
+          </div>
+        </button>
       )}
 
       </div> {/* CLOSE LUXURIOUS BOLD BUILD FRAME */}

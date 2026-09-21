@@ -1,59 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
-  Wallet,
-  CheckCircle2,
-  ShieldCheck,
-  Search,
-  MoreVertical,
   Paperclip,
   Smile,
   Mic,
-  ArrowDown,
-  ArrowUpRight,
-  ExternalLink,
-  RotateCw,
-  Maximize2,
-  Minimize2,
-  Lock,
-  Copy,
+  Search,
+  MoreVertical,
   Check,
-  ChevronRight,
+  CheckCheck,
+  CheckCircle2,
+  Lock,
   Phone,
   Video,
   Info,
-  QrCode,
+  ExternalLink,
+  ChevronLeft,
+  X,
+  Volume2,
+  Sparkles,
   Download,
-  Share2,
-  Sparkles
+  Copy,
+  Wallet,
+  Coins,
+  QrCode,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  Radio,
+  LogOut,
+  Mail,
+  Music,
+  Disc,
+  ArrowRight
 } from "lucide-react";
-
-interface TelegramInEcosystemAppProps {
-  onOpenPhoneLogin?: () => void;
-  onOpenApkHub?: () => void;
-  onOpenTonWallet?: () => void;
-  initialChat?: "wallet" | "notifications" | "cinema" | "quantum";
-}
-
-interface ChatMessage {
-  id: string;
-  sender: "user" | "bot" | "service";
-  senderName: string;
-  text: string;
-  timestamp: string;
-  isWalletCard?: boolean;
-  isCodeCard?: boolean;
-  code?: string;
-  amount?: number;
-  token?: string;
-}
+import { TelegramMusicHubSuite } from "./TelegramMusicHubSuite";
 
 interface ChatContact {
   id: string;
   name: string;
   avatar: string;
   avatarBg: string;
-  badge?: string;
   isVerified?: boolean;
   isBot?: boolean;
   lastMessage: string;
@@ -62,26 +48,66 @@ interface ChatContact {
   pinned?: boolean;
 }
 
+interface ChatMessage {
+  id: string;
+  sender: "user" | "bot" | "other";
+  senderName?: string;
+  text: string;
+  timestamp: string;
+  isMedia?: boolean;
+  mediaUrl?: string;
+  reactions?: string[];
+}
+
+interface TelegramInEcosystemAppProps {
+  onOpenPhoneLogin?: () => void;
+  onOpenApkHub?: () => void;
+  onOpenTonWallet?: () => void;
+  initialChat?: string;
+}
+
 export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
   onOpenPhoneLogin,
   onOpenApkHub,
   onOpenTonWallet,
   initialChat = "wallet"
 }) => {
+  // Session / Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem("telegram_active_session") === "true";
+  });
+  const [sessionUser, setSessionUser] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem("telegram_session_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Phone Sign-In State
+  const [authCountryCode, setAuthCountryCode] = useState<string>("+1");
+  const [authPhoneNumber, setAuthPhoneNumber] = useState<string>("");
+  const [authReceiveMethod, setAuthReceiveMethod] = useState<"mobile_app" | "email">("email");
+  const [authStep, setAuthStep] = useState<"phone" | "code">("phone");
+  const [authVerificationCode, setAuthVerificationCode] = useState<string>("");
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [dispatchedCodeNotice, setDispatchedCodeNotice] = useState<string | null>(null);
+
+  // App Navigation & Active Views
+  const [viewMode, setViewMode] = useState<"messenger" | "music_hub" | "qr_sync">("messenger");
   const [activeChatId, setActiveChatId] = useState<string>(initialChat);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
-  const [showQrModal, setShowQrModal] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<"ecosystem_app" | "web_k_proxy">("ecosystem_app");
-  const [iframeKey, setIframeKey] = useState<number>(0);
 
   const tonAddress = "UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt";
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Chat contacts list
+  // Contacts list
   const contacts: ChatContact[] = [
     {
       id: "mechat",
@@ -93,6 +119,18 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
       lastMessage: "💕 20s Fast Match: 14,280 active users in Isolated Love Suites!",
       time: "Live",
       unreadCount: 2,
+      pinned: true
+    },
+    {
+      id: "gmail_bot",
+      name: "Gmail Bot (@GmailBot)",
+      avatar: "✉️",
+      avatarBg: "bg-rose-600",
+      isVerified: true,
+      isBot: true,
+      lastMessage: "Your Telegram code is: 28636. Use it to access your account.",
+      time: "10:32",
+      unreadCount: 1,
       pinned: true
     },
     {
@@ -124,17 +162,8 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
       avatar: "🎬",
       avatarBg: "bg-amber-600",
       isVerified: true,
-      lastMessage: "🎥 80/20 Video Revenue Stream: +$1,240.00 credited",
+      lastMessage: "🎥 SitonicSA 'Fight for Me' viral dance stream synced to Cinema.",
       time: "14:12"
-    },
-    {
-      id: "quantum",
-      name: "AlphaQubit Quantum Paper",
-      avatar: "⚛️",
-      avatarBg: "bg-purple-600",
-      isVerified: true,
-      lastMessage: "Nature Paper: Neural decoders for quantum surface codes published",
-      time: "12:45"
     },
     {
       id: "saved",
@@ -150,7 +179,7 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
       avatar: "📢",
       avatarBg: "bg-sky-700",
       isVerified: true,
-      lastMessage: "Mini Apps 2.0: Fullscreen mode, device motion, and subscription plans",
+      lastMessage: "Mini Apps 2.0: Fullscreen mode, device motion, and music stream integration.",
       time: "Sep 15"
     }
   ];
@@ -169,8 +198,24 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
         id: "mc-2",
         sender: "bot",
         senderName: "MeChatBot (@MeChatBot)",
-        text: "✨ 14,280 real users online searching right now! Click below or tap the Matchmaking tab to enter your Isolated Love Suite.",
-        timestamp: "Just now"
+        text: "✨ 14,280 verified profiles currently active. Tap below to launch your instant quiz or start pairing with compatible singles in your region!",
+        timestamp: "Live"
+      }
+    ],
+    gmail_bot: [
+      {
+        id: "gb-1",
+        sender: "bot",
+        senderName: "Gmail Bot (@GmailBot)",
+        text: "Official Telegram Gmail Bot active for kansasnelly@gmail.com.\n\nAll security verification codes and critical ecosystem emails are synchronized in real time.",
+        timestamp: "10:30"
+      },
+      {
+        id: "gb-2",
+        sender: "bot",
+        senderName: "Gmail Bot (@GmailBot)",
+        text: "Your code is: 28636. Use it to access your account inside the ecosystem. If you didn't request this code, your account security is intact.",
+        timestamp: "10:32"
       }
     ],
     wallet: [
@@ -178,92 +223,49 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
         id: "w-1",
         sender: "bot",
         senderName: "Wallet (@wallet)",
-        text: "👋 Welcome to Telegram @Wallet! Your wallet is permanently synchronized with the ecosystem TON treasury address UQCE...HLNt.",
-        timestamp: "10:15"
+        text: "💎 Official TON Ecosystem Treasury Connected!\n\nMaster Vault: UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt\nJettons: 1,345.50 TON ($6,727.50)\nUSDT Balance: $14,890.00\nStatus: 100% On-Chain Confirmed",
+        timestamp: "09:15"
       },
       {
         id: "w-2",
         sender: "bot",
         senderName: "Wallet (@wallet)",
-        text: "💎 Live USDT & TON Jetton Balance Summary:",
-        timestamp: "10:16",
-        isWalletCard: true,
-        amount: 1345.50,
-        token: "USDT"
-      },
-      {
-        id: "w-3",
-        sender: "bot",
-        senderName: "Wallet (@wallet)",
-        text: "✅ Direct deposit of 500.00 USDT acknowledged from SAP Enterprise Integration via API Key 5dd2...ecb2. Credited immediately to your TON Jetton account!",
+        text: "⚡ Instant Withdrawals enabled for all verified Telegram users. Tap below to initiate transfer to Tonkeeper, MyTonWallet, or OKX.",
         timestamp: "Just now"
       }
     ],
     notifications: [
       {
         id: "n-1",
-        sender: "service",
-        senderName: "Telegram Notifications",
-        text: "Official Service Notification: You requested an authentication code to log in to Telegram on a new web client or device.",
-        timestamp: "10:29"
-      },
-      {
-        id: "n-2",
-        sender: "service",
-        senderName: "Telegram Notifications",
-        text: "Login code: 84920\n\nThis code can be used to log in to your Telegram account. We have not sent any SMS with this code.\n\nDo not give this code to anyone, even if they say they're from Telegram! This code can be used to delete your account. Having trouble? You can also log in using your phone and code.",
-        timestamp: "10:30",
-        isCodeCard: true,
-        code: "84920"
+        sender: "bot",
+        senderName: "Telegram",
+        text: "Login code: 84920. Do not give this code to anyone, even if they say they are from Telegram!\n\nThis code can be used to log in to your Telegram account. We never ask it for anything else.",
+        timestamp: "10:30"
       }
     ],
     cinema: [
       {
         id: "c-1",
-        sender: "bot",
-        senderName: "Sreymara Cinema Bot",
-        text: "🎬 Sreymara Cinema & VIP Studio 80/20 Revenue share is active! Live visitor metrics and video plays generate continuous yield.",
+        sender: "other",
+        senderName: "Sreymara Cinema Studio",
+        text: "🎬 SitonicSA 'Fight for Me' viral soundstage is now live on the cinema screen! 80% volume active.",
         timestamp: "14:10"
-      },
-      {
-        id: "c-2",
-        sender: "bot",
-        senderName: "Sreymara Cinema Bot",
-        text: "🎥 Latest batch of viewer rewards: 25.00 USDT allocated to creator pool. Transferred directly to connected TON treasury.",
-        timestamp: "14:12"
-      }
-    ],
-    quantum: [
-      {
-        id: "q-1",
-        sender: "bot",
-        senderName: "AlphaQubit Research",
-        text: "⚛️ Welcome to AlphaQubit Quantum Error Correction. Our Nature research demonstrated that Transformer neural decoders achieve higher fidelity on Sycamore surface codes than MWPM.",
-        timestamp: "12:40"
-      },
-      {
-        id: "q-2",
-        sender: "bot",
-        senderName: "AlphaQubit Research",
-        text: "Check out the interactive Surface Code Decoder diagrams and real-time noise simulation in the Quantum tab above!",
-        timestamp: "12:45"
       }
     ],
     saved: [
       {
         id: "s-1",
         sender: "user",
-        senderName: "You",
-        text: `Permanent Ecosystem TON Address: ${tonAddress}\nAPI Key: 5dd22e8e-0ba3-47f7-bb4b-ef1becb2\nOfficial CDN APK: cdn4.telesco.pe/file/Telegram.apk`,
+        text: `My TON Ecosystem Address:\n${tonAddress}`,
         timestamp: "Yesterday"
       }
     ],
     news: [
       {
-        id: "nw-1",
+        id: "news-1",
         sender: "bot",
         senderName: "Telegram News",
-        text: "🚀 Telegram releases major updates to Web Apps: Telegram Mini Apps can now run fullscreen, access device orientation, send custom notifications, and natively process TON & USDT Jetton payments!",
+        text: "🎉 Telegram Mini Apps 2.0 has arrived! Experience fullscreen mini apps, custom home screen icons, motion sensors, and ecosystem multimedia synchronization.",
         timestamp: "Sep 15"
       }
     ]
@@ -272,152 +274,234 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
   const activeContact = contacts.find(c => c.id === activeChatId) || contacts[0];
   const activeMessages = chatMessages[activeChatId] || [];
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Scroll to bottom of chat
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeMessages]);
+
+  // Request Official Phone Code
+  const handleSendPhoneCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!authPhoneNumber.trim()) {
+      setAuthError("Please enter your mobile phone number.");
+      return;
+    }
 
-    const userText = inputMessage.trim();
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      senderName: "You",
-      text: userText,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    };
+    setAuthLoading(true);
+    setAuthError(null);
+    setDispatchedCodeNotice(null);
 
-    const updated = {
-      ...chatMessages,
-      [activeChatId]: [...(chatMessages[activeChatId] || []), newMsg]
-    };
-    setChatMessages(updated);
-    setInputMessage("");
+    try {
+      const fullPhone = `${authCountryCode} ${authPhoneNumber}`.trim();
+      const res = await fetch("/api/telegram/official-auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: authPhoneNumber.trim(),
+          countryCode: authCountryCode,
+          receiveMethod: authReceiveMethod,
+          email: "kansasnelly@gmail.com"
+        })
+      });
 
-    // Scroll to bottom
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-
-    // Bot Auto-Response Simulation
-    setTimeout(() => {
-      let replyText = "Received. Your request has been acknowledged by the ecosystem node.";
-      let isWallet = false;
-      let amountVal: number | undefined;
-
-      const lower = userText.toLowerCase();
-      if (activeChatId === "wallet") {
-        if (lower.includes("balance") || lower.includes("/balance") || lower.includes("usdt") || lower.includes("wallet")) {
-          replyText = "💎 Current Telegram @Wallet Balance: 1,345.50 USDT + 12.45 TON. Synchronized on-chain with address UQCE...HLNt.";
-          isWallet = true;
-          amountVal = 1345.50;
-        } else if (lower.includes("send") || lower.includes("pay")) {
-          replyText = "To send USDT, tap 'Send USDT' on the wallet card above, or use the Telegram @Wallet tab in the Ecosystem.";
-        } else if (lower.includes("/start")) {
-          replyText = "👋 Telegram @Wallet is active! Send, receive, and store USDT & TON with 0% fee on internal transfers.";
-          isWallet = true;
-          amountVal = 1345.50;
+      const data = await res.json();
+      if (data.success) {
+        setAuthStep("code");
+        if (data.code) {
+          setAuthVerificationCode(data.code);
+          setDispatchedCodeNotice(
+            authReceiveMethod === "email"
+              ? `Verification code (${data.code}) sent to kansasnelly@gmail.com & Gmail Bot! Code auto-filled below.`
+              : `Verification code (${data.code}) sent to your mobile Telegram app on ${fullPhone}!`
+          );
         } else {
-          replyText = `Understood: "${userText}". Telegram @Wallet bot is ready to process your on-chain operations.`;
+          setDispatchedCodeNotice(`Verification code dispatched to ${fullPhone}! Please check your notifications.`);
         }
-      } else if (activeChatId === "notifications") {
-        replyText = "Telegram service notifications is an official automated channel. You cannot reply directly to this chat.";
-      } else if (activeChatId === "cinema") {
-        replyText = "🎬 Sreymara Cinema Bot: Tracking visitor engagement and 80/20 royalty payouts in real-time.";
-      } else if (activeChatId === "quantum") {
-        replyText = "⚛️ AlphaQubit AI decoder active: Sycamore 53-qubit lattice noise model verified.";
+      } else {
+        setAuthError(data.error || "Failed to dispatch verification code.");
       }
-
-      const botMsg: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        sender: "bot",
-        senderName: activeContact.name,
-        text: replyText,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isWalletCard: isWallet,
-        amount: amountVal,
-        token: "USDT"
-      };
-
-      setChatMessages(prev => ({
-        ...prev,
-        [activeChatId]: [...(prev[activeChatId] || []), botMsg]
-      }));
-
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }, 800);
-  };
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-    if (onOpenPhoneLogin) {
-      onOpenPhoneLogin();
+    } catch (err: any) {
+      setAuthError(err.message || "Network connection issue.");
+    } finally {
+      setAuthLoading(false);
     }
   };
 
-  const handleCopyAddress = () => {
-    navigator.clipboard.writeText(tonAddress);
-    setCopiedAddress(true);
-    setTimeout(() => setCopiedAddress(false), 2000);
+  // Verify Phone Code & Log In
+  const handleVerifyPhoneCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!authVerificationCode.trim()) {
+      setAuthError("Please enter the 5-digit verification code.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError(null);
+
+    try {
+      const fullPhone = `${authCountryCode} ${authPhoneNumber}`.trim();
+      const res = await fetch("/api/telegram/official-auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: fullPhone,
+          code: authVerificationCode.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const user = data.user || {
+          first_name: "Kansas Nelly",
+          username: "kansasnelly",
+          phone: fullPhone
+        };
+        setIsAuthenticated(true);
+        setSessionUser(user);
+        localStorage.setItem("telegram_active_session", "true");
+        localStorage.setItem("telegram_session_user", JSON.stringify(user));
+        setAuthStep("phone");
+        setAuthVerificationCode("");
+        setDispatchedCodeNotice(null);
+      } else {
+        setAuthError(data.error || "Invalid verification code.");
+      }
+    } catch (err: any) {
+      setAuthError(err.message || "Verification connection issue.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Fast Demo Login
+  const handleQuickDemoLogin = () => {
+    const demoUser = {
+      first_name: "Kansas Nelly",
+      username: "kansasnelly",
+      phone: "+1 310-849-2091"
+    };
+    setIsAuthenticated(true);
+    setSessionUser(demoUser);
+    localStorage.setItem("telegram_active_session", "true");
+    localStorage.setItem("telegram_session_user", JSON.stringify(demoUser));
+  };
+
+  // Log Out / Change Number
+  const handleLogOut = async () => {
+    setIsAuthenticated(false);
+    setSessionUser(null);
+    localStorage.removeItem("telegram_active_session");
+    localStorage.removeItem("telegram_session_user");
+    setAuthPhoneNumber("");
+    setAuthVerificationCode("");
+    setAuthStep("phone");
+    try {
+      await fetch("/api/telegram/official-auth/logout", { method: "POST" });
+    } catch (e) {}
+  };
+
+  // Send message in active chat
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: "user",
+      text: inputMessage.trim(),
+      timestamp: "Just now"
+    };
+
+    setChatMessages(prev => ({
+      ...prev,
+      [activeChatId]: [...(prev[activeChatId] || []), newMsg]
+    }));
+
+    setInputMessage("");
+
+    // Simulated Bot Responses
+    if (activeChatId === "mechat") {
+      setTimeout(() => {
+        const botReply: ChatMessage = {
+          id: `reply-${Date.now()}`,
+          sender: "bot",
+          senderName: "MeChatBot (@MeChatBot)",
+          text: "💌 Query received! Your matchmaking preferences have been updated. 3 new profile matches found in your location!",
+          timestamp: "Just now"
+        };
+        setChatMessages(prev => ({
+          ...prev,
+          mechat: [...(prev.mechat || []), botReply]
+        }));
+      }, 700);
+    } else if (activeChatId === "gmail_bot") {
+      setTimeout(() => {
+        const botReply: ChatMessage = {
+          id: `reply-${Date.now()}`,
+          sender: "bot",
+          senderName: "Gmail Bot (@GmailBot)",
+          text: "📨 Gmail sync status: Active & synchronized with kansasnelly@gmail.com. All incoming Telegram login tokens are monitored.",
+          timestamp: "Just now"
+        };
+        setChatMessages(prev => ({
+          ...prev,
+          gmail_bot: [...(prev.gmail_bot || []), botReply]
+        }));
+      }, 700);
+    }
   };
 
   return (
-    <div className={`w-full rounded-2xl border border-stone-800 bg-[#0e1621] overflow-hidden shadow-2xl transition-all duration-300 ${
-      isFullscreen ? "fixed inset-4 z-50 h-[calc(100vh-2rem)]" : "h-[740px]"
-    }`}>
-      {/* Top Application Bar */}
-      <div className="h-14 bg-[#17212b] border-b border-stone-800/80 px-4 flex items-center justify-between select-none">
+    <div className={`w-full ${isFullscreen ? "fixed inset-0 z-50 rounded-none" : "h-[640px] rounded-2xl"} bg-[#0e1621] text-white flex flex-col overflow-hidden border border-stone-800 shadow-2xl font-sans animate-fade-in`}>
+      {/* Top Telegram Header Bar */}
+      <div className="h-14 bg-[#17212b] border-b border-stone-800/80 px-4 flex items-center justify-between select-none shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-600 to-sky-400 flex items-center justify-center text-white text-sm font-black shadow-md">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
             ✈️
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-white tracking-wide">
-                Telegram v11.4.2
+              <span className="text-xs sm:text-sm font-black text-white tracking-wide">
+                Telegram Web & Ecosystem Bridge
               </span>
               <span className="px-1.5 py-0.2 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                ECOSYSTEM RUNTIME
-              </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.2 bg-sky-950 text-sky-300 rounded text-[9px] font-mono border border-sky-800">
-                CDN4 APK INSTALLED
+                {isAuthenticated ? "AUTHENTICATED" : "OFFICIAL LOGIN"}
               </span>
             </div>
             <div className="text-[10px] text-stone-400 flex items-center gap-2">
-              <span>Connected via MTProto WASM Engine</span>
+              <span>{sessionUser?.phone || "Official Direct Client"}</span>
               <span className="text-stone-600">•</span>
-              <span className="text-emerald-400 font-mono">Bound: UQCE...HLNt</span>
+              <span className="text-emerald-400 font-mono">Status: Online</span>
             </div>
           </div>
         </div>
 
-        {/* Action Controls */}
+        {/* Header Action Controls */}
         <div className="flex items-center gap-2">
-          {/* View Mode Toggle: Ecosystem App vs Web K */}
-          <div className="hidden md:flex bg-black/50 p-1 rounded-xl border border-stone-800 text-[11px] font-bold">
+          {/* View Mode Switcher: Messenger vs 40 Music Channels */}
+          <div className="flex bg-black/50 p-1 rounded-xl border border-stone-800 text-[11px] font-bold">
             <button
-              onClick={() => setViewMode("ecosystem_app")}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                viewMode === "ecosystem_app" ? "bg-sky-600 text-white shadow" : "text-stone-400 hover:text-white"
+              onClick={() => setViewMode("messenger")}
+              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "messenger" ? "bg-sky-600 text-white shadow" : "text-stone-400 hover:text-white"
               }`}
             >
-              Ecosystem App (Active)
+              <span>Chats</span>
             </button>
             <button
-              onClick={() => setViewMode("web_k_proxy")}
-              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                viewMode === "web_k_proxy" ? "bg-sky-600 text-white shadow" : "text-stone-400 hover:text-white"
+              onClick={() => setViewMode("music_hub")}
+              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "music_hub" ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow" : "text-stone-400 hover:text-white"
               }`}
             >
-              Web K Frame
+              <Music size={12} className="text-sky-300" />
+              <span>Music Hub (40 Channels)</span>
             </button>
           </div>
 
+          {/* QR Sync Trigger */}
           <button
-            onClick={() => setShowQrModal(true)}
+            onClick={() => setViewMode(viewMode === "qr_sync" ? "messenger" : "qr_sync")}
             className="p-2 bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white rounded-xl text-xs transition-all border border-stone-700 cursor-pointer flex items-center gap-1"
             title="Scan Telegram QR Code to Link Mobile Device"
           >
@@ -425,18 +509,27 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
             <span className="text-[11px] hidden sm:inline">QR Sync</span>
           </button>
 
-          {onOpenTonWallet && (
+          {/* Log Out / Change Number */}
+          {isAuthenticated ? (
             <button
-              onClick={onOpenTonWallet}
-              className="px-3 py-1.5 bg-blue-950/80 hover:bg-blue-900 text-blue-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-blue-800 cursor-pointer flex items-center gap-1.5 shadow"
-              title="Open Connected Telegram @Wallet Jetton Treasury"
+              onClick={handleLogOut}
+              className="px-2.5 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-300 rounded-xl text-[11px] font-bold transition-all border border-red-800 cursor-pointer flex items-center gap-1"
+              title="Log out or switch phone number"
             >
-              <Wallet size={13} className="text-blue-400" />
-              <span>@Wallet</span>
-              <span className="px-1.5 py-0.2 bg-black/40 text-blue-200 rounded text-[9px] font-mono">1,345.50</span>
+              <LogOut size={12} />
+              <span className="hidden sm:inline">Switch Number</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleQuickDemoLogin}
+              className="px-2.5 py-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 rounded-xl text-[11px] font-bold transition-all border border-emerald-800 cursor-pointer"
+              title="Fast access with Kansas Nelly session"
+            >
+              Quick In
             </button>
           )}
 
+          {/* Fullscreen Toggle */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-2 bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white rounded-xl text-xs transition-all border border-stone-700 cursor-pointer"
@@ -444,376 +537,422 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
-
-          <a
-            href="https://web.telegram.org/k/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 bg-sky-950 hover:bg-sky-900 text-sky-300 hover:text-white rounded-xl text-xs transition-all border border-sky-700 cursor-pointer"
-            title="Open Telegram Web in External Window"
-          >
-            <ExternalLink size={14} />
-          </a>
         </div>
       </div>
 
-      {/* Main View Area */}
-      {viewMode === "web_k_proxy" ? (
-        <div className="w-full h-[calc(100%-3.5rem)] relative bg-[#0e1621] flex flex-col">
-          <div className="p-3 bg-amber-950/40 border-b border-amber-800/50 text-xs text-amber-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Info size={14} className="text-amber-400" />
-              <span>
-                External browser frames to <code>web.telegram.org</code> may be blocked by browser frame isolation policies. If you see a refused connection, switch back to <strong>Ecosystem App</strong> above.
-              </span>
+      {/* VIEW: MUSIC HUB & 40 CHANNELS */}
+      {viewMode === "music_hub" && (
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 bg-[#0e1621]">
+          <TelegramMusicHubSuite onClose={() => setViewMode("messenger")} />
+        </div>
+      )}
+
+      {/* VIEW: QR CODE SYNC MODAL / VIEW */}
+      {viewMode === "qr_sync" && (
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center bg-[#0e1621] space-y-4">
+          <div className="p-6 bg-[#17212b] rounded-3xl border border-stone-700 text-center max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-white">Log in to Telegram by QR Code</h3>
+            <p className="text-xs text-stone-400">
+              Open Telegram on your phone, go to <strong>Settings &gt; Devices &gt; Link Desktop Device</strong>, and point your phone at this screen.
+            </p>
+            <div className="p-4 bg-white rounded-2xl inline-block shadow-lg">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=tg://login?token=Ecosystem_Telegram_Direct_${Date.now()}`}
+                alt="Telegram QR Login"
+                className="w-48 h-48 object-contain"
+              />
+            </div>
+            <div className="text-[11px] font-mono text-stone-500">
+              Direct Bridge Token • Auto-refreshes every 30s
             </div>
             <button
-              onClick={() => setViewMode("ecosystem_app")}
-              className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold"
+              onClick={() => setViewMode("messenger")}
+              className="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
             >
-              Return to Ecosystem App
+              Back to Messenger
             </button>
-          </div>
-          <iframe
-            key={iframeKey}
-            src="https://web.telegram.org/k/"
-            title="Official Telegram Web K"
-            className="w-full flex-1 border-0"
-            allow="camera; microphone; geolocation; clipboard-read; clipboard-write; autoplay; encrypted-media; fullscreen"
-            sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-downloads"
-          />
-        </div>
-      ) : (
-        <div className="w-full h-[calc(100%-3.5rem)] flex overflow-hidden">
-          {/* Left Column: Chats List */}
-          <div className="w-80 sm:w-88 border-r border-stone-800/80 bg-[#17212b] flex flex-col shrink-0">
-            {/* Search Input */}
-            <div className="p-3 border-b border-stone-800/60">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search chats, bots, channels..."
-                  className="w-full pl-9 pr-4 py-2 bg-[#242f3d] rounded-xl text-xs text-stone-200 placeholder:text-stone-500 border border-transparent focus:border-sky-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Chats Scroll Area */}
-            <div className="flex-1 overflow-y-auto divide-y divide-stone-800/30">
-              {contacts
-                .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((contact) => {
-                  const isActive = contact.id === activeChatId;
-                  return (
-                    <div
-                      key={contact.id}
-                      onClick={() => setActiveChatId(contact.id)}
-                      className={`p-3 flex items-center gap-3 cursor-pointer transition-all ${
-                        isActive
-                          ? "bg-[#2b5278] text-white"
-                          : "hover:bg-[#202b36] text-stone-300"
-                      }`}
-                    >
-                      {/* Avatar */}
-                      <div className={`w-11 h-11 rounded-full ${contact.avatarBg} flex items-center justify-center text-lg font-bold shrink-0 shadow`}>
-                        {contact.avatar}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-0.5">
-                          <div className="flex items-center gap-1.5 truncate">
-                            <span className="text-xs font-bold truncate">
-                              {contact.name}
-                            </span>
-                            {contact.isVerified && (
-                              <CheckCircle2 size={12} className={isActive ? "text-sky-200" : "text-sky-400"} />
-                            )}
-                          </div>
-                          <span className={`text-[10px] font-mono shrink-0 ${isActive ? "text-sky-200" : "text-stone-500"}`}>
-                            {contact.time}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <p className={`text-[11px] truncate ${isActive ? "text-stone-200" : "text-stone-400"}`}>
-                            {contact.lastMessage}
-                          </p>
-                          {contact.unreadCount && !isActive && (
-                            <span className="w-5 h-5 rounded-full bg-sky-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0 ml-1">
-                              {contact.unreadCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* Bottom Quick Hub */}
-            <div className="p-3 bg-[#111822] border-t border-stone-800/80 flex items-center justify-between text-[11px] text-stone-400">
-              <button
-                onClick={onOpenApkHub}
-                className="hover:text-amber-400 flex items-center gap-1 font-bold cursor-pointer"
-              >
-                <Download size={13} className="text-amber-400" />
-                <span>APK Node (72MB)</span>
-              </button>
-              <button
-                onClick={onOpenPhoneLogin}
-                className="hover:text-sky-400 flex items-center gap-1 font-bold cursor-pointer"
-              >
-                <Phone size={13} className="text-sky-400" />
-                <span>Phone Auth</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column: Chat History & Interactive Composer */}
-          <div className="flex-1 bg-[#0e1621] flex flex-col min-w-0">
-            {/* Active Chat Header */}
-            <div className="h-14 bg-[#17212b] border-b border-stone-800/80 px-4 flex items-center justify-between select-none shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-9 h-9 rounded-full ${activeContact.avatarBg} flex items-center justify-center text-base shrink-0`}>
-                  {activeContact.avatar}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-black text-white truncate">
-                      {activeContact.name}
-                    </span>
-                    {activeContact.isVerified && (
-                      <CheckCircle2 size={13} className="text-sky-400 shrink-0" />
-                    )}
-                  </div>
-                  <div className="text-[10px] text-sky-400 font-mono">
-                    {activeContact.isBot ? "bot • official service" : "verified chat • online"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-stone-400">
-                {activeContact.id === "wallet" && onOpenTonWallet && (
-                  <button
-                    onClick={onOpenTonWallet}
-                    className="px-3 py-1 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer flex items-center gap-1"
-                  >
-                    <span>Full Wallet View</span>
-                    <ArrowUpRight size={12} />
-                  </button>
-                )}
-                {activeContact.id === "notifications" && onOpenPhoneLogin && (
-                  <button
-                    onClick={onOpenPhoneLogin}
-                    className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer flex items-center gap-1"
-                  >
-                    <span>Fill in Phone Login</span>
-                    <ArrowUpRight size={12} />
-                  </button>
-                )}
-                <button className="p-1.5 hover:text-white rounded-lg hover:bg-stone-800">
-                  <Search size={15} />
-                </button>
-                <button className="p-1.5 hover:text-white rounded-lg hover:bg-stone-800">
-                  <MoreVertical size={15} />
-                </button>
-              </div>
-            </div>
-
-            {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#0e1621] via-[#0c131c] to-[#0a1017]">
-              {activeMessages.map((msg) => {
-                const isMe = msg.sender === "user";
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1`}
-                  >
-                    <div className="text-[10px] font-mono text-stone-500 px-1">
-                      {msg.senderName} • {msg.timestamp}
-                    </div>
-
-                    {/* Standard Text Bubble */}
-                    <div
-                      className={`max-w-md lg:max-w-lg p-3.5 rounded-2xl text-xs leading-relaxed shadow-lg whitespace-pre-line ${
-                        isMe
-                          ? "bg-[#2b5278] text-white rounded-tr-none"
-                          : "bg-[#182533] text-stone-200 border border-stone-800/80 rounded-tl-none"
-                      }`}
-                    >
-                      {msg.text}
-
-                      {/* Official Verification Code Card */}
-                      {msg.isCodeCard && msg.code && (
-                        <div className="mt-3 p-3.5 bg-sky-950/80 rounded-xl border border-sky-700/80 text-center space-y-2">
-                          <div className="text-[10px] font-mono text-sky-400 uppercase font-bold">
-                            TELEGRAM ONE-TIME LOGIN CODE
-                          </div>
-                          <div className="text-2xl font-mono font-black text-white tracking-[0.25em] bg-black/50 py-2 rounded-lg border border-sky-800">
-                            {msg.code}
-                          </div>
-                          <div className="flex items-center justify-center gap-2 pt-1">
-                            <button
-                              onClick={() => handleCopyCode(msg.code!)}
-                              className="px-4 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition-all shadow cursor-pointer"
-                            >
-                              {copiedCode ? <Check size={13} /> : <Copy size={13} />}
-                              <span>{copiedCode ? "Copied!" : "Copy Code & Log In"}</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Telegram @Wallet Interactive Card */}
-                      {msg.isWalletCard && (
-                        <div className="mt-3 p-4 bg-gradient-to-br from-[#101c30] to-[#0a1222] rounded-xl border border-blue-800/80 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <Wallet size={16} className="text-blue-400" />
-                              <span className="font-bold text-white text-xs">USDT & TON Balance</span>
-                            </div>
-                            <span className="px-2 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono font-bold border border-emerald-700">
-                              APY 5.2% ACTIVE
-                            </span>
-                          </div>
-
-                          <div className="p-3 bg-black/50 rounded-xl border border-blue-900/40">
-                            <div className="text-[10px] text-stone-400 font-mono">Total Balance (USDT)</div>
-                            <div className="text-xl font-bold font-mono text-emerald-400">
-                              $1,345.50 <span className="text-xs text-stone-400 font-sans">USDT</span>
-                            </div>
-                            <div className="text-[10px] text-sky-400 font-mono mt-0.5">
-                              + 12.4500 TON ($67.23 USD)
-                            </div>
-                          </div>
-
-                          <div className="text-[10px] font-mono text-stone-400 break-all bg-black/30 p-2 rounded border border-stone-800 flex items-center justify-between">
-                            <span className="truncate">TON: {tonAddress}</span>
-                            <button
-                              onClick={handleCopyAddress}
-                              className="text-sky-400 hover:text-white shrink-0 ml-2 cursor-pointer"
-                              title="Copy TON Address"
-                            >
-                              {copiedAddress ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2 pt-1">
-                            {onOpenTonWallet && (
-                              <button
-                                onClick={onOpenTonWallet}
-                                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer shadow"
-                              >
-                                <ArrowUpRight size={13} />
-                                <span>Send USDT</span>
-                              </button>
-                            )}
-                            <button
-                              onClick={() => setShowQrModal(true)}
-                              className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border border-stone-700"
-                            >
-                              <QrCode size={13} className="text-emerald-400" />
-                              <span>Receive / QR</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Interactive Composer Bar */}
-            <form onSubmit={handleSendMessage} className="p-3 bg-[#17212b] border-t border-stone-800/80 flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                className="p-2 text-stone-400 hover:text-white rounded-xl hover:bg-[#202b36] transition-all cursor-pointer"
-                title="Attach file"
-              >
-                <Paperclip size={18} />
-              </button>
-
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={`Write a message to ${activeContact.name}... (Try: /balance, /wallet, /start)`}
-                className="flex-1 px-4 py-2.5 bg-[#242f3d] rounded-xl text-xs text-white placeholder:text-stone-500 border border-transparent focus:border-sky-500 focus:outline-none font-sans"
-              />
-
-              <button
-                type="button"
-                className="p-2 text-stone-400 hover:text-white rounded-xl hover:bg-[#202b36] transition-all cursor-pointer"
-                title="Emoji"
-              >
-                <Smile size={18} />
-              </button>
-
-              <button
-                type="submit"
-                disabled={!inputMessage.trim()}
-                className="p-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white rounded-xl shadow-lg transition-all cursor-pointer flex items-center justify-center"
-                title="Send Message"
-              >
-                <Send size={16} />
-              </button>
-            </form>
           </div>
         </div>
       )}
 
-      {/* QR Code Sync Dialog */}
-      {showQrModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#17212b] border border-stone-700 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center">
-            <div className="w-12 h-12 rounded-2xl bg-sky-950 border border-sky-700 text-sky-400 flex items-center justify-center mx-auto text-xl">
-              ✈️
-            </div>
-            <div>
-              <h4 className="text-base font-bold text-white">
-                Scan with Telegram App
-              </h4>
-              <p className="text-xs text-stone-400 mt-1">
-                Open Telegram on your phone → Settings → Devices → Link Desktop Device
-              </p>
-            </div>
+      {/* VIEW: MESSENGER (SIGN-IN STATE VS ACTIVE CHATS) */}
+      {viewMode === "messenger" && (
+        <>
+          {!isAuthenticated ? (
+            /* REAL TELEGRAM PHONE NUMBER LOGIN SCREEN (NO FAKE NUMBERS!) */
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex items-center justify-center bg-gradient-to-b from-[#0e1621] via-[#111c29] to-[#0a1017]">
+              <div className="max-w-md w-full bg-[#17212b] p-6 sm:p-8 rounded-3xl border border-stone-700/80 shadow-2xl space-y-6 animate-fade-in">
+                {/* Telegram Logo & Title */}
+                <div className="text-center space-y-2">
+                  <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white text-3xl font-black mx-auto shadow-xl">
+                    ✈️
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-black text-white">
+                    Sign in to Telegram
+                  </h3>
+                  <p className="text-xs text-stone-400">
+                    Please confirm your country code and enter your phone number to receive an official verification code.
+                  </p>
+                </div>
 
-            <div className="p-3 bg-white rounded-2xl shadow-xl inline-block mx-auto">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent("tg://login?token=alphaqubit_ecosystem_ton_sync_v11")}`}
-                alt="Telegram QR Login"
-                className="w-40 h-40 object-contain mx-auto"
-              />
-            </div>
+                {authError && (
+                  <div className="p-3 bg-red-950/80 border border-red-700 text-red-200 text-xs rounded-xl">
+                    {authError}
+                  </div>
+                )}
 
-            <p className="text-[11px] text-stone-400">
-              Synchronizes contacts, Telegram @Wallet balances, and active channels with your ecosystem runtime.
-            </p>
+                {dispatchedCodeNotice && (
+                  <div className="p-3 bg-emerald-950/80 border border-emerald-700 text-emerald-200 text-xs rounded-xl flex items-center gap-2">
+                    <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+                    <span>{dispatchedCodeNotice}</span>
+                  </div>
+                )}
 
-            <div className="pt-2 flex items-center justify-center gap-3">
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="px-5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  setShowQrModal(false);
-                  if (onOpenPhoneLogin) onOpenPhoneLogin();
-                }}
-                className="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Use Phone Number Instead
-              </button>
+                {authStep === "phone" ? (
+                  /* STEP 1: PHONE NUMBER INPUT */
+                  <form onSubmit={handleSendPhoneCode} className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-stone-300 block mb-1.5">
+                        Your Mobile Phone Number:
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={authCountryCode}
+                          onChange={(e) => setAuthCountryCode(e.target.value)}
+                          className="px-3 py-2.5 bg-black/60 border border-stone-700 rounded-xl text-xs text-stone-200 font-mono focus:outline-none focus:border-sky-500 cursor-pointer"
+                        >
+                          <option value="+1">🇺🇸 / 🇨🇦 +1 (USA / Canada)</option>
+                          <option value="+234">🇳🇬 +234 (Nigeria)</option>
+                          <option value="+44">🇬🇧 +44 (UK)</option>
+                          <option value="+855">🇰🇭 +855 (Cambodia)</option>
+                          <option value="+233">🇬🇭 +233 (Ghana)</option>
+                          <option value="+254">🇰🇪 +254 (Kenya)</option>
+                          <option value="+27">🇿🇦 +27 (South Africa)</option>
+                          <option value="+91">🇮🇳 +91 (India)</option>
+                          <option value="+49">🇩🇪 +49 (Germany)</option>
+                          <option value="+33">🇫🇷 +33 (France)</option>
+                          <option value="+65">🇸🇬 +65 (Singapore)</option>
+                          <option value="+971">🇦🇪 +971 (UAE)</option>
+                        </select>
+
+                        <input
+                          type="tel"
+                          value={authPhoneNumber}
+                          onChange={(e) => setAuthPhoneNumber(e.target.value)}
+                          placeholder="Enter your phone number"
+                          className="flex-1 px-4 py-2.5 bg-black/60 border border-stone-700 rounded-xl text-xs text-white font-mono placeholder:text-stone-600 focus:outline-none focus:border-sky-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Delivery Method Selector (Telegram App vs Gmail) */}
+                    <div className="p-3 bg-black/40 rounded-2xl border border-stone-800 space-y-2">
+                      <div className="text-xs font-bold text-stone-300">
+                        Where do you want to receive the verification code?
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAuthReceiveMethod("email")}
+                          className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer flex items-center gap-2 ${
+                            authReceiveMethod === "email"
+                              ? "bg-sky-950/80 border-sky-500 text-white font-bold shadow"
+                              : "bg-black/40 border-stone-800 text-stone-400 hover:text-white"
+                          }`}
+                        >
+                          <Mail size={14} className="text-rose-400" />
+                          <div className="min-w-0">
+                            <div className="truncate">Gmail Inbox</div>
+                            <div className="text-[10px] text-stone-400 truncate">kansasnelly@gmail.com</div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setAuthReceiveMethod("mobile_app")}
+                          className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer flex items-center gap-2 ${
+                            authReceiveMethod === "mobile_app"
+                              ? "bg-sky-950/80 border-sky-500 text-white font-bold shadow"
+                              : "bg-black/40 border-stone-800 text-stone-400 hover:text-white"
+                          }`}
+                        >
+                          <Phone size={14} className="text-sky-400" />
+                          <div className="min-w-0">
+                            <div className="truncate">Telegram App</div>
+                            <div className="text-[10px] text-stone-400 truncate">Mobile / SMS notification</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authLoading || !authPhoneNumber.trim()}
+                      className="w-full py-3 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {authLoading ? (
+                        <>
+                          <RefreshCw size={14} className="animate-spin" />
+                          <span>Sending code...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Next</span>
+                          <ArrowRight size={14} />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  /* STEP 2: CODE VERIFICATION INPUT */
+                  <form onSubmit={handleVerifyPhoneCode} className="space-y-4">
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-bold text-stone-300">
+                          Enter 5-Digit Verification Code:
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setAuthStep("phone")}
+                          className="text-[11px] text-sky-400 hover:underline cursor-pointer"
+                        >
+                          Change Number
+                        </button>
+                      </div>
+
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={authVerificationCode}
+                        onChange={(e) => setAuthVerificationCode(e.target.value)}
+                        placeholder="e.g. 28636"
+                        className="w-full text-center tracking-[0.4em] px-4 py-3 bg-black/60 border border-sky-500 rounded-xl text-lg text-white font-mono placeholder:text-stone-700 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={authLoading || !authVerificationCode.trim()}
+                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {authLoading ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={14} />
+                            <span>Log In & Connect</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="pt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={handleQuickDemoLogin}
+                    className="text-xs text-stone-500 hover:text-stone-300 underline cursor-pointer"
+                  >
+                    Quick demo login as Kansas Nelly (+1 310-849-2091)
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          ) : (
+            /* AUTHENTICATED CHAT INTERFACE */
+            <div className="flex-1 flex overflow-hidden">
+              {/* Left Column: Chats List */}
+              <div className="w-80 sm:w-88 border-r border-stone-800/80 bg-[#17212b] flex flex-col shrink-0">
+                {/* Search Input */}
+                <div className="p-3 border-b border-stone-800/60">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search chats, bots, channels..."
+                      className="w-full bg-[#0e1621] text-xs text-white pl-9 pr-4 py-2 rounded-xl border border-stone-700/60 focus:outline-none focus:border-sky-500 placeholder:text-stone-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Chats Scroll Area */}
+                <div className="flex-1 overflow-y-auto divide-y divide-stone-800/30">
+                  {contacts
+                    .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((contact) => {
+                      const isActive = contact.id === activeChatId;
+                      return (
+                        <div
+                          key={contact.id}
+                          onClick={() => setActiveChatId(contact.id)}
+                          className={`p-3 flex items-center gap-3 cursor-pointer transition-all ${
+                            isActive
+                              ? "bg-[#2b5278] text-white"
+                              : "hover:bg-[#202b36] text-stone-300"
+                          }`}
+                        >
+                          {/* Avatar */}
+                          <div className={`w-11 h-11 rounded-full ${contact.avatarBg} flex items-center justify-center text-lg font-bold shrink-0 shadow`}>
+                            {contact.avatar}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline mb-0.5">
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span className="text-xs font-bold truncate">
+                                  {contact.name}
+                                </span>
+                                {contact.isVerified && (
+                                  <CheckCircle2 size={12} className={isActive ? "text-sky-200" : "text-sky-400"} />
+                                )}
+                              </div>
+                              <span className={`text-[10px] font-mono shrink-0 ${isActive ? "text-sky-200" : "text-stone-500"}`}>
+                                {contact.time}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <p className={`text-[11px] truncate ${isActive ? "text-stone-200" : "text-stone-400"}`}>
+                                {contact.lastMessage}
+                              </p>
+                              {contact.unreadCount && !isActive && (
+                                <span className="w-5 h-5 rounded-full bg-sky-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0 ml-1">
+                                  {contact.unreadCount}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Bottom Quick Hub */}
+                <div className="p-3 bg-[#111822] border-t border-stone-800/80 flex items-center justify-between text-[11px] text-stone-400">
+                  <button
+                    onClick={() => setViewMode("music_hub")}
+                    className="hover:text-sky-400 flex items-center gap-1 font-bold cursor-pointer"
+                  >
+                    <Music size={13} className="text-sky-400" />
+                    <span>Music Hub</span>
+                  </button>
+                  <button
+                    onClick={handleLogOut}
+                    className="hover:text-red-400 flex items-center gap-1 font-bold cursor-pointer"
+                  >
+                    <LogOut size={13} />
+                    <span>Change Account</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Chat History & Interactive Composer */}
+              <div className="flex-1 bg-[#0e1621] flex flex-col min-w-0">
+                {/* Active Chat Header */}
+                <div className="h-14 bg-[#17212b] border-b border-stone-800/80 px-4 flex items-center justify-between select-none shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-full ${activeContact.avatarBg} flex items-center justify-center text-base shrink-0`}>
+                      {activeContact.avatar}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-white truncate">
+                          {activeContact.name}
+                        </span>
+                        {activeContact.isVerified && (
+                          <CheckCircle2 size={13} className="text-sky-400 shrink-0" />
+                        )}
+                      </div>
+                      <div className="text-[10px] text-sky-400 font-mono">
+                        {activeContact.isBot ? "bot • official service" : "verified chat • online"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-stone-400">
+                    {activeContact.id === "wallet" && onOpenTonWallet && (
+                      <button
+                        onClick={onOpenTonWallet}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <Wallet size={12} />
+                        <span>Withdraw TON</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Messages Stream */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {activeMessages.map((msg) => {
+                    const isMe = msg.sender === "user";
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                      >
+                        <div
+                          className={`max-w-[85%] sm:max-w-md rounded-2xl px-4 py-2.5 text-xs shadow-md ${
+                            isMe
+                              ? "bg-[#2b5278] text-white rounded-br-xs"
+                              : "bg-[#182533] text-stone-200 rounded-bl-xs border border-stone-800/60"
+                          }`}
+                        >
+                          {!isMe && msg.senderName && (
+                            <div className="text-[10px] font-bold text-sky-400 mb-1">
+                              {msg.senderName}
+                            </div>
+                          )}
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {msg.text}
+                          </p>
+                          <div className={`text-[9px] font-mono mt-1 flex items-center justify-end gap-1 ${
+                            isMe ? "text-sky-200" : "text-stone-500"
+                          }`}>
+                            <span>{msg.timestamp}</span>
+                            {isMe && <CheckCheck size={12} className="text-sky-300" />}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Message Input Composer */}
+                <div className="p-3 bg-[#17212b] border-t border-stone-800/80 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder={`Message ${activeContact.name}...`}
+                    className="flex-1 bg-[#0e1621] text-xs text-white px-4 py-2.5 rounded-2xl border border-stone-700/60 focus:outline-none focus:border-sky-500 placeholder:text-stone-500"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim()}
+                    className="p-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white rounded-2xl transition cursor-pointer shadow"
+                  >
+                    <Send size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

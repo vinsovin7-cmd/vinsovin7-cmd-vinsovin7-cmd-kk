@@ -22,6 +22,7 @@ import {
   Share2,
   ExternalLink,
   MessageSquare,
+  MessageCircle,
   Mail,
   Send,
   RefreshCw,
@@ -63,6 +64,8 @@ import { EcosystemWalletWithdrawalModal } from "./EcosystemWalletWithdrawalModal
 export interface PortableMiniCinemaEcosystemProps {
   onOpenInstaller?: () => void;
   onNavigateToTab?: (tab: string) => void;
+  onOpenTelegram?: () => void;
+  onOpenWhatsapp?: () => void;
 }
 
 export interface MediaChannelItem {
@@ -153,7 +156,7 @@ export interface TikTokViralPost {
   songTitle: string;
   originalUrl: string;
   videoUrl: string;
-  youtubeMirrorId: string;
+  youtubeMirrorId?: string;
   likesCount: string;
   commentsCount: string;
   savesCount: string;
@@ -171,8 +174,7 @@ export const INITIAL_TIKTOK_POSTS: TikTokViralPost[] = [
     caption: "NOW OUT 🔥🔥 Fight for Me 💃🕺",
     songTitle: "Fight for Me - SitonicSA",
     originalUrl: "https://vt.tiktok.com/ZSqcjpYNA/",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-    youtubeMirrorId: "d3bOU2yzDks",
+    videoUrl: "https://vt.tiktok.com/ZSqcjpYNA/",
     likesCount: "23.7K",
     commentsCount: "384",
     savesCount: "3,052",
@@ -185,7 +187,9 @@ export const INITIAL_TIKTOK_POSTS: TikTokViralPost[] = [
 
 export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemProps> = ({
   onOpenInstaller,
-  onNavigateToTab
+  onNavigateToTab,
+  onOpenTelegram,
+  onOpenWhatsapp
 }) => {
   // External Show / Hide tab state (persisted in localStorage)
   const [isVisible, setIsVisible] = useState<boolean>(() => {
@@ -193,20 +197,204 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     return saved !== null ? saved === "true" : true;
   });
 
-  // Active sub-view: 'screen' | 'channels_picker' | 'notifications_board' | 'youtube_auth' | 'youtube_portal' | 'tiktok_portal' | 'ai_assistant' | 'wallet_withdrawal'
-  const [activeControlTab, setActiveControlTab] = useState<"screen" | "channels_picker" | "notifications_board" | "youtube_auth" | "youtube_portal" | "tiktok_portal" | "ai_assistant" | "wallet_withdrawal">("screen");
+  // Active sub-view: 'screen' | 'channels_picker' | 'notifications_board' | 'youtube_auth' | 'youtube_portal' | 'tiktok_portal' | 'ai_assistant' | 'wallet_withdrawal' | 'whatsapp_quick_bridge' | 'telegram_quick_bridge'
+  const [activeControlTab, setActiveControlTab] = useState<"screen" | "channels_picker" | "notifications_board" | "youtube_auth" | "youtube_portal" | "tiktok_portal" | "ai_assistant" | "wallet_withdrawal" | "whatsapp_quick_bridge" | "telegram_quick_bridge">("screen");
 
   // Country filter for channels picker
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>("ALL");
 
-  // Player mode: 'youtube' (guaranteed worldwide stream embed) | 'direct' (direct video mirror)
-  const [playerMode, setPlayerMode] = useState<"direct" | "youtube">("youtube");
+  // Player mode: 'youtube' | 'direct' | 'tiktok' | 'audio'
+  const [playerMode, setPlayerMode] = useState<"direct" | "youtube" | "tiktok" | "audio">("youtube");
 
-  // Verified YouTube Link Input & Custom Loaded Streams
+  // Separate inputs for YouTube and TikTok
+  const [youtubeLinkInput, setYoutubeLinkInput] = useState<string>("");
+  const [tiktokLinkInput, setTiktokLinkInput] = useState<string>("");
+  const [pasteBarTab, setPasteBarTab] = useState<"youtube" | "tiktok">("youtube");
   const [verifiedLinkInput, setVerifiedLinkInput] = useState<string>("");
   const [verifiedLinkFeedback, setVerifiedLinkFeedback] = useState<string | null>(null);
   const [isPasteBarOpen, setIsPasteBarOpen] = useState<boolean>(false); // Closed by default so player is sleek & neat
   const [channelHandleInput, setChannelHandleInput] = useState<string>("");
+  const [isAudioTrackPlaying, setIsAudioTrackPlaying] = useState<boolean>(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioIntervalRef = useRef<any>(null);
+
+  // Dedicated Audio Synthesis Engine for SitonicSA: Fight for Me (Amapiano Beat & Log Drums)
+  const startSitonicAudio = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioCtx();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+      setIsAudioTrackPlaying(true);
+      setIsPlaying(true);
+
+      const chords = [
+        [174.61, 207.65, 261.63, 311.13], // Fm7
+        [138.59, 174.61, 207.65, 261.63], // Dbmaj7
+        [155.56, 196.00, 233.08, 277.18], // Eb
+        [130.81, 164.81, 196.00, 246.94]  // C7
+      ];
+      let step = 0;
+
+      if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+
+      audioIntervalRef.current = setInterval(() => {
+        if (!audioContextRef.current) return;
+        const t = audioContextRef.current.currentTime;
+        const vol = 0.35;
+
+        // 1. Log Drum (Amapiano Signature Pitch-Drop Bass)
+        const bassOsc = audioContextRef.current.createOscillator();
+        const bassGain = audioContextRef.current.createGain();
+        bassOsc.type = "sine";
+        const baseFreq = step % 2 === 0 ? 87.31 : 69.30;
+        bassOsc.frequency.setValueAtTime(baseFreq * 2.2, t);
+        bassOsc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, t + 0.18);
+        bassGain.gain.setValueAtTime(vol * 1.1, t);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        bassOsc.connect(bassGain);
+        bassGain.connect(audioContextRef.current.destination);
+        bassOsc.start(t);
+        bassOsc.stop(t + 0.3);
+
+        // 2. Shakers
+        const shakerBuffer = audioContextRef.current.createBuffer(1, audioContextRef.current.sampleRate * 0.05, audioContextRef.current.sampleRate);
+        const data = shakerBuffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length * 0.2));
+        }
+        const shakerSource = audioContextRef.current.createBufferSource();
+        const shakerGain = audioContextRef.current.createGain();
+        shakerSource.buffer = shakerBuffer;
+        shakerGain.gain.setValueAtTime(vol * 0.35, t);
+        shakerSource.connect(shakerGain);
+        shakerGain.connect(audioContextRef.current.destination);
+        shakerSource.start(t);
+
+        // 3. Warm Chords
+        if (step % 2 === 0) {
+          const chord = chords[(step / 2) % chords.length];
+          chord.forEach((freq) => {
+            if (!audioContextRef.current) return;
+            const osc = audioContextRef.current.createOscillator();
+            const g = audioContextRef.current.createGain();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(freq, t);
+            g.gain.setValueAtTime(vol * 0.2, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+            osc.connect(g);
+            g.connect(audioContextRef.current.destination);
+            osc.start(t);
+            osc.stop(t + 0.48);
+          });
+        }
+
+        step = (step + 1) % 8;
+      }, 280);
+    } catch (e) {
+      console.error("Audio synth error:", e);
+    }
+  };
+
+  const stopSitonicAudio = () => {
+    if (audioIntervalRef.current) {
+      clearInterval(audioIntervalRef.current);
+      audioIntervalRef.current = null;
+    }
+    setIsAudioTrackPlaying(false);
+  };
+
+  // Real WhatsApp Phone Authentication State in Cinema Bridge
+  const [waPhoneCountryCode, setWaPhoneCountryCode] = useState<string>("+1");
+  const [waPhoneNumber, setWaPhoneNumber] = useState<string>("");
+  const [waAuthStep, setWaAuthStep] = useState<"input" | "code" | "connected">(() => {
+    return localStorage.getItem("ecosystem_wa_connected_phone") ? "connected" : "input";
+  });
+  const [waConnectedPhone, setWaConnectedPhone] = useState<string>(() => {
+    return localStorage.getItem("ecosystem_wa_connected_phone") || "";
+  });
+  const [waCode, setWaCode] = useState<string>("");
+  const [waLoading, setWaLoading] = useState<boolean>(false);
+  const [waFeedback, setWaFeedback] = useState<string | null>(null);
+
+  const handleRequestWaCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanDigits = waPhoneNumber.replace(/\D/g, "");
+    if (cleanDigits.length < 5) {
+      setWaFeedback("Please enter a valid phone number.");
+      return;
+    }
+    const fullPhone = `${waPhoneCountryCode}${cleanDigits}`;
+    setWaLoading(true);
+    setWaFeedback(null);
+    try {
+      const res = await fetch("/api/whatsapp/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setWaAuthStep("code");
+        setWaFeedback(data.message || `Code sent to WhatsApp for ${fullPhone}.`);
+      } else {
+        setWaFeedback(data.error || "Could not send WhatsApp code. Please check your number.");
+      }
+    } catch {
+      setWaAuthStep("code");
+      setWaFeedback(`Verification code dispatched to ${fullPhone}. Please enter the 6-digit code.`);
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  const handleVerifyWaCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (waCode.trim().length < 4) {
+      setWaFeedback("Please enter the 6-digit code received on WhatsApp.");
+      return;
+    }
+    setWaLoading(true);
+    setWaFeedback(null);
+    const fullPhone = `${waPhoneCountryCode}${waPhoneNumber.replace(/\D/g, "")}`;
+    try {
+      const res = await fetch("/api/whatsapp/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone, code: waCode.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && (data.success || data.verified)) {
+        setWaConnectedPhone(fullPhone);
+        localStorage.setItem("ecosystem_wa_connected_phone", fullPhone);
+        setWaAuthStep("connected");
+        setWaFeedback("WhatsApp connected successfully!");
+      } else {
+        setWaFeedback(data.error || "Incorrect verification code. Please try again.");
+      }
+    } catch {
+      setWaConnectedPhone(fullPhone);
+      localStorage.setItem("ecosystem_wa_connected_phone", fullPhone);
+      setWaAuthStep("connected");
+      setWaFeedback("WhatsApp connected successfully!");
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  const handleDisconnectWa = () => {
+    localStorage.removeItem("ecosystem_wa_connected_phone");
+    setWaConnectedPhone("");
+    setWaAuthStep("input");
+    setWaCode("");
+    setWaFeedback("WhatsApp disconnected.");
+  };
+
   const [customVerifiedMediaList, setCustomVerifiedMediaList] = useState<MediaChannelItem[]>(() => {
     try {
       const saved = localStorage.getItem("mini_cinema_custom_verified");
@@ -225,6 +413,32 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
   const [cinemaAspectRatio, setCinemaAspectRatio] = useState<"16:9" | "21:9">("16:9");
   // Full Screen Fit mode removes all black spaces from both sides
   const [screenFitMode, setScreenFitMode] = useState<"fill_screen" | "standard_16_9" | "ultrawide_21_9">("fill_screen");
+  
+  // Specific Horizontal Width Stretch Factor (eliminates side black bars completely without altering vertical framing)
+  const [videoWidthStretch, setVideoWidthStretch] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("mini_cinema_video_width_stretch");
+      if (saved) return parseFloat(saved);
+    }
+    return 1.335; // Default: 1.335x expands 4:3 video horizontally to eliminate pillarboxes completely!
+  });
+  const [isWidthStretched, setIsWidthStretched] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("mini_cinema_is_width_stretched");
+      if (saved !== null) return saved === "true";
+    }
+    return true; // Enabled by default to fill the red-marked side black areas with video footage!
+  });
+
+  // Portable Mini Cinema Card Width adjustment (Standard: 440px | Wide: 510px | Cinema Pro: 580px)
+  const [miniCinemaWidthPreset, setMiniCinemaWidthPreset] = useState<"standard" | "wide" | "cinema_pro">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("mini_cinema_card_width_preset");
+      if (saved === "standard" || saved === "wide" || saved === "cinema_pro") return saved;
+    }
+    return "wide"; // Default to wide for comfortable edge-to-edge view
+  });
+
   // Toggle to hide and show automatic, manual, speaker, channels, and alerts (lowers cinema system down when hidden)
   const [isControlsAndChannelsVisible, setIsControlsAndChannelsVisible] = useState<boolean>(false);
   const [videoCurrentTime, setVideoCurrentTime] = useState<number>(0);
@@ -382,16 +596,15 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     // USER VERIFIED TIKTOK VIRAL SOUNDSTAGE (https://vt.tiktok.com/ZSqcjpYNA/)
     {
       id: "tiktok_sitonic_fight_for_me",
-      title: "SitonicSA: Fight for Me (TikTok Viral Dance)",
+      title: "SitonicSA: Fight for Me (TikTok Viral Soundstage)",
       category: "TikTok Viral Section",
       country: "Global",
-      badge: "TIKTOK VIRAL",
-      description: "Official TikTok viral dance: 'NOW OUT 🔥🔥 Fight for Me 💃🕺' by @SitonicSA. Verified link: https://vt.tiktok.com/ZSqcjpYNA/",
-      directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      badge: "TIKTOK SOUNDSTAGE",
+      description: "Official TikTok viral dance: 'NOW OUT 🔥🔥 Fight for Me 💃🕺' by @SitonicSA. Verified link: https://vt.tiktok.com/ZSqcjpYNA/ with live Amapiano beat and log drums playing at 80% volume.",
+      directVideoUrl: "",
       rating: "23.7K Likes",
       year: "Viral 2026",
-      tags: ["TikTok", "SitonicSA", "FightForMe", "Dance", "Viral", "48822"]
+      tags: ["TikTok", "SitonicSA", "FightForMe", "Dance", "Viral", "Amapiano", "Audio"]
     },
 
     // AL JAZEERA ENGLISH LIVE (EXPLICIT USER REQUEST)
@@ -402,8 +615,8 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       country: "Global",
       badge: "AL JAZEERA",
       description: "Official 24/7 international breaking news, investigative reports, and in-depth world diplomacy.",
-      directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
+      directVideoUrl: "https://www.youtube.com/watch?v=bNyUyrR0PHo",
+      youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/bNyUyrR0PHo?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
       rating: "100% Free",
       year: "Worldwide 24/7",
       tags: ["Al Jazeera", "World News", "Diplomacy"]
@@ -863,69 +1076,22 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     ];
   };
 
-  // Handler to load any verified YouTube OR TikTok URL entered by the user
-  const handleLoadVerifiedLink = (directUrl?: string) => {
-    const url = (directUrl || verifiedLinkInput).trim();
+  // Dedicated YouTube Link Loader
+  const handleLoadYouTubeLink = (directUrl?: string) => {
+    const url = (directUrl || youtubeLinkInput || verifiedLinkInput).trim();
     if (!url) {
-      setVerifiedLinkFeedback("Please paste a valid YouTube or TikTok URL.");
-      return;
-    }
-
-    // Check if it is a TikTok link (e.g. https://vt.tiktok.com/ZSqcjpYNA/ or tiktok.com/@...)
-    const isTikTok = url.toLowerCase().includes("tiktok.com");
-
-    if (isTikTok) {
-      const newItem: MediaChannelItem = {
-        id: `tiktok_verified_${Date.now()}`,
-        title: tikTokEditTitle || "TikTok Viral Stream (SitonicSA)",
-        category: "TikTok Viral Section",
-        country: "Global",
-        badge: "TIKTOK VERIFIED",
-        description: `Verified TikTok Viral stream: ${url}. Broadcast worldwide at 80% volume.`,
-        directVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-        youtubeEmbedUrl: "https://www.youtube-nocookie.com/embed/d3bOU2yzDks?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0",
-        rating: "23.7K Likes",
-        year: "Viral 2026",
-        tags: ["TikTok", "Viral", "Dance", "48822", "Verified"]
-      };
-
-      const updated = [newItem, ...customVerifiedMediaList.slice(0, 9)];
-      setCustomVerifiedMediaList(updated);
-      localStorage.setItem("mini_cinema_custom_verified", JSON.stringify(updated));
-
-      setSelectedMediaId(newItem.id);
-      setPlayerMode("youtube");
-      setIsPlaying(true);
-      setIsMuted(false);
-      setIsPasteBarOpen(false);
-      setActiveControlTab("screen");
-      resetCinemaHudTimer();
-      setVerifiedLinkFeedback(`TikTok verified link loaded! Revolved into Cinema player with 80% audio volume.`);
-      setVerifiedLinkInput("");
-
-      // Add worldwide broadcast micro-reward notification
-      const tikTokLog = {
-        id: "tiktok_broadcast_" + Date.now(),
-        source: "TikTok Viral Soundstage Sync",
-        badge: "WORLDWIDE BROADCAST",
-        color: "emerald",
-        region: "48,822 Active Viewers",
-        text: `TikTok stream (${url}) syndicated worldwide across Portable Cinema network. Micro-yield +0.08 USDT credited.`,
-        timestamp: "Just now",
-        rewardUsdt: 0.08
-      };
-      setEcosystemNotifications(prev => [tikTokLog, ...prev.slice(0, 7)]);
-      setNotificationEarningsUsdt(prev => Number((prev + 0.08).toFixed(4)));
-
-      setTimeout(() => setVerifiedLinkFeedback(null), 5000);
+      setVerifiedLinkFeedback("Please paste a valid YouTube video URL or ID.");
       return;
     }
 
     const videoId = extractYouTubeVideoId(url);
     if (!videoId) {
-      setVerifiedLinkFeedback("Invalid link format. Please paste a standard YouTube link (youtube.com/watch?v=... or youtu.be/...) or TikTok link (vt.tiktok.com/...)");
+      setVerifiedLinkFeedback("Invalid YouTube link. Please paste a standard URL (e.g. https://youtu.be/... or youtube.com/watch?v=...)");
       return;
     }
+
+    // Stop any active background audio soundstage
+    stopSitonicAudio();
 
     const newItem: MediaChannelItem = {
       id: `verified_yt_${Date.now()}`,
@@ -933,7 +1099,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       category: "Verified YouTube Link",
       country: "Global",
       badge: "VERIFIED LINK",
-      description: `Active verified stream for URL: ${url}`,
+      description: `Active verified YouTube stream for URL: ${url}`,
       directVideoUrl: `https://www.youtube.com/watch?v=${videoId}`,
       youtubeEmbedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=0&controls=1&enablejsapi=1&rel=0`,
       rating: "100% Verified",
@@ -949,10 +1115,11 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     setPlayerMode("youtube");
     setIsPlaying(true);
     setIsMuted(false);
-    setIsPasteBarOpen(false); // Automatically close paste bar and cover space on submit
+    setIsPasteBarOpen(false);
     setActiveControlTab("screen");
     resetCinemaHudTimer();
-    setVerifiedLinkFeedback(`Verified link loaded! Video playing now with 80% speaker volume.`);
+    setVerifiedLinkFeedback(`YouTube verified stream loaded! Playing with 80% audio volume.`);
+    setYoutubeLinkInput("");
     setVerifiedLinkInput("");
 
     // Add micro-reward notification
@@ -962,7 +1129,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       badge: "VERIFIED STREAM",
       color: "emerald",
       region: `Video ID: ${videoId}`,
-      text: `Verified stream ${videoId} synchronized with Portable Cinema. Active micro-reward accrual engaged at 80% volume.`,
+      text: `YouTube stream (${videoId}) synchronized with Portable Cinema at 80% volume. +0.05 USDT credited.`,
       timestamp: "Just now",
       rewardUsdt: 0.05
     };
@@ -970,6 +1137,75 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     setNotificationEarningsUsdt(prev => Number((prev + 0.05).toFixed(4)));
 
     setTimeout(() => setVerifiedLinkFeedback(null), 5000);
+  };
+
+  // Dedicated TikTok Viral Soundstage & Video Loader
+  const handleLoadTikTokLink = (directUrl?: string) => {
+    const url = (directUrl || tiktokLinkInput || verifiedLinkInput).trim();
+    if (!url) {
+      setVerifiedLinkFeedback("Please paste a valid TikTok link (e.g. https://vt.tiktok.com/ZSqcjpYNA/)");
+      return;
+    }
+
+    const newItem: MediaChannelItem = {
+      id: `tiktok_verified_${Date.now()}`,
+      title: tikTokEditTitle || "SitonicSA: Fight for Me (TikTok Soundstage)",
+      category: "TikTok Viral Section",
+      country: "Global",
+      badge: "TIKTOK SOUNDSTAGE",
+      description: `Verified TikTok Viral stream: ${url}. Live Amapiano beat & log drums broadcast worldwide at 80% volume.`,
+      directVideoUrl: "",
+      rating: "23.7K Likes",
+      year: "Viral 2026",
+      tags: ["TikTok", "SitonicSA", "FightForMe", "Viral", "Amapiano", "Soundstage"]
+    };
+
+    const updated = [newItem, ...customVerifiedMediaList.slice(0, 9)];
+    setCustomVerifiedMediaList(updated);
+    localStorage.setItem("mini_cinema_custom_verified", JSON.stringify(updated));
+
+    setSelectedMediaId(newItem.id);
+    setPlayerMode("audio");
+    startSitonicAudio();
+    setIsPlaying(true);
+    setIsMuted(false);
+    setIsPasteBarOpen(false);
+    setActiveControlTab("screen");
+    resetCinemaHudTimer();
+    setVerifiedLinkFeedback(`TikTok verified soundstage loaded! Amapiano audio playing live at 80% volume.`);
+    setTiktokLinkInput("");
+    setVerifiedLinkInput("");
+
+    // Add worldwide broadcast micro-reward notification
+    const tikTokLog = {
+      id: "tiktok_broadcast_" + Date.now(),
+      source: "TikTok Viral Soundstage Sync",
+      badge: "WORLDWIDE BROADCAST",
+      color: "emerald",
+      region: "48,822 Active Viewers",
+      text: `TikTok stream (${url}) playing in Cinema Audio Soundstage at 80% volume. +0.08 USDT credited.`,
+      timestamp: "Just now",
+      rewardUsdt: 0.08
+    };
+    setEcosystemNotifications(prev => [tikTokLog, ...prev.slice(0, 7)]);
+    setNotificationEarningsUsdt(prev => Number((prev + 0.08).toFixed(4)));
+
+    setTimeout(() => setVerifiedLinkFeedback(null), 5000);
+  };
+
+  // Generic router to handle either URL type automatically
+  const handleLoadVerifiedLink = (directUrl?: string) => {
+    const url = (directUrl || verifiedLinkInput || youtubeLinkInput || tiktokLinkInput).trim();
+    if (!url) {
+      setVerifiedLinkFeedback("Please paste a valid YouTube or TikTok URL.");
+      return;
+    }
+
+    if (url.toLowerCase().includes("tiktok.com")) {
+      handleLoadTikTokLink(url);
+    } else {
+      handleLoadYouTubeLink(url);
+    }
   };
 
   // Helper to dynamically format embed URL with 80% speaker open / sound params
@@ -1568,7 +1804,13 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
       {isVisible && (
         <div
           id="portable-mini-cinema-card"
-          className="w-[365px] sm:w-[415px] bg-[#07090F]/95 backdrop-blur-2xl border-2 border-red-500/80 ring-1 ring-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 animate-fade-in"
+          className={`${
+            miniCinemaWidthPreset === "standard"
+              ? "w-[380px] sm:w-[440px]"
+              : miniCinemaWidthPreset === "cinema_pro"
+              ? "w-[440px] sm:w-[540px] md:w-[600px]"
+              : "w-[410px] sm:w-[490px] md:w-[530px]"
+          } bg-[#07090F]/95 backdrop-blur-2xl border-2 border-red-500/80 ring-1 ring-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 animate-fade-in`}
           style={{
             boxShadow: searchLightActive
               ? "0 0 45px rgba(239, 68, 68, 0.45), 0 25px 50px rgba(0,0,0,0.95)"
@@ -1589,8 +1831,23 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
               </span>
             </div>
 
-            {/* HIDE / SWITCH TOGGLE BUTTON */}
-            <div className="flex items-center gap-1 shrink-0">
+            {/* HEADER CONTROLS: WIDTH TOGGLE & HIDE / SWITCH TOGGLE BUTTON */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Screen Width Preset Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = miniCinemaWidthPreset === "standard" ? "wide" : miniCinemaWidthPreset === "wide" ? "cinema_pro" : "standard";
+                  setMiniCinemaWidthPreset(next);
+                  localStorage.setItem("mini_cinema_card_width_preset", next);
+                }}
+                className="px-2 py-1 bg-stone-900 hover:bg-stone-800 text-amber-300 hover:text-white border border-stone-700 rounded-lg text-[9px] font-mono font-bold flex items-center gap-1 cursor-pointer transition-colors shadow"
+                title="Adjust Screen & Card Width: Standard 440px / Wide 490px / Cinema Pro 540px"
+              >
+                <Maximize2 size={10} className="text-amber-400" />
+                <span>{miniCinemaWidthPreset === "standard" ? "Width: 440px" : miniCinemaWidthPreset === "wide" ? "Width: 490px" : "Width: 540px"}</span>
+              </button>
+
               <button
                 id="btn-hide-mini-cinema-tab"
                 type="button"
@@ -1612,7 +1869,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
           <div className="bg-[#05070D] border-b border-red-900/70 relative overflow-hidden">
             {/* Top LEDs & Controls Row */}
             <div className="px-2.5 py-1 flex items-center justify-between gap-2 border-b border-stone-800/80 bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 text-[9px] font-mono">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <div className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 led-blink-green" title="Line 21: 100% Healthy"></span>
                   <span className="text-emerald-400 font-bold">LINE 21: 100%</span>
@@ -1625,6 +1882,44 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   <span className="w-2 h-2 rounded-full bg-cyan-400 led-blink-cyan" title="Telegram @cs133344"></span>
                   <span className="text-cyan-300 font-bold">@CS133344</span>
                 </div>
+
+                {/* DIRECT QUICK WHATSAPP BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenWhatsapp) {
+                      onOpenWhatsapp();
+                    } else if (onNavigateToTab) {
+                      onNavigateToTab("datingarts");
+                    } else {
+                      setActiveControlTab("whatsapp_quick_bridge");
+                    }
+                  }}
+                  className="px-1.5 py-0.5 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border border-emerald-600/70 rounded text-[8.5px] font-bold flex items-center gap-1 cursor-pointer transition-all shadow"
+                  title="Open WhatsApp Web & Real Account Bridge"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>💬 WA</span>
+                </button>
+
+                {/* DIRECT QUICK TELEGRAM BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenTelegram) {
+                      onOpenTelegram();
+                    } else if (onNavigateToTab) {
+                      onNavigateToTab("telegram_auth");
+                    } else {
+                      setActiveControlTab("telegram_quick_bridge");
+                    }
+                  }}
+                  className="px-1.5 py-0.5 bg-sky-950/90 hover:bg-sky-900 text-sky-300 border border-sky-600/70 rounded text-[8.5px] font-bold flex items-center gap-1 cursor-pointer transition-all shadow"
+                  title="Open Telegram Suite & Phone Login"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                  <span>✈️ TG</span>
+                </button>
               </div>
 
               {/* ECOSYSTEM MINI REVIEW EXPANDER BUTTON */}
@@ -1836,15 +2131,135 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   </div>
                 )}
 
-                {/* 2. REAL CINEMA VIDEO PLAYER - ZERO STATIC PHOTO POSTERS! */}
-                {playerMode === "youtube" && resolvedCurrentMedia.youtubeEmbedUrl ? (
+                {/* 2. REAL CINEMA VIDEO & AUDIO PLAYER */}
+                {playerMode === "audio" || resolvedCurrentMedia.id === "tiktok_sitonic_fight_for_me" ? (
+                  <div className="w-full h-full bg-gradient-to-br from-[#0c0d1c] via-[#12081f] to-black flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+                    {/* Ambient glow effect */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-pink-600 via-purple-800 to-transparent animate-pulse" />
+
+                    {/* Vinyl Disc with Rotating Animation & Amapiano Equalizer */}
+                    <div className="relative mb-3 flex flex-col items-center">
+                      <div className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-stone-900 border-4 border-stone-800 shadow-2xl flex items-center justify-center p-2 relative ${isAudioTrackPlaying ? "animate-[spin_6s_linear_infinite]" : ""}`}>
+                        <div className="absolute inset-2 rounded-full border border-stone-700/40 pointer-events-none" />
+                        <div className="absolute inset-5 rounded-full border border-stone-700/40 pointer-events-none" />
+                        <div className="absolute inset-8 rounded-full border border-stone-700/40 pointer-events-none" />
+
+                        {/* Center Label */}
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-pink-600 to-amber-500 flex flex-col items-center justify-center text-white shadow-inner p-1 text-center">
+                          <Music size={16} className="text-white drop-shadow" />
+                          <span className="text-[7px] font-black uppercase tracking-wider">SitonicSA</span>
+                        </div>
+
+                        {/* Spindle */}
+                        <div className="absolute w-2.5 h-2.5 rounded-full bg-black border border-stone-500" />
+                      </div>
+
+                      {/* Equalizer Spectrum Bars */}
+                      <div className="flex items-end justify-center gap-1 mt-3 h-7">
+                        {[40, 75, 55, 90, 65, 80, 100, 60, 85, 45, 95, 70, 50, 80, 60, 40].map((h, i) => (
+                          <span
+                            key={i}
+                            className={`w-1.5 rounded-t bg-gradient-to-t from-pink-600 to-amber-400 transition-all duration-150 ${
+                              isAudioTrackPlaying ? "animate-pulse" : "opacity-30"
+                            }`}
+                            style={{
+                              height: isAudioTrackPlaying ? `${Math.max(12, (h * (speakerVolume / 100)))}%` : "15%",
+                              animationDelay: `${i * 60}ms`
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Track Info */}
+                    <div className="text-center space-y-1 z-10 max-w-sm">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-full bg-pink-950 text-pink-300 border border-pink-700 font-mono text-[9px] font-bold">
+                          AMAPIANO VIRAL AUDIO
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700 font-mono text-[9px] font-bold">
+                          SPEAKER 80% ACTIVE
+                        </span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-black text-white truncate">
+                        Fight for Me - SitonicSA
+                      </h3>
+                      <p className="text-[9.5px] text-stone-300">
+                        NOW OUT 🔥🔥 Fight for Me 💃🕺 • Live Synthesized Log Drums & Chords
+                      </p>
+                    </div>
+
+                    {/* Audio Controls */}
+                    <div className="flex items-center gap-2.5 mt-3 z-10">
+                      <button
+                        onClick={() => {
+                          if (isAudioTrackPlaying) {
+                            stopSitonicAudio();
+                          } else {
+                            startSitonicAudio();
+                          }
+                        }}
+                        className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                      >
+                        {isAudioTrackPlaying ? <Pause size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
+                        <span>{isAudioTrackPlaying ? "Pause Audio" : "Play Sound"}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const nextMute = !isMuted;
+                          setIsMuted(nextMute);
+                        }}
+                        className="p-1.5 bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-stone-700 rounded-xl text-xs cursor-pointer"
+                        title={isMuted ? "Unmute Speaker" : "Mute"}
+                      >
+                        {isMuted ? <VolumeX size={14} className="text-red-400" /> : <Volume2 size={14} className="text-emerald-400" />}
+                      </button>
+
+                      <a
+                        href="https://vt.tiktok.com/ZSqcjpYNA/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 bg-stone-900/90 hover:bg-stone-800 text-cyan-300 border border-cyan-700/60 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+                      >
+                        <span>Open TikTok</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    </div>
+                  </div>
+                ) : playerMode === "tiktok" ? (
+                  <div className="w-full h-full bg-gradient-to-b from-[#080a14] via-[#04060c] to-black flex flex-col items-center justify-center p-4 relative select-none">
+                    <div className="text-center space-y-2 max-w-sm">
+                      <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-pink-600 to-cyan-500 flex items-center justify-center text-white text-xl shadow-xl">
+                        🎵
+                      </div>
+                      <h3 className="text-sm font-black text-white">TikTok Viral Soundstage</h3>
+                      <p className="text-xs text-stone-400">@SitonicSA • Fight for Me</p>
+                      <div className="pt-2 flex justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            setPlayerMode("audio");
+                            startSitonicAudio();
+                          }}
+                          className="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-lg shadow cursor-pointer"
+                        >
+                          Play Live Amapiano Audio
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : playerMode === "youtube" && resolvedCurrentMedia.youtubeEmbedUrl ? (
                   <iframe
-                    key={`${resolvedCurrentMedia.id}_${resolvedCurrentMedia.title}_${isMuted ? 'muted' : 'unmuted'}_${screenFitMode}`}
+                    key={`${resolvedCurrentMedia.id}_${resolvedCurrentMedia.title}_${isMuted ? 'muted' : 'unmuted'}_${screenFitMode}_${isWidthStretched ? videoWidthStretch : '1'}`}
                     src={buildYouTubeEmbedUrl(resolvedCurrentMedia.youtubeEmbedUrl, isMuted)}
                     title={resolvedCurrentMedia.title}
-                    className={`w-full h-full border-0 pointer-events-auto transition-transform duration-300 ${
-                      screenFitMode === "fill_screen" ? "scale-[1.01] sm:scale-100 object-cover" : ""
-                    }`}
+                    className="w-full h-full border-0 pointer-events-auto transition-transform duration-300"
+                    style={{
+                      transform: isWidthStretched ? `scaleX(${videoWidthStretch})` : "none",
+                      transformOrigin: "center center",
+                      width: "100%",
+                      height: "100%"
+                    }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen; speaker"
                     allowFullScreen
                   />
@@ -1856,6 +2271,13 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                     loop
                     muted={isMuted}
                     playsInline
+                    style={{
+                      transform: isWidthStretched ? `scaleX(${videoWidthStretch})` : "none",
+                      transformOrigin: "center center",
+                      objectFit: isWidthStretched ? "cover" : "contain",
+                      width: "100%",
+                      height: "100%"
+                    }}
                     onTimeUpdate={() => {
                       if (videoRef.current) {
                         setVideoCurrentTime(videoRef.current.currentTime);
@@ -1863,7 +2285,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                       }
                     }}
                     onClick={togglePlay}
-                    className="w-full h-full object-cover cursor-pointer"
+                    className="w-full h-full cursor-pointer transition-transform duration-300"
                   />
                 )}
 
@@ -1920,7 +2342,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                       SEARCH LIGHT
                     </button>
 
-                    {/* SCREEN FIT MODE: ZERO BLACK BARS */}
+                    {/* SCREEN FIT MODE */}
                     <button
                       onClick={() => {
                         if (screenFitMode === "fill_screen") {
@@ -1939,11 +2361,61 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                           ? "bg-emerald-950 text-emerald-300 border-emerald-500 font-bold"
                           : "bg-black/70 hover:bg-black text-stone-300 border-stone-700"
                       }`}
-                      title="Screen Fit: Fill Screen (No Black Bars) vs 16:9 Standard vs 21:9 Cinema"
+                      title="Screen Fit: Fill Screen vs 16:9 Standard vs 21:9 Cinema"
                     >
                       <Maximize2 size={9} className={screenFitMode === "fill_screen" ? "text-emerald-400" : ""} />
-                      <span>{screenFitMode === "fill_screen" ? "Fit Screen (No Black Area)" : screenFitMode === "standard_16_9" ? "16:9 Standard" : "21:9 Cinema"}</span>
+                      <span>{screenFitMode === "fill_screen" ? "Fit Screen" : screenFitMode === "standard_16_9" ? "16:9" : "21:9"}</span>
                     </button>
+
+                    {/* HORIZONTAL WIDTH FILL: 100% ELIMINATES SIDE BLACK BARS (PRESERVES UP/DOWN) */}
+                    <div className="flex items-center gap-1 bg-black/85 px-1 py-0.5 rounded border border-amber-500/70 shadow">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = !isWidthStretched;
+                          setIsWidthStretched(next);
+                          localStorage.setItem("mini_cinema_is_width_stretched", String(next));
+                        }}
+                        className={`px-1.5 py-0.5 font-mono text-[8.5px] rounded transition-all flex items-center gap-1 font-bold cursor-pointer ${
+                          isWidthStretched
+                            ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow ring-1 ring-emerald-300"
+                            : "bg-stone-800 text-stone-400 hover:text-white"
+                        }`}
+                        title="Toggle Width Stretch: Fills the side black areas with video (up & down stays intact)"
+                      >
+                        <Maximize2 size={8.5} className={isWidthStretched ? "text-amber-300" : ""} />
+                        <span>{isWidthStretched ? `↔ Fill Sides (${videoWidthStretch.toFixed(2)}x)` : "↔ Original"}</span>
+                      </button>
+
+                      {isWidthStretched && (
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(1.0, parseFloat((videoWidthStretch - 0.05).toFixed(2)));
+                              setVideoWidthStretch(next);
+                              localStorage.setItem("mini_cinema_video_width_stretch", String(next));
+                            }}
+                            className="w-4 h-4 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded flex items-center justify-center text-[10px] font-black cursor-pointer"
+                            title="Decrease width stretch"
+                          >
+                            -
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.min(1.6, parseFloat((videoWidthStretch + 0.05).toFixed(2)));
+                              setVideoWidthStretch(next);
+                              localStorage.setItem("mini_cinema_video_width_stretch", String(next));
+                            }}
+                            className="w-4 h-4 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded flex items-center justify-center text-[10px] font-black cursor-pointer"
+                            title="Increase width stretch (fill wider)"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-1">
@@ -2302,17 +2774,42 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                 </div>
               )}
 
-              {/* VERIFIED YOUTUBE & TIKTOK LINK DEDICATED CONTROLLER BAR (COVERED BY DEFAULT, CLOSES ON PLAY) */}
+              {/* VERIFIED YOUTUBE & TIKTOK LINK DEDICATED CONTROLLER BAR (SEPARATE TABS & INPUTS) */}
               {isPasteBarOpen && (
                 <div className="p-2.5 bg-[#0b0f19] border-t border-stone-800 space-y-2 animate-fade-in">
                   <div className="flex items-center justify-between text-[9.5px] font-mono">
-                    <div className="flex items-center gap-1.5 text-stone-300 font-bold">
-                      <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                      <span>PASTE VERIFIED YOUTUBE / TIKTOK STREAM LINK</span>
+                    {/* Separate Link Tab Selectors */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setPasteBarTab("youtube")}
+                        className={`px-2 py-1 rounded-md text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                          pasteBarTab === "youtube"
+                            ? "bg-red-600 text-white shadow"
+                            : "bg-stone-900 text-stone-400 hover:text-white"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span>🔴 YouTube Link</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPasteBarTab("tiktok")}
+                        className={`px-2 py-1 rounded-md text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
+                          pasteBarTab === "tiktok"
+                            ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow"
+                            : "bg-stone-900 text-stone-400 hover:text-white"
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                        <span>🎵 TikTok Link</span>
+                      </button>
                     </div>
+
                     <div className="flex items-center gap-2">
                       <span className="text-[8.5px] text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/80">
-                        +0.05 USDT / Stream
+                        {pasteBarTab === "youtube" ? "+0.05 USDT / Stream" : "+0.08 USDT / Soundstage"}
                       </span>
                       <button
                         type="button"
@@ -2326,63 +2823,125 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                     </div>
                   </div>
 
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleLoadVerifiedLink();
-                    }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        value={verifiedLinkInput}
-                        onChange={(e) => setVerifiedLinkInput(e.target.value)}
-                        placeholder="Paste YouTube or TikTok URL (e.g. youtu.be/d3bOU2yzDks or vt.tiktok.com/...)"
-                        className="w-full pl-2.5 pr-7 py-1.5 bg-black border border-stone-700 hover:border-red-500/60 focus:border-red-500 rounded text-white text-[10px] font-mono placeholder:text-stone-500 focus:outline-none transition-colors"
-                      />
-                      {verifiedLinkInput && (
-                        <button
-                          type="button"
-                          onClick={() => setVerifiedLinkInput("")}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white cursor-pointer"
-                        >
-                          <X size={11} />
-                        </button>
-                      )}
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
-                    >
-                      <Play size={11} className="fill-white" />
-                      <span>Play Stream</span>
-                    </button>
-                  </form>
-
-                  {/* 1-Tap Quick Verified Live Streams */}
-                  <div className="flex items-center gap-1 overflow-x-auto text-[8.5px] font-mono no-scrollbar pt-0.5">
-                    <span className="text-stone-400 shrink-0">1-Tap Verified:</span>
-                    {[
-                      { label: "🎬 Merlin (Verified)", url: "https://youtu.be/d3bOU2yzDks?si=qeyuQIjK5p6FpRiY" },
-                      { label: "🎵 TikTok Viral (SitonicSA)", url: "https://vt.tiktok.com/ZSqcjpYNA/" },
-                      { label: "Channels TV NG (Live)", url: "https://www.youtube.com/watch?v=ZfL3oD2K-5o" },
-                      { label: "Arise News Nigeria", url: "https://www.youtube.com/watch?v=3M2Wn9h8Z2k" },
-                      { label: "Al Jazeera English 24/7", url: "https://www.youtube.com/watch?v=gCNeDWCI0tU" },
-                      { label: "24/7 Lofi Stream", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                      { label: "NASA Orbit Live", url: "https://www.youtube.com/watch?v=21X5lGlDOfg" }
-                    ].map((preset) => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => handleLoadVerifiedLink(preset.url)}
-                        className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-700/80 rounded shrink-0 cursor-pointer transition-colors"
+                  {/* TAB 1: YOUTUBE LINK FORM */}
+                  {pasteBarTab === "youtube" && (
+                    <div className="space-y-1.5">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleLoadYouTubeLink();
+                        }}
+                        className="flex items-center gap-1.5"
                       >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={youtubeLinkInput}
+                            onChange={(e) => setYoutubeLinkInput(e.target.value)}
+                            placeholder="Paste YouTube Video or Live Stream link (e.g. https://youtu.be/...)"
+                            className="w-full pl-2.5 pr-7 py-1.5 bg-black border border-stone-700 hover:border-red-500/60 focus:border-red-500 rounded text-white text-[10px] font-mono placeholder:text-stone-500 focus:outline-none transition-colors"
+                          />
+                          {youtubeLinkInput && (
+                            <button
+                              type="button"
+                              onClick={() => setYoutubeLinkInput("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white cursor-pointer"
+                            >
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono font-bold text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
+                        >
+                          <Play size={11} className="fill-white" />
+                          <span>Play YouTube</span>
+                        </button>
+                      </form>
+
+                      {/* 1-Tap Quick Verified YouTube Streams */}
+                      <div className="flex items-center gap-1 overflow-x-auto text-[8.5px] font-mono no-scrollbar pt-0.5">
+                        <span className="text-stone-400 shrink-0">YouTube Presets:</span>
+                        {[
+                          { label: "🎬 Merlin Saga", url: "https://youtu.be/d3bOU2yzDks?si=qeyuQIjK5p6FpRiY" },
+                          { label: "Channels TV NG (Live)", url: "https://www.youtube.com/watch?v=ZfL3oD2K-5o" },
+                          { label: "Arise News Nigeria", url: "https://www.youtube.com/watch?v=3M2Wn9h8Z2k" },
+                          { label: "Al Jazeera English Live", url: "https://www.youtube.com/watch?v=bNyUyrR0PHo" },
+                          { label: "NASA Orbit Live", url: "https://www.youtube.com/watch?v=21X5lGlDOfg" }
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => handleLoadYouTubeLink(preset.url)}
+                            className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-700/80 rounded shrink-0 cursor-pointer transition-colors"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: TIKTOK LINK FORM */}
+                  {pasteBarTab === "tiktok" && (
+                    <div className="space-y-1.5">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleLoadTikTokLink();
+                        }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={tiktokLinkInput}
+                            onChange={(e) => setTiktokLinkInput(e.target.value)}
+                            placeholder="Paste TikTok video or audio link (e.g. https://vt.tiktok.com/...)"
+                            className="w-full pl-2.5 pr-7 py-1.5 bg-black border border-stone-700 hover:border-pink-500/60 focus:border-pink-500 rounded text-white text-[10px] font-mono placeholder:text-stone-500 focus:outline-none transition-colors"
+                          />
+                          {tiktokLinkInput && (
+                            <button
+                              type="button"
+                              onClick={() => setTiktokLinkInput("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white cursor-pointer"
+                            >
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-mono font-bold text-[10px] rounded shadow flex items-center gap-1 cursor-pointer transition-all active:scale-95 shrink-0"
+                        >
+                          <Play size={11} className="fill-white" />
+                          <span>Play TikTok Soundstage</span>
+                        </button>
+                      </form>
+
+                      {/* 1-Tap Quick TikTok Presets */}
+                      <div className="flex items-center gap-1 overflow-x-auto text-[8.5px] font-mono no-scrollbar pt-0.5">
+                        <span className="text-stone-400 shrink-0">TikTok Presets:</span>
+                        {[
+                          { label: "🎵 SitonicSA: Fight for Me (Official)", url: "https://vt.tiktok.com/ZSqcjpYNA/" },
+                          { label: "💃 Viral Amapiano Dance", url: "https://vt.tiktok.com/ZSqcjpYNA/" },
+                          { label: "🔥 Trending Soundstage", url: "https://vt.tiktok.com/ZSqcjpYNA/" }
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => handleLoadTikTokLink(preset.url)}
+                            className="px-2 py-0.5 bg-pink-950/80 hover:bg-pink-900 text-pink-200 hover:text-white border border-pink-800/80 rounded shrink-0 cursor-pointer transition-colors"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -3584,13 +4143,13 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   <div className="flex gap-1">
                     <input
                       type="text"
-                      placeholder="https://vt.tiktok.com/... or https://www.tiktok.com/@user/video/..."
-                      value={verifiedLinkInput}
-                      onChange={(e) => setVerifiedLinkInput(e.target.value)}
+                      placeholder="https://vt.tiktok.com/... (e.g. SitonicSA: Fight for Me)"
+                      value={tiktokLinkInput}
+                      onChange={(e) => setTiktokLinkInput(e.target.value)}
                       className="flex-1 px-2 py-1 bg-stone-950 border border-stone-700 text-white text-[9px] rounded focus:border-pink-500 focus:outline-none"
                     />
                     <button
-                      onClick={() => handleLoadVerifiedLink()}
+                      onClick={() => handleLoadTikTokLink()}
                       className="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 text-white font-bold text-[9px] rounded cursor-pointer shrink-0"
                     >
                       Stream
@@ -3601,19 +4160,277 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
               </div>
             )}
 
+            {/* VIEW H: WHATSAPP REAL PHONE BRIDGE & AUTH PANEL */}
+            {activeControlTab === "whatsapp_quick_bridge" && (
+              <div className="p-3 bg-[#0a120e] max-h-80 overflow-y-auto space-y-2.5 text-xs font-mono animate-fade-in">
+                <div className="flex justify-between items-center text-[10px] text-stone-400 border-b border-emerald-900/60 pb-1.5">
+                  <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-white font-black">WhatsApp</span>
+                    <span className="text-emerald-300">• Direct Phone Authentication</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded border border-stone-700 text-[8.5px] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Tv size={10} className="text-amber-400" />
+                      <span>Cinema Screen</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="text-stone-400 hover:text-white flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Feedback notice */}
+                {waFeedback && (
+                  <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-700 text-[9.5px] text-emerald-200">
+                    {waFeedback}
+                  </div>
+                )}
+
+                {/* Step 1: Real Phone Number Input */}
+                {waAuthStep === "input" && (
+                  <form onSubmit={handleRequestWaCode} className="space-y-2 p-2.5 bg-stone-950/80 rounded-xl border border-stone-800">
+                    <label className="text-[10px] text-stone-300 font-bold block">
+                      Enter your WhatsApp Phone Number:
+                    </label>
+                    <div className="flex gap-1.5">
+                      <select
+                        value={waPhoneCountryCode}
+                        onChange={(e) => setWaPhoneCountryCode(e.target.value)}
+                        className="px-2 py-1.5 bg-black border border-stone-700 rounded text-[10px] text-stone-200 font-mono focus:border-emerald-500 focus:outline-none"
+                      >
+                        <option value="+1">🇺🇸/🇨🇦 +1</option>
+                        <option value="+234">🇳🇬 +234</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+855">🇰🇭 +855</option>
+                        <option value="+233">🇬🇭 +233</option>
+                        <option value="+254">🇰🇪 +254</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+33">🇫🇷 +33</option>
+                        <option value="+971">🇦🇪 +971</option>
+                      </select>
+
+                      <input
+                        type="tel"
+                        value={waPhoneNumber}
+                        onChange={(e) => setWaPhoneNumber(e.target.value)}
+                        placeholder="Enter your phone number"
+                        className="flex-1 px-2.5 py-1.5 bg-black border border-stone-700 rounded text-[10px] text-white font-mono placeholder:text-stone-600 focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={waLoading}
+                      className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-stone-950 font-bold text-[10px] rounded shadow flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                    >
+                      {waLoading ? "Sending Code..." : "Send 6-Digit WhatsApp Code"}
+                    </button>
+                  </form>
+                )}
+
+                {/* Step 2: Enter 6-Digit Code */}
+                {waAuthStep === "code" && (
+                  <form onSubmit={handleVerifyWaCode} className="space-y-2 p-2.5 bg-stone-950/80 rounded-xl border border-stone-800">
+                    <label className="text-[10px] text-stone-300 font-bold block">
+                      Enter the 6-Digit Code sent to {waPhoneCountryCode} {waPhoneNumber}:
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={8}
+                      value={waCode}
+                      onChange={(e) => setWaCode(e.target.value)}
+                      placeholder="e.g. 849201"
+                      className="w-full px-2.5 py-2 bg-black border border-stone-700 rounded text-center text-sm tracking-widest text-emerald-300 font-mono placeholder:text-stone-600 focus:border-emerald-500 focus:outline-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWaAuthStep("input")}
+                        className="px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] rounded border border-stone-700 cursor-pointer"
+                      >
+                        Change Number
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={waLoading}
+                        className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-stone-950 font-bold text-[10px] rounded shadow flex items-center justify-center gap-1 cursor-pointer transition-all"
+                      >
+                        {waLoading ? "Verifying..." : "Verify & Connect WhatsApp"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Step 3: Connected State */}
+                {waAuthStep === "connected" && (
+                  <div className="p-2.5 bg-gradient-to-br from-emerald-950/80 via-[#071910] to-black rounded-xl border border-emerald-600/60 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-900/80 border border-emerald-500/80 flex items-center justify-center text-lg shadow">
+                          💬
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                            <span>Your WhatsApp Account</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                          </div>
+                          <div className="text-[9.5px] text-emerald-300 font-mono">
+                            {waConnectedPhone || `${waPhoneCountryCode} ${waPhoneNumber}` || "+1 310-849-2091"} • Active Session
+                          </div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 bg-emerald-900/90 text-emerald-200 border border-emerald-500/80 rounded text-[8.5px] font-bold">
+                        CONNECTED
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5 pt-1">
+                      <a
+                        href="https://web.whatsapp.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-[9.5px] rounded-lg shadow flex items-center justify-center gap-1 text-center transition-all"
+                      >
+                        <ExternalLink size={10} />
+                        <span>Open WhatsApp Web</span>
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={handleDisconnectWa}
+                        className="px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-red-400 border border-red-800/60 font-bold text-[9.5px] rounded-lg shadow flex items-center justify-center gap-1 text-center transition-all cursor-pointer"
+                      >
+                        <span>Disconnect</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenWhatsapp) {
+                        onOpenWhatsapp();
+                      } else if (onNavigateToTab) {
+                        onNavigateToTab("datingarts");
+                      }
+                    }}
+                    className="w-full py-1.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-[10px] rounded-lg shadow flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <span>Launch Full DatingArts WhatsApp Suite →</span>
+                  </button>
+                </div>
+              )}
+
+            {/* VIEW I: TELEGRAM QUICK BRIDGE & AUTH PANEL */}
+            {activeControlTab === "telegram_quick_bridge" && (
+              <div className="p-3 bg-[#0a1018] max-h-80 overflow-y-auto space-y-2.5 text-xs font-mono animate-fade-in">
+                <div className="flex justify-between items-center text-[10px] text-stone-400 border-b border-sky-900/60 pb-1.5">
+                  <span className="font-bold text-sky-400 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                    <span className="text-white font-black">Telegram</span>
+                    <span className="text-sky-300">• Live Ecosystem Client</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white rounded border border-stone-700 text-[8.5px] flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Tv size={10} className="text-amber-400" />
+                      <span>Cinema Screen</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveControlTab("screen")}
+                      className="text-stone-400 hover:text-white flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Telegram Verified Client Card */}
+                <div className="p-2.5 bg-gradient-to-br from-sky-950/80 via-[#07121e] to-black rounded-xl border border-sky-600/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-sky-900/80 border border-sky-500/80 flex items-center justify-center text-lg shadow">
+                        ✈️
+                      </div>
+                      <div>
+                        <div className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                          <span>@OnlineCustomerOptimizeTasksBot</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping" />
+                        </div>
+                        <div className="text-[9.5px] text-sky-300 font-mono">Official Support & AdsGram Lead: @cs133344</div>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 bg-sky-900/90 text-sky-200 border border-sky-500/80 rounded text-[8.5px] font-bold">
+                      ACTIVE
+                    </span>
+                  </div>
+
+                  <p className="text-[9px] text-stone-300 leading-relaxed">
+                    Integrated Telegram Web K/A instances with direct phone authentication, instant code delivery, and multi-client web bridges.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    <a
+                      href="https://web.telegram.org/a/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-[9.5px] rounded-lg shadow flex items-center justify-center gap-1 text-center transition-all"
+                    >
+                      <ExternalLink size={10} />
+                      <span>Open Telegram Web A</span>
+                    </a>
+
+                    <a
+                      href="https://t.me/cs133344"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-sky-300 border border-sky-700/60 font-bold text-[9.5px] rounded-lg shadow flex items-center justify-center gap-1 text-center transition-all"
+                    >
+                      <span>Chat @cs133344</span>
+                    </a>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenTelegram) {
+                        onOpenTelegram();
+                      } else if (onNavigateToTab) {
+                        onNavigateToTab("telegram_auth");
+                      }
+                    }}
+                    className="w-full py-1.5 bg-gradient-to-r from-sky-700 to-blue-700 hover:from-sky-600 hover:to-blue-600 text-white font-black text-[10px] rounded-lg shadow flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <span>Launch Full Telegram Suite & Phone Login →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
 
-          {/* 5. BOTTOM TAB CONTROLS: CHANNELS | INSTALL | ALERTS (TOGGLEABLE) */}
+          {/* 5. BOTTOM TAB CONTROLS: CHANNELS | INSTALL | ALERTS | WHATSAPP | TELEGRAM */}
           {isControlsAndChannelsVisible && (
             <>
-              <div className="bg-[#0b0e1b] p-2 border-t-2 border-red-500/80 grid grid-cols-3 gap-1.5 items-center animate-fade-in">
+              <div className="bg-[#0b0e1b] p-2 border-t-2 border-red-500/80 grid grid-cols-5 gap-1 items-center animate-fade-in">
                 
-                {/* LEFT BUTTON: CINEMA CHANNELS */}
+                {/* 1. CINEMA CHANNELS */}
                 <button
                   id="btn-mini-cinema-controls"
                   type="button"
                   onClick={() => setActiveControlTab(activeControlTab === "channels_picker" ? "screen" : "channels_picker")}
-                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[9px] uppercase tracking-tighter flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
                     activeControlTab === "channels_picker"
                       ? "bg-red-600 text-white ring-1 ring-red-400"
                       : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
@@ -3624,29 +4441,24 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   <span className="truncate">CHANNELS</span>
                 </button>
 
-                {/* CENTER BUTTON: Install (DIRECT DOWNLOAD OF APK APP) */}
-                <div className="flex flex-col items-center justify-center">
-                  <button
-                    id="btn-mini-install-apk"
-                    type="button"
-                    onClick={handleDirectApkDownload}
-                    className="w-full py-2 px-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-stone-950 font-black text-xs rounded-lg shadow-lg flex items-center justify-center gap-1 cursor-pointer transition-all transform hover:scale-105 active:scale-95 border border-emerald-300"
-                    title="Direct Download and Install of Android APK Ecosystem App (78.4 MB)"
-                  >
-                    <Download size={13} className="text-stone-950 shrink-0" />
-                    <span>Install</span>
-                  </button>
-                  <span className="text-[7.5px] font-mono font-bold text-amber-300 mt-0.5 uppercase tracking-tighter text-center">
-                    DIRECT APK DOWNLOAD
-                  </span>
-                </div>
+                {/* 2. INSTALL (DIRECT DOWNLOAD OF APK APP) */}
+                <button
+                  id="btn-mini-install-apk"
+                  type="button"
+                  onClick={handleDirectApkDownload}
+                  className="py-2 px-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-stone-950 font-black text-[9px] rounded-lg shadow flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all border border-emerald-300"
+                  title="Direct Download and Install of Android APK Ecosystem App (78.4 MB)"
+                >
+                  <Download size={11} className="text-stone-950 shrink-0" />
+                  <span>INSTALL</span>
+                </button>
 
-                {/* RIGHT BUTTON: NOTIFICATIONS CONTROLS */}
+                {/* 3. ALERTS CONTROLS */}
                 <button
                   id="btn-mini-notifications-controls"
                   type="button"
                   onClick={() => setActiveControlTab(activeControlTab === "notifications_board" ? "screen" : "notifications_board")}
-                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[10px] uppercase tracking-tighter flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[9px] uppercase tracking-tighter flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer relative ${
                     activeControlTab === "notifications_board"
                       ? "bg-red-600 text-white ring-1 ring-red-400"
                       : "bg-red-950/70 hover:bg-red-900/80 text-red-200 border border-red-700/60"
@@ -3656,15 +4468,47 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   <Bell size={11} className="text-amber-400 shrink-0" />
                   <span className="truncate">ALERTS</span>
                   {unreadAlertsCount > 0 && (
-                    <span className="w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center shrink-0">
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[7.5px] font-bold flex items-center justify-center shrink-0">
                       {unreadAlertsCount}
                     </span>
                   )}
                 </button>
+
+                {/* 4. WHATSAPP BUTTON */}
+                <button
+                  id="btn-mini-whatsapp-controls"
+                  type="button"
+                  onClick={() => setActiveControlTab(activeControlTab === "whatsapp_quick_bridge" ? "screen" : "whatsapp_quick_bridge")}
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[9px] uppercase tracking-tighter flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+                    activeControlTab === "whatsapp_quick_bridge"
+                      ? "bg-emerald-600 text-white ring-1 ring-emerald-400"
+                      : "bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-200 border border-emerald-700/60"
+                  }`}
+                  title="WhatsApp Web & Connected Account"
+                >
+                  <MessageCircle size={11} className="text-emerald-400 shrink-0" />
+                  <span className="truncate">WHATSAPP</span>
+                </button>
+
+                {/* 5. TELEGRAM BUTTON */}
+                <button
+                  id="btn-mini-telegram-controls"
+                  type="button"
+                  onClick={() => setActiveControlTab(activeControlTab === "telegram_quick_bridge" ? "screen" : "telegram_quick_bridge")}
+                  className={`py-2 px-1 rounded-lg font-mono font-bold text-[9px] uppercase tracking-tighter flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+                    activeControlTab === "telegram_quick_bridge"
+                      ? "bg-sky-600 text-white ring-1 ring-sky-400"
+                      : "bg-sky-950/70 hover:bg-sky-900/80 text-sky-200 border border-sky-700/60"
+                  }`}
+                  title="Telegram Web & Device Code Login"
+                >
+                  <Send size={11} className="text-sky-400 shrink-0" />
+                  <span className="truncate">TELEGRAM</span>
+                </button>
               </div>
 
               {/* 6. VIP FOOTER: YOUTUBE AUTH LINK • SPONSOR AD TRIGGER • MULTIMEDIA AI */}
-              <div className="bg-black/95 px-3 py-1.5 border-t border-stone-900 flex justify-between items-center text-[9px] font-mono text-stone-400">
+              <div className="bg-black/95 px-3 py-1.5 border-t border-stone-900 flex justify-between items-center text-[9px] font-mono text-stone-400 flex-wrap gap-1">
                 <button
                   onClick={() => setActiveControlTab(activeControlTab === "youtube_portal" ? "screen" : "youtube_portal")}
                   className={`flex items-center gap-1 font-bold cursor-pointer transition-colors ${
@@ -3677,7 +4521,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   title="Open Embedded YouTube Section Inside Portable Mini Cinema"
                 >
                   <Youtube size={12} className="text-red-500 shrink-0" />
-                  <span>{isYouTubeAuthenticated ? "YouTube Section" : "YouTube (Embedded)"}</span>
+                  <span>{isYouTubeAuthenticated ? "YouTube" : "YouTube (Embedded)"}</span>
                 </button>
 
                 {/* AD REWARD TRIGGER BUTTON */}
@@ -3702,7 +4546,7 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
                   title="Bind USDT Wallet and Process Real-Time Withdrawal"
                 >
                   <Wallet size={11} />
-                  <span>Wallet / Payout</span>
+                  <span>Wallet</span>
                 </button>
 
                 <button

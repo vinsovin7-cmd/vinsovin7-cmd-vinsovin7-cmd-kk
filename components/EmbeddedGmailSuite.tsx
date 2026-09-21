@@ -20,8 +20,10 @@ import {
   ChevronRight,
   Sparkles,
   LogOut,
-  Key
+  Key,
+  Copy
 } from "lucide-react";
+import { TelegramGmailBotView } from "./TelegramGmailBotView";
 import {
   googleSignIn,
   fetchGmailMessages,
@@ -41,6 +43,18 @@ export function EmbeddedGmailSuite() {
 
   // Email State
   const [messages, setMessages] = useState<RealGmailMessage[]>([
+    {
+      id: "tg-code-official-1",
+      threadId: "t-tg-1",
+      subject: "Your Code - 28636",
+      from: "Telegram <noreply@telegram.org>",
+      to: "kansasnelly@gmail.com",
+      date: "1:56 PM",
+      snippet: "Dear C'S, Your code is: 28636. Use it to access your Telegram account. Never share your code with anyone.",
+      bodyText: "Dear C'S,\n\nYour code is: 28636. Use it to access your account.\nIf you didn't request this, simply ignore this message.\n\nYours,\nThe Telegram Team",
+      isRead: false,
+      category: "ecosystem"
+    },
     {
       id: "demo-1",
       threadId: "t-1",
@@ -80,8 +94,46 @@ export function EmbeddedGmailSuite() {
   ]);
 
   const [selectedMessage, setSelectedMessage] = useState<RealGmailMessage | null>(null);
-  const [activeTab, setActiveTab] = useState<"inbox" | "ecosystem" | "news">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "ecosystem" | "news" | "gmail_bot">("inbox");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [emailCopiedCode, setEmailCopiedCode] = useState<boolean>(false);
+
+  // Sync Telegram Bot messages from server
+  const syncGmailBotMessages = async () => {
+    try {
+      const res = await fetch("/api/telegram/gmail-bot/messages");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.messages)) {
+        const botEmails: RealGmailMessage[] = data.messages.map((m: any) => ({
+          id: `gmail-bot-${m.id}`,
+          threadId: `thread-bot-${m.id}`,
+          subject: m.subject || `Your Code - ${m.verificationCode || "28636"}`,
+          from: m.from || "Telegram <noreply@telegram.org>",
+          to: m.to || "kansasnelly@gmail.com",
+          date: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Just Now",
+          snippet: m.body || m.preview || "Telegram verification code received",
+          bodyText: m.body || `Your code is: ${m.verificationCode || "28636"}. Use it to access your account.`,
+          isRead: m.isRead || false,
+          category: "ecosystem"
+        }));
+
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newOnes = botEmails.filter((b) => !existingIds.has(b.id));
+          if (newOnes.length === 0) return prev;
+          return [...newOnes, ...prev];
+        });
+      }
+    } catch (e) {
+      // Background sync silent catch
+    }
+  };
+
+  useEffect(() => {
+    syncGmailBotMessages();
+    const timer = setInterval(syncGmailBotMessages, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Compose Email Modal
   const [showCompose, setShowCompose] = useState<boolean>(false);
@@ -387,6 +439,25 @@ export function EmbeddedGmailSuite() {
                 <span>Ecosystem Digest</span>
               </div>
             </button>
+
+            <button
+              onClick={() => setActiveTab("gmail_bot")}
+              className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === "gmail_bot"
+                  ? "bg-sky-600/20 text-sky-300 border border-sky-500/30 font-bold"
+                  : "text-stone-400 hover:bg-stone-800/50 hover:text-stone-200"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-4 h-4 rounded-full bg-sky-500 flex items-center justify-center text-white text-[9px] font-black shrink-0">
+                  ✓
+                </div>
+                <span>Gmail Bot (@GmailBot)</span>
+              </div>
+              <span className="px-1.5 py-0.5 text-[9px] bg-rose-950 text-rose-300 rounded font-mono border border-rose-800 font-bold">
+                39k
+              </span>
+            </button>
           </nav>
 
           <div className="mt-auto p-3 bg-stone-900/80 rounded-xl border border-stone-800/80 text-[11px] text-stone-400 space-y-2">
@@ -400,106 +471,180 @@ export function EmbeddedGmailSuite() {
           </div>
         </div>
 
-        {/* Message List Panel */}
-        <div className="w-80 border-r border-stone-800 flex flex-col bg-stone-950">
-          {/* Search Bar */}
-          <div className="p-3 border-b border-stone-800">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-stone-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search emails..."
-                className="w-full pl-9 pr-3 py-1.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:border-rose-500 placeholder-stone-500"
-              />
-            </div>
+        {activeTab === "gmail_bot" ? (
+          <div className="flex-1 bg-[#0e1621] overflow-y-auto p-4 sm:p-6">
+            <TelegramGmailBotView
+              onBack={() => setActiveTab("inbox")}
+              onCodeSelect={(code) => {
+                navigator.clipboard.writeText(code);
+                setEmailCopiedCode(true);
+                setStatusMessage(`Telegram Code ${code} copied to clipboard! Switch to Telegram tab to sign in.`);
+                setTimeout(() => setEmailCopiedCode(false), 2500);
+              }}
+              onAutoLogin={(code) => {
+                navigator.clipboard.writeText(code);
+                const btn = document.getElementById("btn-nav-telegram");
+                if (btn) btn.click();
+              }}
+            />
           </div>
-
-          {/* List items */}
-          <div className="flex-1 overflow-y-auto divide-y divide-stone-900">
-            {filteredMessages.length === 0 ? (
-              <div className="p-6 text-center text-stone-500 text-xs">
-                No emails match your filter.
-              </div>
-            ) : (
-              filteredMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  onClick={() => setSelectedMessage(msg)}
-                  className={`p-3.5 cursor-pointer transition-colors hover:bg-stone-900/80 ${
-                    selectedMessage?.id === msg.id ? "bg-stone-900 border-l-2 border-rose-500" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className={`text-xs truncate ${!msg.isRead ? "font-bold text-stone-100" : "text-stone-300"}`}>
-                      {msg.from.split("<")[0]}
-                    </p>
-                    <span className="text-[10px] text-stone-500 whitespace-nowrap">{msg.date}</span>
-                  </div>
-                  <h4 className={`text-xs truncate mb-1 ${!msg.isRead ? "font-semibold text-rose-200" : "text-stone-400"}`}>
-                    {msg.subject}
-                  </h4>
-                  <p className="text-[11px] text-stone-500 line-clamp-2 leading-relaxed">
-                    {msg.snippet}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Selected Email Reader Panel */}
-        <div className="flex-1 bg-stone-900/30 flex flex-col overflow-y-auto p-6">
-          {selectedMessage ? (
-            <div className="max-w-2xl mx-auto w-full bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
-              <div className="border-b border-stone-800 pb-4">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <h3 className="text-lg font-bold text-stone-100 leading-snug">
-                    {selectedMessage.subject}
-                  </h3>
-                  <span className="text-xs text-stone-400 bg-stone-800 px-2.5 py-1 rounded-lg border border-stone-700">
-                    {selectedMessage.date}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm">
-                    {selectedMessage.from.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-stone-200">{selectedMessage.from}</p>
-                    <p className="text-[11px] text-stone-500">To: {selectedMessage.to}</p>
-                  </div>
+        ) : (
+          <>
+            {/* Message List Panel */}
+            <div className="w-80 border-r border-stone-800 flex flex-col bg-stone-950">
+              {/* Search Bar */}
+              <div className="p-3 border-b border-stone-800">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-stone-500" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search emails..."
+                    className="w-full pl-9 pr-3 py-1.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-stone-200 focus:outline-none focus:border-rose-500 placeholder-stone-500"
+                  />
                 </div>
               </div>
 
-              {/* Body Content */}
-              <div className="text-xs text-stone-300 leading-relaxed whitespace-pre-wrap font-sans space-y-3">
-                {selectedMessage.bodyText || selectedMessage.snippet}
-              </div>
-
-              {/* Reply Button */}
-              <div className="border-t border-stone-800 pt-4 flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setComposeTo(selectedMessage.from.includes("<") ? selectedMessage.from.split("<")[1].replace(">", "") : selectedMessage.from);
-                    setComposeSubject("Re: " + selectedMessage.subject);
-                    setShowCompose(true);
-                  }}
-                  className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium rounded-xl border border-stone-700 transition-colors flex items-center gap-2"
-                >
-                  <Send className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Reply Email</span>
-                </button>
+              {/* List items */}
+              <div className="flex-1 overflow-y-auto divide-y divide-stone-900">
+                {filteredMessages.length === 0 ? (
+                  <div className="p-6 text-center text-stone-500 text-xs">
+                    No emails match your filter.
+                  </div>
+                ) : (
+                  filteredMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      onClick={() => setSelectedMessage(msg)}
+                      className={`p-3.5 cursor-pointer transition-colors hover:bg-stone-900/80 ${
+                        selectedMessage?.id === msg.id ? "bg-stone-900 border-l-2 border-rose-500" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className={`text-xs truncate ${!msg.isRead ? "font-bold text-stone-100" : "text-stone-300"}`}>
+                          {msg.from.split("<")[0]}
+                        </p>
+                        <span className="text-[10px] text-stone-500 whitespace-nowrap">{msg.date}</span>
+                      </div>
+                      <h4 className={`text-xs truncate mb-1 ${!msg.isRead ? "font-semibold text-rose-200" : "text-stone-400"}`}>
+                        {msg.subject}
+                      </h4>
+                      <p className="text-[11px] text-stone-500 line-clamp-2 leading-relaxed">
+                        {msg.snippet}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-          ) : (
-            <div className="m-auto text-center p-8 text-stone-500 space-y-3">
-              <Mail className="w-12 h-12 mx-auto text-stone-700" />
-              <p className="text-xs">Select an email from the list to view full content</p>
+
+            {/* Selected Email Reader Panel */}
+            <div className="flex-1 bg-stone-900/30 flex flex-col overflow-y-auto p-6">
+              {selectedMessage ? (
+                <div className="max-w-2xl mx-auto w-full bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-xl space-y-6">
+                  <div className="border-b border-stone-800 pb-4">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <h3 className="text-lg font-bold text-stone-100 leading-snug">
+                        {selectedMessage.subject}
+                      </h3>
+                      <span className="text-xs text-stone-400 bg-stone-800 px-2.5 py-1 rounded-lg border border-stone-700">
+                        {selectedMessage.date}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm">
+                        {selectedMessage.from.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-stone-200">{selectedMessage.from}</p>
+                        <p className="text-[11px] text-stone-500">To: {selectedMessage.to}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Telegram Login Code Quick Copy Banner if email is from Telegram or has code */}
+                  {(selectedMessage.subject.toLowerCase().includes("code") ||
+                    selectedMessage.from.toLowerCase().includes("telegram") ||
+                    selectedMessage.bodyText?.toLowerCase().includes("your code is")) && (
+                    <div className="p-4 bg-sky-950/80 border border-sky-600 rounded-2xl space-y-3 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sky-300 font-bold text-xs">
+                          <Send className="w-3.5 h-3.5 text-sky-400" />
+                          <span>Telegram Login Code Detected</span>
+                        </div>
+                        <span className="text-[10px] bg-sky-900 text-sky-200 px-2 py-0.5 rounded font-mono border border-sky-700">
+                          1-Click Copy & Sync
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-black/60 p-3 rounded-xl border border-sky-800">
+                        <div>
+                          <span className="text-[9px] uppercase tracking-wider text-sky-400 font-bold block">Auth Code</span>
+                          <div className="text-2xl font-black font-mono tracking-widest text-sky-300">
+                            {selectedMessage.subject.match(/\b\d{5}\b/)?.[0] || selectedMessage.bodyText?.match(/\b\d{5}\b/)?.[0] || "28636"}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const code = selectedMessage.subject.match(/\b\d{5}\b/)?.[0] || selectedMessage.bodyText?.match(/\b\d{5}\b/)?.[0] || "28636";
+                              navigator.clipboard.writeText(code);
+                              setEmailCopiedCode(true);
+                              setTimeout(() => setEmailCopiedCode(false), 2500);
+                            }}
+                            className="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow"
+                          >
+                            {emailCopiedCode ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{emailCopiedCode ? "Copied!" : "Copy Code"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const code = selectedMessage.subject.match(/\b\d{5}\b/)?.[0] || selectedMessage.bodyText?.match(/\b\d{5}\b/)?.[0] || "28636";
+                              navigator.clipboard.writeText(code);
+                              const btn = document.getElementById("btn-nav-telegram");
+                              if (btn) btn.click();
+                            }}
+                            className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow"
+                          >
+                            <span>Open Telegram Phone Login →</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Body Content */}
+                  <div className="text-xs text-stone-300 leading-relaxed whitespace-pre-wrap font-sans space-y-3">
+                    {selectedMessage.bodyText || selectedMessage.snippet}
+                  </div>
+
+                  {/* Reply Button */}
+                  <div className="border-t border-stone-800 pt-4 flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setComposeTo(selectedMessage.from.includes("<") ? selectedMessage.from.split("<")[1].replace(">", "") : selectedMessage.from);
+                        setComposeSubject("Re: " + selectedMessage.subject);
+                        setShowCompose(true);
+                      }}
+                      className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium rounded-xl border border-stone-700 transition-colors flex items-center gap-2"
+                    >
+                      <Send className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Reply Email</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="m-auto text-center p-8 text-stone-500 space-y-3">
+                  <Mail className="w-12 h-12 mx-auto text-stone-700" />
+                  <p className="text-xs">Select an email from the list to view full content</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Compose Email Modal */}
