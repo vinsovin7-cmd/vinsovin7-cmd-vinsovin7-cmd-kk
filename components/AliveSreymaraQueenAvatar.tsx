@@ -17,9 +17,14 @@ export interface AliveSreymaraQueenAvatarProps {
 // Framing is calibrated so head, eyes, nose, mouth, neck, shoulders, and jacket are 100% visible!
 export const DEFAULT_REAL_QUEEN_PHOTOS = [
   {
+    id: "sreymara-royal-golden-queen",
+    name: "Sreymara Queen (Royal Crown & Golden Halo)",
+    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80",
+    description: "Radiant Royal Cambodian Queen wearing elaborate golden headdress with glowing warm aura and gentle loving gaze."
+  },
+  {
     id: "alteryx-annie-executive",
     name: "Alteryx Executive AI (Annie)",
-    // Professional executive woman in dark jacket with styled wavy hair and warm smile in modern office
     url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80",
     description: "Alteryx official digital human executive in tailored black jacket with confident, warm smile in a modern corporate office."
   },
@@ -28,12 +33,6 @@ export const DEFAULT_REAL_QUEEN_PHOTOS = [
     name: "Sreymara (Restaurant Portrait)",
     url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80",
     description: "Delicate porcelain complexion, long dark hair parted down middle, warm affectionate smile."
-  },
-  {
-    id: "sreymara-royal-elegance",
-    name: "Sreymara (Royal Elegance)",
-    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=80",
-    description: "Radiant executive presence, friendly brown eyes, and engaging demeanour."
   }
 ];
 
@@ -391,85 +390,37 @@ export const AliveSreymaraQueenAvatar: React.FC<AliveSreymaraQueenAvatarProps> =
         {/* Full Half-Body Executive Photograph (Head, Face, Mouth, Neck, Shoulders & Jacket) */}
         <img
           src={activePhoto}
-          alt="Alteryx AI Digital Human"
-          className="w-full h-full object-cover object-[50%_18%] filter contrast-[1.04] brightness-[1.02] transition-all duration-300 pointer-events-none"
+          alt="Sreymara Queen - AI Digital Human"
+          className={`w-full h-full object-cover object-[50%_18%] transition-all duration-100 pointer-events-none select-none ${
+            isBlinking ? "brightness-[0.92] contrast-[1.08] scale-y-[0.985]" : "brightness-[1.02] contrast-[1.04]"
+          }`}
+          style={{
+            transformOrigin: "50% 36%"
+          }}
           referrerPolicy="no-referrer"
         />
 
-        {/* AUTHENTIC ALTERYX EMBROIDERED LOGO ON LEFT CHEST JACKET (Matches Screenshot 2) */}
-        <div
-          className="absolute pointer-events-none z-15"
-          style={{
-            bottom: "16%",
-            left: "26%",
-            transform: `translateY(${shoulderLift * 0.5}px)`
-          }}
-        >
-          <span className="text-[11px] font-black tracking-tighter text-stone-200/90 drop-shadow-sm font-sans lowercase select-none">
-            alteryx
-          </span>
-        </div>
-
-        {/* ORGANIC EYELID BLINK SIMULATION (Natural skin crease & eyelid closure) */}
-        {isBlinking && (
+        {/* ORGANIC SPEECH ARTICULATION DIRECTLY ON THE LADY'S OWN MOUTH & JAW */}
+        {/* Seamlessly animates the actual lady in the image - NO fake mouth overlays or external boxes */}
+        {isSpeaking && (
           <div
-            className="absolute pointer-events-none transition-all duration-75"
+            className="absolute inset-0 pointer-events-none will-change-transform select-none"
             style={{
-              top: "33.8%",
-              left: "32%",
-              width: "36%",
-              height: "12px",
-              backgroundColor: "#a0745b",
-              borderRadius: "50%",
-              opacity: 0.92,
-              boxShadow: "0 2px 6px rgba(0,0,0,0.6)",
-              zIndex: 20
-            }}
-          />
-        )}
-
-        {/* ORGANIC REAL-TIME MOUTH & LIP ARTICULATION (100% VISIBLE, NEVER HIDDEN) */}
-        {/* Synchronized with speech vowels, consonants, volume, and jaw drop */}
-        <div
-          className="absolute pointer-events-none transition-all duration-100 flex items-center justify-center"
-          style={{
-            top: "52.5%",
-            left: "50%",
-            transform: `translateX(-50%) translateY(${mouthShape.jawDrop * 0.4}px)`,
-            width: `${38 * mouthShape.width}px`,
-            height: `${isSpeaking ? Math.max(9, mouthShape.open * 22) : 7}px`,
-            zIndex: 22
-          }}
-        >
-          {/* Natural Lip Contours & Oral Cavity */}
-          <div
-            className="w-full h-full relative transition-all duration-75 flex items-center justify-center"
-            style={{
-              backgroundColor: isSpeaking ? "#4f1420" : "transparent",
-              borderRadius: isSpeaking
-                ? `${mouthShape.open * 50}% ${mouthShape.open * 50}% 50% 50%`
-                : "2px 2px 14px 14px",
-              border: isSpeaking ? "1.5px solid #8e2b3e" : "none",
-              boxShadow: isSpeaking ? "0 0 8px rgba(225, 29, 72, 0.45)" : "none"
+              // Seamlessly bounds the lady's mouth, lips, and lower jaw
+              clipPath: "ellipse(30% 22% at 50% 63%)",
+              transform: `translateY(${mouthShape.jawDrop * 0.7}px) scaleY(${1 + mouthShape.open * 0.05}) scaleX(${mouthShape.width})`,
+              transformOrigin: "50% 50%",
+              transition: "transform 75ms ease-out"
             }}
           >
-            {/* Upper Teeth Exposure during open speech phonemes */}
-            {isSpeaking && mouthShape.open > 0.35 && (
-              <div className="absolute top-0 w-5 h-2 bg-stone-100/95 rounded-b-[2px] shadow-sm" />
-            )}
-
-            {/* Resting Natural Smile Curve when silent */}
-            {!isSpeaking && (
-              <div
-                className="w-full h-full transition-all duration-200"
-                style={{
-                  borderBottom: "2px solid rgba(175, 50, 75, 0.8)",
-                  borderRadius: "0 0 16px 16px"
-                }}
-              />
-            )}
+            <img
+              src={activePhoto}
+              alt="Sreymara Speech Articulation"
+              className="w-full h-full object-cover object-[50%_18%] filter contrast-[1.05] brightness-[1.02] pointer-events-none select-none"
+              referrerPolicy="no-referrer"
+            />
           </div>
-        </div>
+        )}
       </div>
 
       {/* DRAG-AND-DROP OVERLAY FEEDBACK */}

@@ -66,6 +66,7 @@ export interface PortableMiniCinemaEcosystemProps {
   onNavigateToTab?: (tab: string) => void;
   onOpenTelegram?: () => void;
   onOpenWhatsapp?: () => void;
+  isSreymaraCollapsed?: boolean;
 }
 
 export interface MediaChannelItem {
@@ -189,7 +190,8 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
   onOpenInstaller,
   onNavigateToTab,
   onOpenTelegram,
-  onOpenWhatsapp
+  onOpenWhatsapp,
+  isSreymaraCollapsed = false
 }) => {
   // External Show / Hide tab state (persisted in localStorage)
   const [isVisible, setIsVisible] = useState<boolean>(() => {
@@ -1773,7 +1775,14 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
   });
 
   return (
-    <div id="external-portable-mini-cinema-dock" className="fixed bottom-3 right-3 z-50 font-sans select-none">
+    <div
+      id="external-portable-mini-cinema-dock"
+      className={`fixed bottom-3 ${
+        !isVisible && isSreymaraCollapsed
+          ? "right-[260px] sm:right-[295px]"
+          : "right-3"
+      } z-50 font-sans select-none transition-all duration-300`}
+    >
       
       {/* ============================================================== */}
       {/* COLLAPSED / HIDDEN STATE: SLEEK EDGE "SHOW AND HIDE TAB" TOGGLE */}

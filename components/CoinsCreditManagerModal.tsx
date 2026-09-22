@@ -162,49 +162,36 @@ export function CoinsCreditManagerModal({
           <div className="bg-gradient-to-br from-stone-950 via-stone-900 to-amber-950/30 border border-amber-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-amber-400/80 mb-1">
-                  Your Available Coins Balance
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-400/80 mb-1 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  <span>Ecosystem AI Quota & Credits</span>
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-amber-300 tracking-tight">{credits}</span>
-                  <span className="text-sm font-semibold text-amber-400/80">Coins</span>
+                  <span className="text-4xl font-extrabold text-amber-300 tracking-tight">∞ Unlimited</span>
+                  <span className="text-sm font-semibold text-amber-400/80">AI Credits</span>
                 </div>
-                <p className="text-xs text-stone-400 mt-2 flex items-center gap-1.5">
+                <p className="text-xs text-stone-300 mt-2 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Free Member Allowance: <strong>{dailyAllowance} Coins/day</strong></span>
+                  <span>Autonomous Continuous Learning Active • <strong>Never Stops While Building</strong></span>
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <div className="px-4 py-2.5 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span>Infinite Compute & Synaptic Expansion Enabled</span>
+                </div>
                 <button
                   onClick={handleClaimDailyFree}
                   disabled={isClaiming}
-                  className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-stone-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-stone-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   <Gift className="w-4 h-4" />
-                  <span>{isClaiming ? "Claiming..." : `Claim Free +${dailyAllowance} Daily Coins`}</span>
+                  <span>{isClaiming ? "Refreshing..." : `Sync Unlimited Compute Grant`}</span>
                 </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleInstantFreeTopUp(200)}
-                    className="flex-1 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 text-[11px] font-semibold rounded-lg border border-amber-500/20 text-center"
-                  >
-                    +200 Free
-                  </button>
-                  <button
-                    onClick={() => handleInstantFreeTopUp(500)}
-                    className="flex-1 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 text-[11px] font-semibold rounded-lg border border-amber-500/20 text-center"
-                  >
-                    +500 Free
-                  </button>
-                  <button
-                    onClick={() => handleInstantFreeTopUp(1000)}
-                    className="flex-1 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 text-[11px] font-semibold rounded-lg border border-amber-500/20 text-center"
-                  >
-                    +1,000 Free
-                  </button>
-                </div>
               </div>
             </div>
           </div>
