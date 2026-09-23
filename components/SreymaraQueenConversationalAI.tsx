@@ -232,26 +232,63 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
   onClose,
   isFloating = true
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "msg-init-1",
-      sender: "queen",
-      text: "speech input and output, workflow logic, and governed access to enterprise data, with Alteryx serving as the layer that prepares data, applies business logic, and powers the responses or downstream actions.",
-      timestamp: "Just now"
-    },
-    {
-      id: "msg-init-2",
-      sender: "queen",
-      text: "For the step-by-step implementation details, though, I want to make sure you get accurate technical guidance, so the best next step is MyAlteryx (https://my.alteryx.com/).",
-      timestamp: "Just now"
-    },
-    {
-      id: "msg-init-3",
-      sender: "queen",
-      text: "Is there a high-level architecture question I can help with before you head there?",
-      timestamp: "Just now"
+  // Real conversation history (loaded from localStorage, zero placeholder responses)
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem("sreymara_queen_chat_history");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const cleaned = parsed.filter(m => 
+            !m.text.includes("speech input and output, workflow logic") &&
+            !m.text.includes("Is there a high-level architecture question") &&
+            !m.text.includes("best next step is MyAlteryx")
+          );
+          if (cleaned.length > 0) return cleaned;
+        }
+      }
+    } catch {}
+    return [
+      {
+        id: "msg-init-gemini",
+        sender: "queen",
+        text: "Hello! I am Sreymara Queen, powered directly by Google Gemini 3.8. Ask me anything, speak to me by name, or request deep analytical and ecosystem guidance.",
+        timestamp: "Just now"
+      }
+    ];
+  });
+
+  // Persistent Chat History
+  useEffect(() => {
+    try {
+      localStorage.setItem("sreymara_queen_chat_history", JSON.stringify(messages.slice(-30)));
+    } catch {}
+  }, [messages]);
+
+  // Robust Close Handler that guarantees state persistence to localStorage
+  const handleClose = () => {
+    try {
+      localStorage.setItem("alphaqubit_sreymara_agent_open", "false");
+    } catch {}
+    if (onClose) {
+      onClose();
     }
-  ]);
+  };
+
+  const clearChatHistory = () => {
+    const fresh: ChatMessage[] = [
+      {
+        id: `msg-fresh-${Date.now()}`,
+        sender: "queen",
+        text: "Chat cleared. I am Sreymara Queen on Gemini 3.8. How can I help you?",
+        timestamp: "Just now"
+      }
+    ];
+    setMessages(fresh);
+    try {
+      localStorage.setItem("sreymara_queen_chat_history", JSON.stringify(fresh));
+    } catch {}
+  };
 
   const [inputVal, setInputVal] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -827,7 +864,7 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
       const fallbackMsg: ChatMessage = {
         id: `queen-fb-${Date.now()}`,
         sender: "queen",
-        text: `Hello my dear friend! I hope you are feeling wonderful. In Alteryx Designer, we can build workflows directly from your prompt, generate synthetic data, and walk step-by-step through every transformation tool. Would you like me to demonstrate our Customer Churn Analysis or Financial Reconciliation workflow right now?`,
+        text: `I heard you, but the connection momentarily re-routed. I am Sreymara Queen on Gemini 3.8. Please repeat your prompt or call my name!`,
         timestamp: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
       };
       setMessages(prev => [...prev, fallbackMsg]);
@@ -899,14 +936,27 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
     <div
       className={`${
         isFloating
-          ? "fixed bottom-4 right-4 z-50 transition-all duration-300 shadow-2xl"
+          ? "fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-50 transition-all duration-300 shadow-2xl"
           : "w-full h-full flex flex-col"
       } ${
         isExpanded
-          ? "w-[96vw] sm:w-[620px] h-[92vh] max-h-[880px]"
-          : "w-[94vw] sm:w-[410px] h-[720px] max-h-[88vh]"
+          ? "w-[96vw] sm:w-[620px] h-[92vh] max-h-[860px]"
+          : "w-[94vw] sm:w-[410px] h-[640px] max-h-[82vh]"
       } ${isMinimized ? "h-14 overflow-hidden" : ""}`}
     >
+      {/* 0. PROMINENT FLOATING EMERGENCY HIDE TAB BUTTON - ALWAYS VISIBLE OVER MODAL */}
+      {onClose && (
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute -top-3.5 -right-2 z-[60] px-3.5 py-1.5 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-mono font-black text-xs rounded-full shadow-[0_0_20px_rgba(239,68,68,0.7)] border-2 border-white flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-all select-none"
+          title="Click to hide Sreymara Queen and dock to bottom bar"
+        >
+          <X size={14} strokeWidth={3} className="text-white" />
+          <span className="tracking-tight uppercase">HIDE TAB (COLLAPSE)</span>
+        </button>
+      )}
+
       <div className="w-full h-full flex flex-col bg-[#06080e] border-2 border-sky-500/50 rounded-3xl overflow-hidden shadow-2xl shadow-sky-950/70 font-sans text-stone-100 ring-1 ring-white/15">
         
         {/* 1. TOP ROYAL HEADER & NAVIGATION TABS */}
@@ -923,22 +973,36 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
             <div>
               <div className="flex items-center gap-1.5 leading-tight">
                 <span className="font-extrabold text-xs text-white tracking-wide">Sreymara Queen</span>
+                <span className="px-1.5 py-0.2 bg-sky-950 text-sky-300 border border-sky-600/60 rounded text-[8px] font-mono font-bold flex items-center gap-0.5">
+                  <Sparkles size={8} className="text-amber-300 fill-amber-300" />
+                  GEMINI 3.8
+                </span>
                 <span className="px-1.5 py-0.2 bg-rose-950 text-rose-300 border border-rose-600/60 rounded text-[8px] font-mono font-bold flex items-center gap-0.5">
                   <Heart size={8} className="text-rose-400 fill-rose-400" />
                   FEMALE VOICE
                 </span>
               </div>
-              <span className="text-[9.5px] text-stone-400 font-mono">Alteryx AI Partner & Royal Guide</span>
+              <span className="text-[9.5px] text-stone-400 font-mono">Gemini 3.8 Flash • Conversational AI & Guide</span>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Clear Chat Button */}
+            <button
+              type="button"
+              onClick={clearChatHistory}
+              className="p-1.5 hover:bg-stone-800 text-stone-400 hover:text-amber-300 rounded-lg transition-colors cursor-pointer"
+              title="Clear Chat History"
+            >
+              <RotateCcw size={13} />
+            </button>
+
             {/* Prominent Collapse & Hide Tab button - folds entire interface down to bottom dock */}
             {onClose && (
               <button
                 id="btn-sreymara-collapse-tab"
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-2.5 py-1 bg-gradient-to-r from-sky-950 via-[#0a1832] to-blue-950 hover:from-sky-900 hover:to-blue-900 text-sky-200 hover:text-white rounded-lg border border-sky-500/60 hover:border-sky-400 transition-all flex items-center gap-1 text-[11px] font-bold shadow-sm cursor-pointer group"
                 title="Collapse and hide application into bottom dock tab"
               >
@@ -955,7 +1019,7 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
             </button>
             {onClose && (
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="p-1.5 hover:bg-red-950/80 text-stone-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
                 title="Hide / Close Sreymara Queen"
               >
@@ -1160,24 +1224,31 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
                     }}
                   />
 
-                  {/* Real-Time Live Status Indicator (Discreet top-right dot) */}
-                  <div className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-full border border-stone-700/70 text-[9.5px] font-medium text-stone-300 flex items-center gap-1.5 pointer-events-none z-20">
-                    {isSpeaking ? (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
-                        <span className="text-rose-300 font-semibold">Speaking</span>
-                      </>
-                    ) : isMicActive ? (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                        <span className="text-emerald-300 font-semibold">Listening</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-emerald-300">Active</span>
-                      </>
+                  {/* Floating Action Buttons over Stage (Always visible, unmistakable close/hide) */}
+                  <div className="absolute top-2.5 right-2.5 z-30 flex items-center gap-1.5">
+                    {onClose && (
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-2.5 py-1 bg-red-600/90 hover:bg-red-500 text-white font-mono font-black text-[10px] rounded-lg border border-white/60 shadow-lg flex items-center gap-1 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                        title="Hide Sreymara Queen and restore bottom dock"
+                      >
+                        <X size={12} strokeWidth={3} />
+                        <span>HIDE TAB</span>
+                      </button>
                     )}
+                  </div>
+
+                  <div className="absolute top-2.5 left-2.5 z-30 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={toggleAvatarSectionFold}
+                      className="px-2 py-1 bg-black/80 hover:bg-black text-stone-200 hover:text-white font-mono font-bold text-[9.5px] rounded-lg border border-stone-600 shadow flex items-center gap-1 cursor-pointer transition-all"
+                      title="Fold face section"
+                    >
+                      <EyeOff size={11} />
+                      <span>Minimize Face</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1707,6 +1778,21 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
                 Alteryx Privacy Policy
               </a>
             </p>
+
+            {/* PROMINENT BOTTOM HIDE / DOCK BUTTON (Directly visible at the bottom of the form) */}
+            {onClose && (
+              <div className="pt-1 select-none">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="w-full py-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-mono font-black text-xs rounded-xl shadow-lg border border-red-400/60 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 uppercase tracking-wide"
+                  title="Click to hide Sreymara Queen and dock to bottom bar"
+                >
+                  <ChevronDown size={15} strokeWidth={3} className="text-amber-300 animate-bounce" />
+                  <span>HIDE & DOCK TO BOTTOM BAR</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

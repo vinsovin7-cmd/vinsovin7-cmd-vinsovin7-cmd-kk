@@ -1778,10 +1778,12 @@ export const PortableMiniCinemaEcosystem: React.FC<PortableMiniCinemaEcosystemPr
     <div
       id="external-portable-mini-cinema-dock"
       className={`fixed bottom-3 ${
-        !isVisible && isSreymaraCollapsed
-          ? "right-[260px] sm:right-[295px]"
+        !isVisible
+          ? isSreymaraCollapsed
+            ? "right-[260px] sm:right-[295px]"
+            : "right-3 sm:right-[430px] max-sm:bottom-[660px]"
           : "right-3"
-      } z-50 font-sans select-none transition-all duration-300`}
+      } z-[60] font-sans select-none transition-all duration-300`}
     >
       
       {/* ============================================================== */}

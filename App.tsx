@@ -20,7 +20,10 @@ import { WebsiteToAppConverter } from './components/WebsiteToAppConverter';
 import { AdsGramTonPayoutSuite } from './components/AdsGramTonPayoutSuite';
 import { PortableMiniCinemaEcosystem } from './components/PortableMiniCinemaEcosystem';
 import { SreymaraQueenConversationalAI } from './components/SreymaraQueenConversationalAI';
-import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star, Mic, Bot } from 'lucide-react';
+import { CrossBorderPaymentGatewaySuite } from './components/CrossBorderPaymentGatewaySuite';
+import { CoinbaseAgentMcpSuite } from './components/CoinbaseAgentMcpSuite';
+import { FranzMultiMessengerWrapper } from './components/FranzMultiMessengerWrapper';
+import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star, Mic, Bot, Building2, CreditCard, TrendingUp, MessageSquare } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
   return (
@@ -45,10 +48,17 @@ const SEVEN_COLOR_STARS = [
 
 const App: React.FC = () => {
   const [selectedStar, setSelectedStar] = useState<typeof SEVEN_COLOR_STARS[0] | null>(null);
-  const [activeMainTab, setActiveMainTab] = useState<"web_to_app" | "adsgram_ton" | "revenue" | "ton_wallet" | "external_api" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
+  const [activeMainTab, setActiveMainTab] = useState<"franz_messenger" | "web_to_app" | "adsgram_ton" | "revenue" | "ton_wallet" | "external_api" | "cross_border_payments" | "coinbase_mcp" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
     if (typeof window !== "undefined") {
+      const pathname = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       const href = window.location.href.toLowerCase();
+      // Dedicated Franz Multi-Messenger URL detection (/franz or #franz)
+      if (pathname.startsWith("/franz") || pathname.startsWith("/messenger") || hash.includes("franz") || hash.includes("messenger") || hash.includes("webview")) {
+        return "franz_messenger";
+      }
+      if (hash.includes("coinbase") || hash.includes("mcp") || hash.includes("cdp") || hash.includes("base_mcp")) return "coinbase_mcp";
+      if (hash.includes("cross_border") || hash.includes("ach") || hash.includes("banking") || hash.includes("payments") || hash.includes("wise") || hash.includes("stripe")) return "cross_border_payments";
       if (hash.includes("adsgram") || hash.includes("payout") || hash.includes("ton_payout")) return "adsgram_ton";
       if (hash.includes("converter") || hash.includes("web_to_app") || hash.includes("admob") || hash.includes("apk")) return "web_to_app";
       if (hash.includes("dating") || hash.includes("matchmaking") || hash.includes("datingarts")) return "datingarts";
@@ -67,7 +77,7 @@ const App: React.FC = () => {
       if (hash.includes("revenue") || hash.includes("dashboard")) return "revenue";
       if (hash.includes("quantum")) return "quantum";
       const saved = localStorage.getItem("alphaqubit_active_main_tab");
-      if (saved) return saved as any;
+      if (saved && saved !== "franz_messenger") return saved as any;
     }
     return "web_to_app";
   });
@@ -89,25 +99,39 @@ const App: React.FC = () => {
   });
   const [showGoogleSignInModal, setShowGoogleSignInModal] = useState<boolean>(false);
   const [showAndroidInstallerModal, setShowAndroidInstallerModal] = useState<boolean>(false);
-  const [isTabHidden, setIsTabHidden] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("alphaqubit_is_tab_hidden") === "true";
-    }
-    return false;
+  const [showUrlNavigatorModal, setShowUrlNavigatorModal] = useState<boolean>(false);
+  // Guarantee UI is always visible on fresh render and never permanently collapsed
+  const [isTabHidden, setIsTabHidden] = useState<boolean>(false);
+  const [isNavBannerHidden, setIsNavBannerHidden] = useState<boolean>(false);
+  const [isSreymaraAgentOpen, setIsSreymaraAgentOpen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("alphaqubit_sreymara_agent_open");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    } catch {}
+    return false; // Stays hidden / collapsed until user explicitly clicks to show it
   });
-  const [isNavBannerHidden, setIsNavBannerHidden] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("alphaqubit_nav_banner_hidden") === "true";
-    }
-    return false;
-  });
-  const [isSreymaraAgentOpen, setIsSreymaraAgentOpen] = useState<boolean>(true);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    try {
+      localStorage.setItem("alphaqubit_sreymara_agent_open", String(isSreymaraAgentOpen));
+    } catch {}
+  }, [isSreymaraAgentOpen]);
+
+  useEffect(() => {
     localStorage.setItem("alphaqubit_active_main_tab", activeMainTab);
-    if (window.location.hash !== `#${activeMainTab}`) {
-      window.history.replaceState(null, "", `#${activeMainTab}`);
+    if (activeMainTab === "franz_messenger") {
+      if (window.location.pathname !== "/franz") {
+        window.history.replaceState(null, "", "/franz");
+      }
+    } else {
+      if (window.location.pathname === "/franz") {
+        window.history.replaceState(null, "", `/#${activeMainTab}`);
+      } else if (window.location.hash !== `#${activeMainTab}`) {
+        window.history.replaceState(null, "", `#${activeMainTab}`);
+      }
     }
   }, [activeMainTab]);
 
@@ -123,10 +147,16 @@ const App: React.FC = () => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "").toLowerCase();
       const pathname = window.location.pathname.toLowerCase();
-      if (pathname.includes("/admin") || hash === "admin_palace" || hash === "admin" || hash === "palace" || hash === "master_admin") {
+      if (pathname.startsWith("/franz") || pathname.startsWith("/messenger") || hash.includes("franz") || hash.includes("messenger") || hash.includes("webview")) {
+        setActiveMainTab("franz_messenger");
+        setIsTabHidden(false);
+      }
+      else if (pathname.includes("/admin") || hash === "admin_palace" || hash === "admin" || hash === "palace" || hash === "master_admin") {
         setActiveMainTab("admin_palace");
         setIsTabHidden(false);
       }
+      else if (hash === "coinbase_mcp" || hash === "coinbase" || hash === "mcp" || hash === "cdp" || hash === "wallet_mcp") setActiveMainTab("coinbase_mcp");
+      else if (hash === "cross_border_payments" || hash === "cross_border" || hash === "payments" || hash === "ach" || hash === "banking") setActiveMainTab("cross_border_payments");
       else if (hash === "adsgram_ton" || hash === "adsgram" || hash === "payout" || hash === "ton_payout") setActiveMainTab("adsgram_ton");
       else if (hash === "web_to_app" || hash === "converter" || hash === "website_to_app" || hash === "admob" || hash === "apk") setActiveMainTab("web_to_app");
       else if (hash === "ton_wallet" || hash === "wallet" || hash === "ton") setActiveMainTab("ton_wallet");
@@ -148,7 +178,11 @@ const App: React.FC = () => {
     handleHashChange();
 
     window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener("popstate", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener("popstate", handleHashChange);
+    };
   }, []);
 
   // BULLETPROOF INBUILD FRAME GUARD: Intercept all external link clicks so NOTHING opens outside
@@ -329,10 +363,20 @@ const App: React.FC = () => {
               <h1 className="font-serif font-bold text-lg tracking-wide text-white flex items-center gap-2">
                 AlphaQubit Quantum Ecosystem <span className="text-nobel-gold font-normal">2024</span>
               </h1>
-              <p className="text-xs text-stone-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>Shopify ID: 5144661590b... • Mail.com Proxy Connected</span>
-              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs text-stone-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                  <span>Shopify ID: 5144661590b... • Mail.com Proxy Connected</span>
+                </p>
+                <button
+                  onClick={() => setShowUrlNavigatorModal(true)}
+                  className="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 border border-sky-500/50 text-sky-300 font-mono text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  title="View and copy distinct browser URLs for AlphaQubit Ecosystem & Franz Messenger"
+                >
+                  <Share2 size={10} />
+                  <span>Dual URLs (/ & /franz)</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -372,6 +416,25 @@ const App: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-stone-950 animate-ping" />
                   LIVE MIC
                 </span>
+              </button>
+
+              {/* Franz Multi-Messenger Core Wrapper & Isolated Webview Engine Tab */}
+              <button
+                id="btn-nav-franz-messenger"
+                onClick={() => {
+                  setActiveMainTab("franz_messenger");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "franz_messenger" && !isTabHidden
+                    ? "bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 text-white border-sky-300 ring-2 ring-sky-400/50"
+                    : "bg-sky-950/70 text-sky-200 hover:text-white border-sky-700/80"
+                }`}
+                title="Franz Multi-Messenger Electron Core Wrapper with Isolated Webview Containers & Owner Bypass"
+              >
+                <MessageSquare size={14} className="text-sky-300" />
+                <span>Franz Messenger OS</span>
+                <span className="px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded text-[9px] font-black uppercase">OWNER VIP</span>
               </button>
 
               {/* Primary Google Play Website to App Converter Tab */}
@@ -441,6 +504,44 @@ const App: React.FC = () => {
                 <Wallet size={14} className="text-cyan-400" />
                 <span>Telegram @Wallet</span>
                 <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">USDT</span>
+              </button>
+
+              {/* Dedicated Cross-Border Payments & Banking Architecture Button */}
+              <button
+                id="btn-nav-cross-border"
+                onClick={() => {
+                  setActiveMainTab("cross_border_payments");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "cross_border_payments" && !isTabHidden
+                    ? "bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-600 text-stone-950 font-black border-amber-300 ring-2 ring-emerald-400/40"
+                    : "bg-[#0F1420] text-amber-300 hover:text-white border-amber-500/40"
+                }`}
+                title="Cross-Border Payments (Stripe Connect, Wise, Flutterwave, ACH Timelines & Virtual Accounts)"
+              >
+                <Building2 size={14} className="text-amber-400" />
+                <span>Cross-Border Banking</span>
+                <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded text-[9px] font-mono border border-emerald-700 font-bold">ACH • NGN</span>
+              </button>
+
+              {/* Dedicated Coinbase MCP (Coinbase Trading, Wallet MCP, CDP MCP) */}
+              <button
+                id="btn-nav-coinbase-mcp"
+                onClick={() => {
+                  setActiveMainTab("coinbase_mcp");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "coinbase_mcp" && !isTabHidden
+                    ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 text-white font-black border-blue-400 ring-2 ring-blue-400/40"
+                    : "bg-[#0B101D] text-blue-300 hover:text-white border-blue-500/30"
+                }`}
+                title="Coinbase for Agents (Coinbase Trading MCP, Wallet MCP Base DeFi, CDP CLI MCP)"
+              >
+                <TrendingUp size={14} className="text-blue-400" />
+                <span>Coinbase MCP</span>
+                <span className="px-1.5 py-0.5 bg-blue-950 text-blue-300 rounded text-[9px] font-mono border border-blue-700 font-bold">3 MCPs</span>
               </button>
 
               {/* Dedicated External Systems Transaction Integration Button */}
@@ -845,6 +946,13 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* VIEW: FRANZ MULTI-MESSENGER ELECTRON CORE WRAPPER & ISOLATED WEBVIEW ENGINE */}
+        {!isTabHidden && activeMainTab === "franz_messenger" && (
+          <div className="w-full h-[88vh] min-h-[660px] max-h-[920px] rounded-2xl overflow-hidden border border-stone-800 shadow-2xl animate-fade-in flex flex-col">
+            <FranzMultiMessengerWrapper onCloseToMain={() => setActiveMainTab("web_to_app")} />
+          </div>
+        )}
+
         {/* VIEW: WEBSITE TO APP CONVERTER (com.webtoapp.converter from Google Play) */}
         {!isTabHidden && activeMainTab === "web_to_app" && (
           <div className="space-y-6 animate-fade-in flex flex-col items-center">
@@ -917,6 +1025,20 @@ const App: React.FC = () => {
         {!isTabHidden && activeMainTab === "admin_palace" && (
           <div className="space-y-6 animate-fade-in">
             <AdminControlPalace onClose={() => setActiveMainTab("revenue")} />
+          </div>
+        )}
+
+        {/* VIEW: CROSS-BORDER PAYMENTS & BANKING ARCHITECTURE (PCI-DSS & ACH) */}
+        {!isTabHidden && activeMainTab === "cross_border_payments" && (
+          <div className="space-y-6 animate-fade-in">
+            <CrossBorderPaymentGatewaySuite onClose={() => setActiveMainTab("revenue")} />
+          </div>
+        )}
+
+        {/* VIEW: COINBASE MCP & AGENT ECOSYSTEM SUITE */}
+        {!isTabHidden && activeMainTab === "coinbase_mcp" && (
+          <div className="space-y-6 animate-fade-in">
+            <CoinbaseAgentMcpSuite onClose={() => setActiveMainTab("revenue")} />
           </div>
         )}
 
@@ -1217,6 +1339,126 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* DISTINCT BROWSER URLS NAVIGATOR & COPIER MODAL */}
+      {showUrlNavigatorModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in select-none">
+          <div className="w-full max-w-lg bg-[#11141c] border-2 border-amber-500/50 rounded-2xl shadow-2xl p-6 text-stone-100 flex flex-col space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-base">
+                  🔗
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-white">Browser URLs & Direct Links</h3>
+                  <p className="text-[11px] text-stone-400">Separate distinct endpoints for any web browser</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowUrlNavigatorModal(false)}
+                className="w-7 h-7 rounded-lg hover:bg-stone-800 flex items-center justify-center text-stone-400 hover:text-white cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* URL 1: AlphaQubit Quantum Ecosystem */}
+            <div className="p-3.5 rounded-xl bg-[#161a24] border border-amber-500/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span>⚛</span>
+                  <span>AlphaQubit Quantum Ecosystem (Default Base URL)</span>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">
+                  ROUTE: /
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-300">
+                Primary hub: 3D Quantum Engine, TON Ad Revenue smart contracts, Sreymara Queen Conversational AI, Website-to-App, and Ecosystem Explorer.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== "undefined" ? `${window.location.origin}/` : "https://ais-dev-yri2x2xif26llxnhpuguzk-152195627325.asia-east1.run.app/"}
+                  className="flex-1 bg-black/60 border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-amber-300 select-all"
+                />
+                <button
+                  onClick={() => {
+                    const u = `${window.location.origin}/`;
+                    navigator.clipboard.writeText(u);
+                    alert(`AlphaQubit URL copied:\n${u}`);
+                  }}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs rounded-lg cursor-pointer"
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab("web_to_app");
+                    setShowUrlNavigatorModal(false);
+                  }}
+                  className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs rounded-lg cursor-pointer"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
+
+            {/* URL 2: Franz Multi-Messenger OS */}
+            <div className="p-3.5 rounded-xl bg-[#131b2b] border border-sky-500/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+                  <MessageSquare size={13} />
+                  <span>Franz Multi-Messenger System (Separate Dedicated URL)</span>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono font-bold">
+                  ROUTE: /franz
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-300">
+                Direct isolated messaging desktop wrapper: 80+ messaging services, multi-account WhatsApp/Telegram/Instagram, DevTools, and Kansas Nelly VIP Lifetime bypass.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== "undefined" ? `${window.location.origin}/franz` : "https://ais-dev-yri2x2xif26llxnhpuguzk-152195627325.asia-east1.run.app/franz"}
+                  className="flex-1 bg-black/60 border border-stone-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-sky-300 select-all"
+                />
+                <button
+                  onClick={() => {
+                    const u = `${window.location.origin}/franz`;
+                    navigator.clipboard.writeText(u);
+                    alert(`Franz Multi-Messenger URL copied:\n${u}`);
+                  }}
+                  className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-lg cursor-pointer"
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveMainTab("franz_messenger");
+                    setShowUrlNavigatorModal(false);
+                  }}
+                  className="px-3 py-1.5 bg-sky-700 hover:bg-sky-600 text-white font-bold text-xs rounded-lg cursor-pointer"
+                >
+                  Open
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setShowUrlNavigatorModal(false)}
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold rounded-lg cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SREYMARA QUEEN CONVERSATIONAL AI FLOATING WIDGET */}
       <SreymaraQueenConversationalAI
         isOpen={isSreymaraAgentOpen}
@@ -1229,44 +1471,30 @@ const App: React.FC = () => {
         isFloating={true}
       />
 
-      {/* DOCKED EXPAND TAB WHEN COLLAPSED: Sits seamlessly beside Portable Mini Cinema */}
+      {/* DOCKED EXPAND TAB WHEN COLLAPSED: Sits seamlessly on bottom bar, exactly like Mini Cinema */}
       {!isSreymaraAgentOpen && (
-        <button
-          id="btn-floating-sreymara-agent"
-          type="button"
-          onClick={() => {
-            setIsSreymaraAgentOpen(true);
-            try {
-              localStorage.setItem("alphaqubit_sreymara_agent_open", "true");
-            } catch {}
-          }}
-          className="fixed bottom-3 right-3 sm:bottom-3 sm:right-3 z-50 px-3 py-2 bg-gradient-to-r from-[#070e1d] via-[#091527] to-[#0d1e38] text-white rounded-2xl border-2 border-sky-400/90 shadow-[0_0_25px_rgba(56,189,248,0.35)] hover:scale-105 transition-all flex items-center gap-2.5 cursor-pointer group hover:ring-4 hover:ring-sky-500/40 select-none animate-fade-in"
-          title="Click to expand Sreymara Queen Conversational AI & Executive Stage"
-        >
-          <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-amber-400 shadow-md shrink-0">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-              alt="Sreymara Queen"
-              className="w-full h-full object-cover object-top"
-              referrerPolicy="no-referrer"
-            />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-black animate-pulse" />
-          </div>
-          <div className="flex flex-col text-left pr-1 min-w-0">
-            <div className="flex items-center gap-1.5 font-extrabold text-xs text-white">
-              <span className="truncate">Sreymara Queen</span>
-              <Crown size={12} className="text-amber-400 shrink-0" />
-            </div>
-            <span className="text-[9.5px] text-rose-300 font-mono flex items-center gap-1 truncate">
-              <Mic size={9} className="text-rose-400 shrink-0" />
-              <span>Sweet Voice • 10 Workflows</span>
+        <div className="fixed bottom-3 right-3 z-50 flex items-center gap-2 animate-fade-in select-none">
+          <button
+            id="btn-floating-sreymara-agent"
+            type="button"
+            onClick={() => {
+              setIsSreymaraAgentOpen(true);
+              try {
+                localStorage.setItem("alphaqubit_sreymara_agent_open", "true");
+              } catch {}
+            }}
+            className="group px-3.5 py-2.5 bg-gradient-to-r from-blue-700 via-sky-600 to-indigo-700 hover:from-blue-600 hover:to-sky-500 text-white font-mono font-black text-xs rounded-xl shadow-2xl border-2 border-sky-400 flex items-center gap-2 cursor-pointer transition-all transform hover:scale-105 active:scale-95"
+            title="Click to show Sreymara Queen Conversational AI"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <Crown size={15} className="text-amber-300" />
+            <span className="tracking-tight uppercase">SHOW AND HIDE TAB</span>
+            <span className="text-[10px] bg-blue-950/90 text-sky-200 px-1.5 py-0.5 rounded border border-sky-400/60 font-mono">
+              SREYMARA QUEEN
             </span>
-          </div>
-          <div className="px-2 py-1 bg-sky-500/25 text-sky-200 border border-sky-400/70 rounded-lg text-[9.5px] font-mono font-black flex items-center gap-1 group-hover:bg-sky-400 group-hover:text-stone-950 transition-colors whitespace-nowrap">
-            <span>EXPAND TAB</span>
-            <ChevronUp size={12} className="group-hover:-translate-y-0.5 transition-transform" />
-          </div>
-        </button>
+            <ChevronUp size={14} className="text-white group-hover:-translate-y-0.5 transition-transform" />
+          </button>
+        </div>
       )}
 
       </div> {/* CLOSE LUXURIOUS BOLD BUILD FRAME */}

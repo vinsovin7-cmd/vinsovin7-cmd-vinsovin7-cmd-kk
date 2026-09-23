@@ -1,6 +1,6 @@
 {
   "name": "AlphaQubit Quantum Research & Live Ecosystem",
-  "description": "AlphaQubit Research & Live Ecosystem featuring TON Ad Revenue Aggregator & Payout Distribution smart contracts, Sreymara Queen Conversational AI with real-time speech and avatar reflection, AdsGram rewarded video Telegram Mini App (TMA), Master Personal Admin Palace, Website to App Android converter, and Solscan.io Pro explorer.",
+  "description": "AlphaQubit Research & Live Ecosystem featuring Franz Multi-Messenger Core Wrapper with isolated webviews and owner bypass, TON Ad Revenue Aggregator & Payout Distribution smart contracts, Sreymara Queen Conversational AI with real-time speech, AdsGram rewarded video Telegram Mini App (TMA), Master Personal Admin Palace, Website to App Android converter, and Solscan.io Pro explorer.",
   "requestFramePermissions": [
     "microphone"
   ],

@@ -497,6 +497,20 @@ export const EcosystemWalletWithdrawalModal: React.FC<EcosystemWalletWithdrawalM
               </>
             )}
           </button>
+
+          {/* Quick link to Cross-Border Banking & ACH */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                window.location.hash = "#cross_border_payments";
+              }}
+              className="w-full py-1.5 px-2 bg-stone-900/90 hover:bg-stone-800 border border-amber-500/40 rounded-lg text-[9px] text-amber-300 font-bold flex items-center justify-center gap-1.5 cursor-pointer transition"
+            >
+              <span>🏛️ Need ACH, Wire, or Nigeria NGN Bank Payout? Open Cross-Border Banking →</span>
+            </button>
+          </div>
         </form>
       )}
 

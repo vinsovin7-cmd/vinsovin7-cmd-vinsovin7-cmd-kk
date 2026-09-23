@@ -64,13 +64,19 @@ interface TelegramInEcosystemAppProps {
   onOpenApkHub?: () => void;
   onOpenTonWallet?: () => void;
   initialChat?: string;
+  onNavigateHome?: () => void;
+  onNavigateCinema?: () => void;
+  onNavigateChat?: () => void;
 }
 
 export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
   onOpenPhoneLogin,
   onOpenApkHub,
   onOpenTonWallet,
-  initialChat = "wallet"
+  initialChat = "wallet",
+  onNavigateHome,
+  onNavigateCinema,
+  onNavigateChat
 }) => {
   // Session / Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -158,12 +164,15 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
     },
     {
       id: "cinema",
-      name: "Sreymara Cinema & VIP Studio",
+      name: "Sreymara Cinema Bot (@ONLINECUSTOMEROPTIMIZETASKSBOT)",
       avatar: "🎬",
       avatarBg: "bg-amber-600",
       isVerified: true,
-      lastMessage: "🎥 SitonicSA 'Fight for Me' viral dance stream synced to Cinema.",
-      time: "14:12"
+      isBot: true,
+      lastMessage: "WELCOME TO SREYMARA CINEMA! 🎬 Choose HOME, CINEMA, or CHAT.",
+      time: "Live",
+      unreadCount: 1,
+      pinned: true
     },
     {
       id: "saved",
@@ -245,11 +254,11 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
     ],
     cinema: [
       {
-        id: "c-1",
-        sender: "other",
-        senderName: "Sreymara Cinema Studio",
-        text: "🎬 SitonicSA 'Fight for Me' viral soundstage is now live on the cinema screen! 80% volume active.",
-        timestamp: "14:10"
+        id: "c-0",
+        sender: "bot",
+        senderName: "Sreymara Cinema Bot (@ONLINECUSTOMEROPTIMIZETASKSBOT)",
+        text: "WELCOME TO SREYMARA CINEMA! 🎬\n\nI'M HERE TO HELP YOU NAVIGATE THE APP. CHOOSE AN OPTION BELOW, OR TYPE A WORD LIKE \"HOME\", \"CINEMA\" OR \"CHAT\".",
+        timestamp: "Live"
       }
     ],
     saved: [
@@ -447,7 +456,90 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
           gmail_bot: [...(prev.gmail_bot || []), botReply]
         }));
       }, 700);
+    } else if (activeChatId === "cinema") {
+      const lower = inputMessage.trim().toLowerCase();
+      setTimeout(() => {
+        let replyText = "";
+        if (lower.includes("home") || lower === "home") {
+          replyText = `🏠 EXECUTIVE ECOSYSTEM — HOME SUITE 👑\n\nWelcome back! You are now in the Executive Ecosystem Home view.\n\n• Direct VIP Magnet: Ready & Verified\n• TON Treasury Pool: +$0.0400 USDT\n• Automated Node Status: 100% Active\n\n🔗 Direct VIP Magnet Link: ${window.location.origin}/?ref=executive_vip_meeting`;
+          if (onNavigateHome) onNavigateHome();
+          else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'home' } }));
+        } else if (lower.includes("cinema") || lower.includes("movie") || lower === "cinema") {
+          replyText = `🎬 SREYMARA CINEMA & MOVIE STREAMING 🍿\n\nWelcome to Sreymara Cinema!\n• 25+ Continuous HD Cinema Channels & Movies\n• Featured Film: SitonicSA 'Fight for Me' Soundstage\n• Library: Hollywood, Nollywood, Afrobeats & Sci-Fi\n• Zero buffering • Rewarded streaming (+0.02 USDT per view)`;
+          if (onNavigateCinema) onNavigateCinema();
+          else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'cinema' } }));
+        } else if (lower.includes("chat") || lower === "chat") {
+          replyText = `💬 COMMUNITY DISCUSSION & VIP MATCH SUITE 💕\n\nWelcome to Community Discussion!\n• Real-Time Discussions: Verified community members\n• Love Suite Room #108: 20-Second Fast-Match Active\n• Safe, respectful & verified atmosphere`;
+          if (onNavigateChat) onNavigateChat();
+          else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'chat' } }));
+        } else {
+          replyText = `WELCOME TO SREYMARA CINEMA! 🎬\n\nI'M HERE TO HELP YOU NAVIGATE THE APP. CHOOSE AN OPTION BELOW, OR TYPE A WORD LIKE "HOME", "CINEMA" OR "CHAT".`;
+        }
+
+        const botReply: ChatMessage = {
+          id: `reply-${Date.now()}`,
+          sender: "bot",
+          senderName: "Sreymara Cinema Bot (@ONLINECUSTOMEROPTIMIZETASKSBOT)",
+          text: replyText,
+          timestamp: "Just now"
+        };
+        setChatMessages(prev => ({
+          ...prev,
+          cinema: [...(prev.cinema || []), botReply]
+        }));
+      }, 500);
     }
+  };
+
+  const handleQuickCinemaAction = (type: "home" | "cinema" | "chat" | "tma" | "vip") => {
+    if (type === "tma") {
+      window.open("/tma", "_blank");
+      return;
+    }
+    if (type === "vip") {
+      window.location.href = "/?ref=executive_vip_meeting";
+      return;
+    }
+    const label = type.toUpperCase();
+    const userMsg: ChatMessage = {
+      id: `quick-${Date.now()}`,
+      sender: "user",
+      text: label,
+      timestamp: "Just now"
+    };
+    setChatMessages(prev => ({
+      ...prev,
+      cinema: [...(prev.cinema || []), userMsg]
+    }));
+
+    setTimeout(() => {
+      let replyText = "";
+      if (type === "home") {
+        replyText = `🏠 EXECUTIVE ECOSYSTEM — HOME SUITE 👑\n\nWelcome back! You are now in the Executive Ecosystem Home view.\n\n• Direct VIP Magnet: Ready & Verified\n• TON Treasury Pool: +$0.0400 USDT\n• Automated Node Status: 100% Active\n\n🔗 Direct VIP Magnet Link: ${window.location.origin}/?ref=executive_vip_meeting`;
+        if (onNavigateHome) onNavigateHome();
+        else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'home' } }));
+      } else if (type === "cinema") {
+        replyText = `🎬 SREYMARA CINEMA & MOVIE STREAMING 🍿\n\nWelcome to Sreymara Cinema!\n• 25+ Continuous HD Cinema Channels & Movies\n• Featured Film: SitonicSA 'Fight for Me' Soundstage\n• Library: Hollywood, Nollywood, Afrobeats & Sci-Fi\n• Zero buffering • Rewarded streaming (+0.02 USDT per view)`;
+        if (onNavigateCinema) onNavigateCinema();
+        else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'cinema' } }));
+      } else if (type === "chat") {
+        replyText = `💬 COMMUNITY DISCUSSION & VIP MATCH SUITE 💕\n\nWelcome to Community Discussion!\n• Real-Time Discussions: Verified community members\n• Love Suite Room #108: 20-Second Fast-Match Active\n• Safe, respectful & verified atmosphere`;
+        if (onNavigateChat) onNavigateChat();
+        else window.dispatchEvent(new CustomEvent('ecosystem:navigate', { detail: { target: 'chat' } }));
+      }
+
+      const botReply: ChatMessage = {
+        id: `reply-${Date.now()}`,
+        sender: "bot",
+        senderName: "Sreymara Cinema Bot (@ONLINECUSTOMEROPTIMIZETASKSBOT)",
+        text: replyText,
+        timestamp: "Just now"
+      };
+      setChatMessages(prev => ({
+        ...prev,
+        cinema: [...(prev.cinema || []), botReply]
+      }));
+    }, 400);
   };
 
   return (
@@ -925,6 +1017,55 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
                   })}
                   <div ref={messagesEndRef} />
                 </div>
+
+                {/* Interactive Quick Navigation Keyboard for Cinema Bot */}
+                {activeChatId === "cinema" && (
+                  <div className="p-2.5 bg-[#141d26] border-t border-stone-800/80 shrink-0">
+                    <div className="text-[10px] text-amber-400 font-mono font-bold mb-1.5 flex items-center justify-between">
+                      <span>BOT KEYBOARD NAVIGATION:</span>
+                      <span className="text-[9px] text-stone-400 font-normal">Click any button below</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+                      <button
+                        onClick={() => handleQuickCinemaAction("home")}
+                        className="py-2 px-2 bg-[#202b36] hover:bg-[#2b5278] text-white text-xs font-bold rounded-xl transition border border-stone-700/60 flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow"
+                      >
+                        <span>🏠</span>
+                        <span>HOME</span>
+                      </button>
+                      <button
+                        onClick={() => handleQuickCinemaAction("cinema")}
+                        className="py-2 px-2 bg-[#202b36] hover:bg-[#2b5278] text-white text-xs font-bold rounded-xl transition border border-stone-700/60 flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow"
+                      >
+                        <span>🎬</span>
+                        <span>CINEMA</span>
+                      </button>
+                      <button
+                        onClick={() => handleQuickCinemaAction("chat")}
+                        className="py-2 px-2 bg-[#202b36] hover:bg-[#2b5278] text-white text-xs font-bold rounded-xl transition border border-stone-700/60 flex items-center justify-center gap-1 cursor-pointer active:scale-95 shadow"
+                      >
+                        <span>💬</span>
+                        <span>CHAT</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => handleQuickCinemaAction("tma")}
+                        className="py-1.5 px-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-[11px] font-black rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
+                      >
+                        <span>🚀</span>
+                        <span>LAUNCH MINI APP</span>
+                      </button>
+                      <button
+                        onClick={() => handleQuickCinemaAction("vip")}
+                        className="py-1.5 px-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-[11px] font-black rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow"
+                      >
+                        <span>👑</span>
+                        <span>DIRECT VIP MAGNET</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Message Input Composer */}
                 <div className="p-3 bg-[#17212b] border-t border-stone-800/80 flex items-center gap-2">

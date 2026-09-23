@@ -66,11 +66,28 @@ Return ONLY a valid JSON object matching this TypeScript schema:
 }
 Do not include markdown codeblocks or extra text outside JSON.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `${systemPrompt}\n\nUser Request: ${prompt}`,
-      config: { responseMimeType: "application/json" }
-    });
+    const candidateModels = ['gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-3.8-flash'];
+    let response: any = null;
+    let modelError: any = null;
+
+    for (const modelCandidate of candidateModels) {
+      try {
+        response = await ai.models.generateContent({
+          model: modelCandidate,
+          contents: `${systemPrompt}\n\nUser Request: ${prompt}`,
+          config: { responseMimeType: "application/json" }
+        });
+        if (response && response.text) {
+          break;
+        }
+      } catch (err: any) {
+        modelError = err;
+      }
+    }
+
+    if (!response || !response.text) {
+      throw modelError || new Error("All LLM candidates failed.");
+    }
 
     clearTimeout(timeoutId);
     failureCount = 0; // Reset circuit breaker failures on success
