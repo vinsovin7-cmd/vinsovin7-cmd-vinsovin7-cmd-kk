@@ -388,39 +388,81 @@ export const AliveSreymaraQueenAvatar: React.FC<AliveSreymaraQueenAvatarProps> =
         }}
       >
         {/* Full Half-Body Executive Photograph (Head, Face, Mouth, Neck, Shoulders & Jacket) */}
-        <img
-          src={activePhoto}
-          alt="Sreymara Queen - AI Digital Human"
-          className={`w-full h-full object-cover object-[50%_18%] transition-all duration-100 pointer-events-none select-none ${
-            isBlinking ? "brightness-[0.92] contrast-[1.08] scale-y-[0.985]" : "brightness-[1.02] contrast-[1.04]"
-          }`}
-          style={{
-            transformOrigin: "50% 36%"
-          }}
-          referrerPolicy="no-referrer"
-        />
+        <div className="relative w-full h-full">
+          <img
+            src={activePhoto}
+            alt="Sreymara Queen - AI Digital Human"
+            className="w-full h-full object-cover object-[50%_18%] pointer-events-none select-none"
+            referrerPolicy="no-referrer"
+          />
 
-        {/* ORGANIC SPEECH ARTICULATION DIRECTLY ON THE LADY'S OWN MOUTH & JAW */}
-        {/* Seamlessly animates the actual lady in the image - NO fake mouth overlays or external boxes */}
-        {isSpeaking && (
-          <div
-            className="absolute inset-0 pointer-events-none will-change-transform select-none"
-            style={{
-              // Seamlessly bounds the lady's mouth, lips, and lower jaw
-              clipPath: "ellipse(30% 22% at 50% 63%)",
-              transform: `translateY(${mouthShape.jawDrop * 0.7}px) scaleY(${1 + mouthShape.open * 0.05}) scaleX(${mouthShape.width})`,
-              transformOrigin: "50% 50%",
-              transition: "transform 75ms ease-out"
-            }}
-          >
-            <img
-              src={activePhoto}
-              alt="Sreymara Speech Articulation"
-              className="w-full h-full object-cover object-[50%_18%] filter contrast-[1.05] brightness-[1.02] pointer-events-none select-none"
-              referrerPolicy="no-referrer"
+          {/* REALISTIC EYE BLINK OVERLAY (Smooth natural eyelid closure without whole-image distortion) */}
+          {isBlinking && (
+            <div
+              className="absolute inset-0 pointer-events-none transition-opacity duration-75"
+              style={{
+                opacity: blinkStrength,
+                background: "radial-gradient(ellipse 26% 7% at 50% 32.5%, rgba(20, 15, 25, 0.72) 0%, rgba(20, 15, 25, 0.35) 60%, transparent 100%)"
+              }}
             />
-          </div>
-        )}
+          )}
+
+          {/* ORGANIC SEAMLESS SPEECH ARTICULATION DIRECTLY AT HER LIPS & JAW (Zero face splitting, feathered mask) */}
+          {isSpeaking && (
+            <div
+              className="absolute inset-0 pointer-events-none select-none flex items-center justify-center overflow-hidden"
+              style={{
+                // Feathered radial mask focused strictly on the mouth zone (around 50% horizontal, 57% vertical)
+                // This ensures cheeks, eyes, nose, forehead, and hair NEVER get sliced or sheared!
+                WebkitMaskImage: "radial-gradient(ellipse 16% 11% at 50% 57.5%, black 40%, rgba(0,0,0,0.5) 75%, transparent 100%)",
+                maskImage: "radial-gradient(ellipse 16% 11% at 50% 57.5%, black 40%, rgba(0,0,0,0.5) 75%, transparent 100%)",
+                transform: `translateY(${mouthShape.jawDrop * 0.45}px) scaleY(${1 + mouthShape.open * 0.08}) scaleX(${mouthShape.width})`,
+                transformOrigin: "50% 56%",
+                transition: "transform 60ms cubic-bezier(0.2, 0.8, 0.4, 1)"
+              }}
+            >
+              {/* Underlying seamless mouth texture moving organically with speech */}
+              <img
+                src={activePhoto}
+                alt="Speech sync mouth movement"
+                className="w-full h-full object-cover object-[50%_18%] filter brightness-[1.02] contrast-[1.03] pointer-events-none select-none"
+                referrerPolicy="no-referrer"
+              />
+
+              {/* Natural speech aperture depth between lips when mouth opens wide */}
+              {mouthShape.open > 0.35 && (
+                <div
+                  className="absolute pointer-events-none rounded-full transition-all duration-75"
+                  style={{
+                    top: "57.2%",
+                    left: "50%",
+                    width: `${26 * mouthShape.width}px`,
+                    height: `${Math.max(2, mouthShape.open * 10)}px`,
+                    transform: "translate(-50%, -50%)",
+                    background: "radial-gradient(ellipse at center, rgba(30, 8, 12, 0.85) 0%, rgba(60, 15, 20, 0.5) 70%, transparent 100%)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.6)"
+                  }}
+                >
+                  {/* Subtle natural teeth reflection during open syllables */}
+                  {mouthShape.open > 0.5 && (
+                    <div
+                      className="w-3/5 h-[1.5px] mx-auto mt-[1px] bg-white/75 rounded-full blur-[0.3px]"
+                      style={{ opacity: Math.min(1, mouthShape.open * 0.9) }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ACTIVE VOICE PULSE RING (Subtle aura around the digital human stage indicating live speech activity) */}
+          {isSpeaking && (
+            <div
+              className="absolute inset-0 border-2 border-sky-400/40 rounded-2xl pointer-events-none animate-pulse"
+              style={{ animationDuration: "1.2s" }}
+            />
+          )}
+        </div>
       </div>
 
       {/* DRAG-AND-DROP OVERLAY FEEDBACK */}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { FranzIsolatedWebview } from "./FranzIsolatedWebview";
+import { FranzRewardsCenterModal, FranzRewardLedgerEntry } from "./FranzRewardsCenterModal";
 import {
   ALL_FRANZ_SERVICES,
   INITIAL_USER_INSTANCES,
@@ -23,6 +25,9 @@ import {
   X,
   Star,
   User,
+  Coins,
+  ArrowRightLeft,
+  Wallet,
   Users,
   Power,
   Trash2,
@@ -143,6 +148,88 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
   const [isNotificationsMuted, setIsNotificationsMuted] = useState<boolean>(false);
   const [proxyMode, setProxyMode] = useState<boolean>(false);
 
+  // Rewards Management Engine State & Activity Tracking
+  const [isRewardsModalOpen, setIsRewardsModalOpen] = useState<boolean>(false);
+  const [rewardsState, setRewardsState] = useState<{
+    batBalance: number;
+    usdtBalance: number;
+    usdtRate: number;
+    equivalentUsdt: number;
+    totalBatEarned: number;
+    lifetimeActivities: number;
+    unreadCount: number;
+    ledger: FranzRewardLedgerEntry[];
+  }>({
+    batBalance: 19.50,
+    usdtBalance: 1.80,
+    usdtRate: 0.2485,
+    equivalentUsdt: 4.84,
+    totalBatEarned: 26.75,
+    lifetimeActivities: 45,
+    unreadCount: 1,
+    ledger: []
+  });
+
+  // Fetch Rewards Balance from Backend
+  const fetchRewards = async () => {
+    try {
+      const res = await fetch("/api/franz/rewards/balance");
+      const data = await res.json();
+      if (data.success) {
+        setRewardsState({
+          batBalance: data.batBalance,
+          usdtBalance: data.usdtBalance,
+          usdtRate: data.usdtRate,
+          equivalentUsdt: data.equivalentUsdt,
+          totalBatEarned: data.totalBatEarned,
+          lifetimeActivities: data.lifetimeActivities,
+          unreadCount: data.unreadCount,
+          ledger: data.ledger || []
+        });
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchRewards();
+    const interval = setInterval(fetchRewards, 12000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Track Action in Backend silently (NO annoying screen toast!)
+  const handleTrackActivity = async (action: string, metadata?: any) => {
+    try {
+      const res = await fetch("/api/franz/rewards/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, serviceId: activeInstanceId, metadata })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRewardsState(prev => ({
+          ...prev,
+          batBalance: data.batBalance,
+          usdtBalance: data.usdtBalance,
+          totalBatEarned: data.totalBatEarned,
+          unreadCount: data.unreadCount,
+          ledger: [data.entry, ...(prev.ledger || [])]
+        }));
+      }
+    } catch {}
+  };
+
+  // Mark all notifications as read in ledger
+  const handleMarkNotificationsRead = async () => {
+    try {
+      await fetch("/api/franz/rewards/notifications/mark-read", { method: "POST" });
+      setRewardsState(prev => ({
+        ...prev,
+        unreadCount: 0,
+        ledger: prev.ledger.map(l => ({ ...l, read: true }))
+      }));
+    } catch {}
+  };
+
   // Sync instances to localStorage & backend
   useEffect(() => {
     try {
@@ -180,9 +267,14 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
   const handleSelectInstance = (id: string) => {
     setActiveInstanceId(id);
     setIframeKey(Date.now());
-    // Add log to DevTools
+    // Add log to DevTools & track activity
     const target = instances.find(i => i.instanceId === id);
     if (target) {
+      handleTrackActivity("service_switch", {
+        serviceName: target.name,
+        partition: target.sessionPartition,
+        serviceId: target.serviceId
+      });
       setDevLogs(prev => [
         ...prev.slice(-30),
         {
@@ -214,6 +306,12 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
     setInstances(prev => [...prev, newInstance]);
     setActiveInstanceId(newId);
     setIsModalOpen(false);
+
+    handleTrackActivity("account_paired", {
+      serviceName: newInstance.name,
+      partition: newInstance.sessionPartition,
+      serviceId: newInstance.serviceId
+    });
   };
 
   // Toggle instance enabled state
@@ -407,48 +505,48 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
       {/* ==================================================================== */}
       {/* 1. TOP WINDOW BAR (Franz Desktop Header with Title, Menu & Live URL) */}
       {/* ==================================================================== */}
-      <div className="h-9 bg-[#111317] border-b border-[#242932] px-3 flex items-center justify-between text-xs shrink-0 select-none">
+      <div className="h-10 bg-[#0f1115] border-b border-[#252a34] px-3.5 flex items-center justify-between text-xs shrink-0 select-none shadow-sm">
         {/* Left: Franz Logo & Title */}
         <div className="flex items-center gap-2">
           {/* Franz Mustache Logo Icon */}
-          <div className="w-5 h-5 rounded-full bg-[#1da1f2] flex items-center justify-center text-white">
+          <div className="w-5 h-5 rounded-full bg-[#1da1f2] flex items-center justify-center text-white shadow-sm">
             <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
             </svg>
           </div>
-          <span className="font-semibold text-stone-200 tracking-tight">Franz</span>
-          <span className="text-stone-500 font-bold">:</span>
+          <span className="font-bold text-stone-100 text-xs sm:text-[13px] tracking-tight">Franz</span>
+          <span className="text-stone-400 font-bold text-xs">:</span>
 
-          {/* Top Menu Dropdown items */}
-          <div className="hidden md:flex items-center gap-3 text-[11px] text-stone-400 pl-2">
+          {/* Top Menu Dropdown items - Portable, clear, medium-bold contrast */}
+          <div className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-stone-300 pl-2">
             <button
               onClick={() => {
                 setModalTab("available");
                 setIsModalOpen(true);
               }}
-              className="hover:text-stone-200 cursor-pointer"
+              className="px-2 py-1 rounded-md hover:bg-stone-800/80 hover:text-white transition-colors cursor-pointer"
             >
               File
             </button>
             <button
               onClick={() => setIframeKey(Date.now())}
-              className="hover:text-stone-200 cursor-pointer"
+              className="px-2 py-1 rounded-md hover:bg-stone-800/80 hover:text-white transition-colors cursor-pointer"
             >
               View
             </button>
             <button
               onClick={() => setIsDevToolsOpen(!isDevToolsOpen)}
-              className="hover:text-stone-200 cursor-pointer flex items-center gap-1"
+              className="px-2 py-1 rounded-md hover:bg-stone-800/80 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <span>Developer Tools</span>
-              {isDevToolsOpen && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+              {isDevToolsOpen && <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />}
             </button>
             <button
               onClick={() => {
                 setModalTab("workspaces");
                 setIsModalOpen(true);
               }}
-              className="hover:text-stone-200 cursor-pointer"
+              className="px-2 py-1 rounded-md hover:bg-stone-800/80 hover:text-white transition-colors cursor-pointer"
             >
               Workspaces
             </button>
@@ -457,7 +555,7 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
                 setModalTab("account");
                 setIsModalOpen(true);
               }}
-              className="hover:text-stone-200 cursor-pointer"
+              className="px-2 py-1 rounded-md hover:bg-stone-800/80 hover:text-white transition-colors cursor-pointer"
             >
               Help
             </button>
@@ -465,11 +563,11 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
         </div>
 
         {/* Center: Live Browser URL & Owner Status Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {/* Live Web URL indicator for user */}
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#1b212c] border border-sky-800/40 text-[10px] text-sky-300 font-mono">
-            <Globe size={11} className="text-sky-400" />
-            <span className="truncate max-w-[240px]">ais-dev-yri2x2xif26llxnhpuguzk-152195627325.asia-east1.run.app</span>
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#171f2b] border border-sky-600/40 text-[11px] text-sky-200 font-semibold font-mono shadow-inner">
+            <Globe size={12} className="text-sky-400" />
+            <span className="truncate max-w-[280px]">ais-dev-yri2x2xif26llxnhpuguzk-152195627325.asia-east1.run.app</span>
           </div>
 
           {/* Owner Privilege Status Pill */}
@@ -478,36 +576,40 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
               setModalTab("account");
               setIsModalOpen(true);
             }}
-            className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm ${
               isOwnerBypassActive
-                ? "bg-gradient-to-r from-amber-500/20 via-emerald-500/20 to-sky-500/20 text-amber-300 border border-amber-500/40 hover:border-amber-400"
+                ? "bg-gradient-to-r from-amber-500/25 via-emerald-500/25 to-sky-500/25 text-amber-300 border border-amber-500/60 hover:border-amber-400"
                 : "bg-red-950 text-red-300 border border-red-800"
             }`}
             title="Owner Account: Kansas Nelly (Unlimited VIP Lifetime Edition)"
           >
             <span>👑</span>
-            <span>OWNER VIP: UNLOCKED</span>
+            <span className="tracking-wide">OWNER VIP: UNLOCKED</span>
           </button>
         </div>
 
         {/* Right: Window Control buttons (_ □ ✕) */}
-        <div className="flex items-center gap-1 text-stone-400">
+        <div className="flex items-center gap-1.5 text-stone-300 font-semibold">
           <button
             onClick={() => setShowWaitScreenTest(!showWaitScreenTest)}
-            className="px-2 py-1 hover:bg-stone-800 hover:text-white rounded text-[10px] cursor-pointer"
+            className="px-2.5 py-1 hover:bg-stone-800 hover:text-white bg-stone-900/80 border border-stone-700/60 rounded-md text-[11px] cursor-pointer transition-colors"
             title="Toggle Wait Screen Simulation"
           >
-            Wait Screen: {showWaitScreenTest ? "ON" : "OFF"}
+            Wait Screen: <span className={showWaitScreenTest ? "text-amber-400" : "text-stone-400"}>{showWaitScreenTest ? "ON" : "OFF"}</span>
           </button>
           <button
             onClick={() => setProxyMode(!proxyMode)}
-            className={`px-2 py-1 rounded text-[10px] cursor-pointer ${proxyMode ? "bg-sky-900 text-sky-200" : "hover:bg-stone-800 text-stone-400"}`}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+              proxyMode
+                ? "bg-sky-900/90 text-sky-200 border-sky-500"
+                : "bg-stone-900/80 hover:bg-stone-800 text-stone-300 border-stone-700/60 hover:text-white"
+            }`}
             title="Toggle Webview Proxy Engine"
           >
             Proxy Mode
           </button>
           <button
-            className="w-7 h-6 flex items-center justify-center hover:bg-stone-800 hover:text-white rounded cursor-pointer"
+            className="w-8 h-7 flex items-center justify-center hover:bg-stone-800 hover:text-white rounded-md cursor-pointer text-xs font-bold transition-colors"
             title="Minimize"
           >
             —
@@ -520,7 +622,7 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
                 document.exitFullscreen().catch(() => {});
               }
             }}
-            className="w-7 h-6 flex items-center justify-center hover:bg-stone-800 hover:text-white rounded cursor-pointer"
+            className="w-8 h-7 flex items-center justify-center hover:bg-stone-800 hover:text-white rounded-md cursor-pointer text-xs font-bold transition-colors"
             title="Maximize / Fullscreen"
           >
             □
@@ -528,7 +630,7 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
           {onCloseToMain && (
             <button
               onClick={onCloseToMain}
-              className="w-7 h-6 flex items-center justify-center hover:bg-red-600 hover:text-white rounded cursor-pointer"
+              className="w-8 h-7 flex items-center justify-center hover:bg-red-600 hover:text-white rounded-md cursor-pointer text-xs font-bold transition-colors"
               title="Close Franz"
             >
               ✕
@@ -776,6 +878,32 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
                 {currentInstance.isMuted ? <BellOff size={13} /> : <Bell size={13} />}
               </button>
 
+              {/* BAT / USDT Rewards Engine Status Button */}
+              <button
+                onClick={() => setIsRewardsModalOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 border border-amber-500/50 text-amber-300 text-xs font-mono font-bold transition-all cursor-pointer shadow-sm"
+                title="Franz BAT/USDT Rewards & Liquidity Engine"
+              >
+                <span>🦁</span>
+                <span>{rewardsState.batBalance.toFixed(2)} BAT</span>
+                <span className="text-stone-500">|</span>
+                <span className="text-emerald-400">${(rewardsState.batBalance * rewardsState.usdtRate).toFixed(2)} USDT</span>
+              </button>
+
+              {/* Notification Records Button (Silent BAT Earning Ledger) */}
+              <button
+                onClick={() => setIsRewardsModalOpen(true)}
+                className="relative p-1.5 hover:bg-[#242932] text-stone-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+                title="Notification Records (Silent BAT earnings ledger)"
+              >
+                <Bell size={13} />
+                {rewardsState.unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[9px] font-bold font-mono">
+                    {rewardsState.unreadCount}
+                  </span>
+                )}
+              </button>
+
               {/* Open in external browser tab */}
               <a
                 href={currentInstance.url}
@@ -878,47 +1006,15 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
           )}
 
           {/* ================================================================ */}
-          {/* ISOLATED WEBVIEW IFRAME CONTAINER                                */}
+          {/* ISOLATED PARTITIONED WEBVIEW CONTAINER                           */}
           {/* ================================================================ */}
-          <div className="flex-1 w-full h-full bg-[#1e2229] relative overflow-hidden flex items-center justify-center">
-            {/* Sandboxed Webview IFrame */}
-            <iframe
-              key={`${currentInstance.instanceId}-${iframeKey}-${proxyMode}`}
-              src={proxyMode ? `/api/franz/proxy?url=${encodeURIComponent(currentInstance.url)}` : currentInstance.url}
-              title={currentInstance.name}
-              className="w-full h-full border-0 bg-white"
-              style={{
-                transform: `scale(${currentInstance.zoomFactor})`,
-                transformOrigin: "top left",
-                width: `${100 / currentInstance.zoomFactor}%`,
-                height: `${100 / currentInstance.zoomFactor}%`
-              }}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"
-              allow="camera; microphone; clipboard-read; clipboard-write; autoplay; fullscreen"
+          <div className="flex-1 w-full h-full bg-[#1e2229] relative overflow-hidden flex flex-col">
+            <FranzIsolatedWebview
+              key={currentInstance.instanceId}
+              instance={currentInstance}
+              onActivity={handleTrackActivity}
+              onOpenDevTools={() => setIsDevToolsOpen(true)}
             />
-
-            {/* Fallback Overlay if third-party site headers (X-Frame-Options) prevent embedding */}
-            <div className="absolute bottom-3 right-3 z-10 bg-[#161a21]/90 backdrop-blur-md border border-stone-700/80 rounded-xl p-2.5 shadow-xl flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5 text-stone-300">
-                <Shield size={14} className="text-emerald-400" />
-                <span>Isolated Session Sandbox Active</span>
-              </div>
-              <button
-                onClick={() => setProxyMode(!proxyMode)}
-                className="px-2 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded font-bold text-[11px] cursor-pointer"
-              >
-                {proxyMode ? "Direct Frame" : "Toggle Proxy Frame"}
-              </button>
-              <a
-                href={currentInstance.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2 py-1 bg-stone-700 hover:bg-stone-600 text-stone-100 rounded font-bold text-[11px] flex items-center gap-1"
-              >
-                <span>Open Popout</span>
-                <ExternalLink size={11} />
-              </a>
-            </div>
           </div>
 
           {/* ================================================================ */}
@@ -1855,6 +1951,21 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
           </div>
         </div>
       )}
+
+      {/* 9. BAT / USDT REWARDS MANAGEMENT ENGINE & NOTIFICATIONS MODAL */}
+      <FranzRewardsCenterModal
+        isOpen={isRewardsModalOpen}
+        onClose={() => setIsRewardsModalOpen(false)}
+        batBalance={rewardsState.batBalance}
+        usdtBalance={rewardsState.usdtBalance}
+        usdtRate={rewardsState.usdtRate}
+        equivalentUsdt={rewardsState.equivalentUsdt}
+        totalBatEarned={rewardsState.totalBatEarned}
+        lifetimeActivities={rewardsState.lifetimeActivities}
+        ledger={rewardsState.ledger}
+        onRefresh={fetchRewards}
+        onMarkNotificationsRead={handleMarkNotificationsRead}
+      />
     </div>
   );
 };

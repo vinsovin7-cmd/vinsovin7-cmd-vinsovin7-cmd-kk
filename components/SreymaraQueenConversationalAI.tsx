@@ -318,6 +318,14 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
   const [availableFemaleVoices, setAvailableFemaleVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState<string>("");
   const [voicePitch, setVoicePitch] = useState<number>(1.28); // High sweet feminine tone
+  const mainScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const handleStageWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop += e.deltaY;
+    }
+  };
   const [voiceRate, setVoiceRate] = useState<number>(0.98); // Tender cadence
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -934,6 +942,8 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
 
   return (
     <div
+      onWheel={(e) => e.stopPropagation()}
+      style={{ overscrollBehavior: "contain" }}
       className={`${
         isFloating
           ? "fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-50 transition-all duration-300 shadow-2xl"
@@ -1172,7 +1182,11 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
               </div>
             ) : (
               /* EXPANDED FULL STAGE: With responsive photo avatar, Book A Meeting, Mic/Speaker, and Show/Hide toggle */
-              <div className="px-3.5 pt-2.5 pb-2 bg-[#090d15] border-b border-stone-800/90 flex flex-col items-center shrink-0">
+              <div 
+                onWheel={handleStageWheel}
+                style={{ overscrollBehavior: "contain" }}
+                className="px-3.5 pt-2.5 pb-2 bg-[#090d15] border-b border-stone-800/90 flex flex-col items-center shrink-0"
+              >
                 {/* Section Header & Hide/Fold Toggle Tab */}
                 <div className="w-full max-w-[380px] flex items-center justify-between pb-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-stone-400 flex items-center gap-1 select-none">
@@ -1324,7 +1338,12 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
         )}
 
         {/* 4. MAIN BODY: TABS CONTENT */}
-        <div className="flex-1 overflow-y-auto bg-[#04060b] scrollbar-thin scrollbar-thumb-stone-800">
+        <div 
+          ref={mainScrollRef}
+          onWheel={(e) => e.stopPropagation()}
+          style={{ overscrollBehavior: "contain" }}
+          className="flex-1 overflow-y-auto bg-[#04060b] scrollbar-thin scrollbar-thumb-stone-800"
+        >
           
           {/* TAB A: CHAT CONVERSATION */}
           {activeTab === "chat" && (
@@ -1800,8 +1819,16 @@ export const SreymaraQueenConversationalAI: React.FC<SreymaraQueenConversational
 
       {/* 6. BOOK A MEETING MODAL */}
       {showBookingModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#0a0f1d] border border-sky-600/60 rounded-3xl p-5 shadow-2xl space-y-4 font-sans text-stone-100 animate-fade-in">
+        <div 
+          onWheel={(e) => e.stopPropagation()}
+          style={{ overscrollBehavior: "contain" }}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div 
+            onWheel={(e) => e.stopPropagation()}
+            style={{ overscrollBehavior: "contain" }}
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#0a0f1d] border border-sky-600/60 rounded-3xl p-5 shadow-2xl space-y-4 font-sans text-stone-100 animate-fade-in"
+          >
             <div className="flex items-center justify-between border-b border-stone-800 pb-3">
               <div className="flex items-center gap-2">
                 <Crown size={16} className="text-amber-400" />
