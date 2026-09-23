@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { OneKeyApp } from "./OneKeyApp";
 import {
   X,
   Coins,
@@ -15,7 +16,8 @@ import {
   Zap,
   TrendingUp,
   Sliders,
-  DollarSign
+  DollarSign,
+  Smartphone
 } from "lucide-react";
 
 export interface FranzRewardLedgerEntry {
@@ -68,10 +70,13 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
   // Withdrawal State
   const [withdrawToken, setWithdrawToken] = useState<"USDT" | "BAT">("USDT");
   const [withdrawAmount, setWithdrawAmount] = useState<string>("1.00");
-  const [withdrawAddress, setWithdrawAddress] = useState<string>("0x71C...KansasWallet");
-  const [withdrawNetwork, setWithdrawNetwork] = useState<string>("Ethereum (ERC-20)");
+  const [withdrawAddress, setWithdrawAddress] = useState<string>("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs");
+  const [withdrawNetwork, setWithdrawNetwork] = useState<string>("Tron (TRC-20)");
   const [isWithdrawing, setIsWithdrawing] = useState<boolean>(false);
   const [withdrawFeedback, setWithdrawFeedback] = useState<string | null>(null);
+
+  // OneKey Companion Phone Visibility (Matching Screenshot 5 Right Section)
+  const [showOneKeyCompanion, setShowOneKeyCompanion] = useState<boolean>(true);
 
   if (!isOpen) return null;
 
@@ -152,40 +157,59 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
   const unreadCount = ledger.filter(l => !l.read).length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in font-sans select-none">
-      <div 
-        className="w-full max-w-2xl bg-[#0e1219] border-2 border-amber-500/50 rounded-3xl overflow-hidden shadow-2xl text-stone-200 flex flex-col max-h-[90vh]"
-        style={{ overscrollBehavior: "contain" }}
-      >
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in font-sans select-none">
+      <div className="flex flex-col xl:flex-row items-center xl:items-start justify-center gap-5 max-w-[1300px] w-full my-auto py-2">
         
-        {/* TOP MODAL HEADER */}
-        <div className="p-4 bg-gradient-to-r from-[#171b26] via-[#121620] to-[#1a1f2e] border-b border-stone-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-600 flex items-center justify-center text-stone-950 font-black text-lg shadow-lg shadow-amber-500/20">
-              🦁
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm sm:text-base text-white">
-                  Franz BAT / USDT Rewards Management Engine
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 font-mono text-[9.5px] font-bold">
-                  Brave Web3
-                </span>
+        {/* LEFT CONTAINER: Franz BAT / USDT Rewards Management Engine */}
+        <div 
+          className="w-full max-w-2xl bg-[#0e1219] border-2 border-amber-500/50 rounded-3xl overflow-hidden shadow-2xl text-stone-200 flex flex-col max-h-[92vh]"
+          style={{ overscrollBehavior: "contain" }}
+        >
+          
+          {/* TOP MODAL HEADER */}
+          <div className="p-4 bg-gradient-to-r from-[#171b26] via-[#121620] to-[#1a1f2e] border-b border-stone-800 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-600 flex items-center justify-center text-stone-950 font-black text-lg shadow-lg shadow-amber-500/20">
+                🦁
               </div>
-              <p className="text-[11px] text-stone-400">
-                Silent Activity Tracking Module • Brave Liquidity Swap • External Web3 Wallet Provider
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-sm sm:text-base text-white">
+                    Franz BAT / USDT Rewards Management Engine
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50 font-mono text-[9.5px] font-bold">
+                    Brave Web3
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-400">
+                  Silent Activity Tracking Module • Brave Liquidity Swap • External Web3 Wallet Provider
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* OneKey Companion Toggle */}
+              <button
+                onClick={() => setShowOneKeyCompanion(!showOneKeyCompanion)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  showOneKeyCompanion
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm"
+                    : "bg-stone-800 text-stone-400 border-stone-700 hover:text-white"
+                }`}
+                title="Toggle ONE KEY Companion App"
+              >
+                <Smartphone size={13} />
+                <span>ONE KEY {showOneKeyCompanion ? "Active" : "Closed"}</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="p-1.5 hover:bg-stone-800 text-stone-400 hover:text-white rounded-xl transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-800 text-stone-400 hover:text-white rounded-xl transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-        </div>
 
         {/* NAVIGATION TABS */}
         <div className="px-4 pt-2.5 pb-0 bg-[#0a0d14] border-b border-stone-800 flex items-center gap-2 text-xs font-bold overflow-x-auto shrink-0">
@@ -432,6 +456,34 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
                 <Wallet size={18} className="text-sky-400" />
               </div>
 
+              {/* Quick Select OneKey TRC-20 Wallet Card */}
+              <div className="p-3 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-stone-900 border border-emerald-500/40 rounded-2xl flex items-center justify-between gap-3">
+                <div className="overflow-hidden">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                    <span className="text-sm">🔑</span>
+                    <span>OneKey TRC-20 Tether Wallet (Real-Time Sync)</span>
+                  </div>
+                  <p className="text-[11px] text-stone-300 font-mono truncate mt-0.5">
+                    TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs
+                  </p>
+                  <p className="text-[10px] text-emerald-400/80 mt-0.5">
+                    ✓ Connected to Kansas Nelly • Dispatched funds reflect on the right instantly
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWithdrawToken("USDT");
+                    setWithdrawNetwork("Tron (TRC-20)");
+                    setWithdrawAddress("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs");
+                    setShowOneKeyCompanion(true);
+                  }}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow cursor-pointer transition-all shrink-0"
+                >
+                  ⚡ Select OneKey
+                </button>
+              </div>
+
               {withdrawFeedback && (
                 <div className="p-3 bg-stone-900 border border-stone-700 rounded-xl text-xs text-stone-200">
                   {withdrawFeedback}
@@ -459,6 +511,7 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
                       onChange={(e) => setWithdrawNetwork(e.target.value)}
                       className="w-full bg-black border border-stone-700 rounded-xl px-3 py-2 text-xs text-white outline-none cursor-pointer"
                     >
+                      <option value="Tron (TRC-20)">Tron (TRC-20) - OneKey Native</option>
                       <option value="Ethereum (ERC-20)">Ethereum (ERC-20)</option>
                       <option value="Polygon (PoS)">Polygon (PoS)</option>
                       <option value="Solana Web3">Solana Web3</option>
@@ -481,16 +534,36 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
                 </div>
 
                 <div>
-                  <label className="text-stone-400 text-[11px] font-bold block mb-1">Destination Web3 Wallet Address:</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-stone-400 text-[11px] font-bold">Destination Web3 Wallet Address:</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWithdrawAddress("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs");
+                        setWithdrawNetwork("Tron (TRC-20)");
+                      }}
+                      className="text-[10px] text-emerald-400 hover:underline cursor-pointer"
+                    >
+                      Use OneKey Address
+                    </button>
+                  </div>
                   <input
                     type="text"
                     required
                     value={withdrawAddress}
                     onChange={(e) => setWithdrawAddress(e.target.value)}
-                    placeholder="0x... or Solana/TON public key"
+                    placeholder="0x... or Tron/Solana address"
                     className="w-full bg-black border border-stone-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono outline-none focus:border-sky-500"
                   />
                 </div>
+
+                {/* Live Sync Confirmation Badge */}
+                {(withdrawAddress.includes("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs") || withdrawNetwork === "Tron (TRC-20)") && (
+                  <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center gap-2">
+                    <Sparkles size={14} className="text-emerald-400 shrink-0" />
+                    <span>OneKey Real-Time Sync Active: Withdrawal will credit directly into the OneKey app on the right!</span>
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -592,6 +665,25 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
             Done
           </button>
         </div>
+
+      </div>
+
+      {/* RIGHT CONTAINER: ONE KEY Applet Companion (Screenshot 5 Red Outline Box) */}
+      {showOneKeyCompanion && (
+        <div className="shrink-0 flex flex-col items-center animate-fade-in relative z-10">
+          {/* Subtle label indicating OneKey Applet */}
+          <div className="flex items-center gap-1.5 px-3 py-1 mb-2 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[11px] font-bold text-emerald-300 shadow-md">
+            <span>🔑</span>
+            <span>ONE KEY Web3 Mobile Wallet (TRC-20 Real-Time Sync)</span>
+          </div>
+
+          <OneKeyApp
+            isEmbedded={false}
+            onClose={() => setShowOneKeyCompanion(false)}
+            className="shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+          />
+        </div>
+      )}
 
       </div>
     </div>

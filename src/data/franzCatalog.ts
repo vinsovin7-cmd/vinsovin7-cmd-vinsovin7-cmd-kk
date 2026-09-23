@@ -17,6 +17,17 @@ export interface FranzServiceDefinition {
 export const ALL_FRANZ_SERVICES: FranzServiceDefinition[] = [
   // --- MOST POPULAR SERVICES ---
   {
+    id: "onekey",
+    name: "ONE KEY",
+    category: "popular",
+    isPopular: true,
+    defaultUrl: "https://web.onekey.so",
+    iconType: "onekey",
+    brandColor: "#00B812",
+    description: "Next-gen Web3 crypto wallet with real-time Tron TRC-20 USDT sync (TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs).",
+    recipeDevPath: "C:\\Users\\PC\\AppData\\Roaming\\Franz\\recipes\\dev\\onekey"
+  },
+  {
     id: "whatsapp",
     name: "WhatsApp",
     category: "popular",
@@ -1140,5 +1151,18 @@ export const INITIAL_USER_INSTANCES: ActiveFranzInstance[] = [
     zoomFactor: 1.0,
     sessionPartition: "persist:custom_3",
     order: 17
+  },
+  {
+    instanceId: "inst-onekey-1",
+    serviceId: "onekey",
+    name: "ONE KEY (TRC-20 USDT)",
+    url: "https://web.onekey.so",
+    badge: 0,
+    isEnabled: true,
+    isMuted: false,
+    workspace: "all",
+    zoomFactor: 1.0,
+    sessionPartition: "persist:onekey_1",
+    order: 18
   }
 ];

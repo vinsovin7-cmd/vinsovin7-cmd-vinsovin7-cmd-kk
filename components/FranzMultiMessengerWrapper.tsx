@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FranzIsolatedWebview } from "./FranzIsolatedWebview";
 import { FranzRewardsCenterModal, FranzRewardLedgerEntry } from "./FranzRewardsCenterModal";
+import { OneKeyApp } from "./OneKeyApp";
 import {
   ALL_FRANZ_SERVICES,
   INITIAL_USER_INSTANCES,
@@ -150,6 +151,7 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
 
   // Rewards Management Engine State & Activity Tracking
   const [isRewardsModalOpen, setIsRewardsModalOpen] = useState<boolean>(false);
+  const [isOneKeyModalOpen, setIsOneKeyModalOpen] = useState<boolean>(false);
   const [rewardsState, setRewardsState] = useState<{
     batBalance: number;
     usdtBalance: number;
@@ -425,6 +427,12 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
               <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
               <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
             </svg>
+          </div>
+        );
+      case "onekey":
+        return (
+          <div className="w-8 h-8 rounded-xl bg-black border border-emerald-500/60 p-0.5 flex items-center justify-center text-white shadow-sm overflow-hidden">
+            <span className="text-sm">🔑</span>
           </div>
         );
       case "chatgpt":
@@ -888,6 +896,19 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
                 <span>{rewardsState.batBalance.toFixed(2)} BAT</span>
                 <span className="text-stone-500">|</span>
                 <span className="text-emerald-400">${(rewardsState.batBalance * rewardsState.usdtRate).toFixed(2)} USDT</span>
+              </button>
+
+              {/* ONE KEY Web3 Mobile Wallet Quick-Launcher Button */}
+              <button
+                onClick={() => setIsOneKeyModalOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                title="ONE KEY Tether TRC-20 Mobile Wallet (TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs)"
+              >
+                <span>🔑</span>
+                <span>ONE KEY</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/30 text-emerald-200 text-[10px] font-mono">
+                  $4.35
+                </span>
               </button>
 
               {/* Notification Records Button (Silent BAT Earning Ledger) */}
@@ -1966,6 +1987,13 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
         onRefresh={fetchRewards}
         onMarkNotificationsRead={handleMarkNotificationsRead}
       />
+
+      {/* 10. FLOATING ONE KEY MOBILE WALLET MODAL */}
+      {isOneKeyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in select-none">
+          <OneKeyApp onClose={() => setIsOneKeyModalOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };

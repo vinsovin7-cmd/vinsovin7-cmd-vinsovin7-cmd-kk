@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FranzChatGPTView } from "./FranzChatGPTView";
+import { OneKeyApp } from "./OneKeyApp";
 import {
   Shield,
   ExternalLink,
@@ -55,7 +56,7 @@ export const FranzIsolatedWebview: React.FC<FranzIsolatedWebviewProps> = ({
   onOpenDevTools
 }) => {
   // Rendering Mode: "isolated_client" (guaranteed no refused-to-connect) | "proxy_stream" | "direct_frame"
-  const isCustomUrl = !["whatsapp", "telegram", "messenger", "instagram", "chatgpt", "facebook", "slack", "discord"].includes(
+  const isCustomUrl = !["whatsapp", "telegram", "messenger", "instagram", "chatgpt", "facebook", "slack", "discord", "onekey"].includes(
     instance.serviceId
   );
 
@@ -635,8 +636,19 @@ export const FranzIsolatedWebview: React.FC<FranzIsolatedWebviewProps> = ({
               />
             )}
 
-            {/* A5. FALLBACK FOR GENERAL SERVICES */}
-            {!["whatsapp", "telegram", "instagram", "chatgpt"].includes(instance.serviceId) && (
+            {/* A5. ONE KEY WEB3 MOBILE WALLET (TRC-20 USDT Sync & Tronscan) */}
+            {instance.serviceId === "onekey" && (
+              <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[#0a0d14] overflow-y-auto">
+                <div className="mb-3 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-xs font-bold text-emerald-300 flex items-center gap-1.5 shadow-md">
+                  <span>🔑</span>
+                  <span>ONE KEY Web3 Mobile Wallet • Tron (TRC-20) Real-Time Sync</span>
+                </div>
+                <OneKeyApp isEmbedded={false} />
+              </div>
+            )}
+
+            {/* A6. FALLBACK FOR GENERAL SERVICES */}
+            {!["whatsapp", "telegram", "instagram", "chatgpt", "onekey"].includes(instance.serviceId) && (
               <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
                 <div className="p-5 bg-stone-900 border border-stone-800 rounded-2xl max-w-md space-y-3">
                   <Globe size={32} className="text-sky-400 mx-auto" />

@@ -1,0 +1,39 @@
+{
+  "userEmail": "kansasnelly@gmail.com",
+  "userName": "Kansas Nelly",
+  "isLoggedIn": true,
+  "avatarUrl": "https://lh3.googleusercontent.com/a/default-user=s96-c",
+  "walletAddress": "TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs",
+  "tronscanApiKey": "190e875d-2c7e-4f2a-bee2-9f3449947b10",
+  "accountName": "Account #1",
+  "customUsdtCredits": 5.35,
+  "customTrxCredits": 0,
+  "customUsdcCredits": 0,
+  "transactions": [
+    {
+      "id": "ok-tx-muegqo0i",
+      "type": "deposit",
+      "token": "USDT",
+      "amount": 1,
+      "source": "Franz BAT/USDT Rewards Engine",
+      "destination": "TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs",
+      "timestamp": "2026-09-23T18:55:24.690Z",
+      "status": "confirmed",
+      "txHash": "0x3c049508e43e45a3b423b819d7d7fad3638a6eb",
+      "network": "Tron (TRC-20)"
+    },
+    {
+      "id": "ok-init-1",
+      "type": "deposit",
+      "token": "USDT",
+      "amount": 4.35,
+      "source": "OneKey Mobile App Sync",
+      "destination": "TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs",
+      "timestamp": "2026-09-23T18:55:09.059Z",
+      "status": "confirmed",
+      "txHash": "f3353f8afbbcb78d3f6198dd3550201d5cf6547027d3d4c9e57dc510f77cf672",
+      "network": "Tron (TRC-20)"
+    }
+  ],
+  "lastSyncedAt": "2026-09-23T18:55:09.059Z"
+}
