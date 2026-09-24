@@ -183,7 +183,7 @@ export class AdsgramManager {
         adType: params.adType,
         grossAdRevenue: params.grossRate,
         impressionToken: params.impressionToken,
-        userWallet: params.userWallet || "UQCeMpY46o_P3qA20vK-89f41b4904558ecb2_HLNt",
+        userWallet: params.userWallet || "UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG",
         timestamp: new Date().toISOString()
       })
     });

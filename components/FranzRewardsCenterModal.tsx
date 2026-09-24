@@ -536,16 +536,28 @@ export const FranzRewardsCenterModal: React.FC<FranzRewardsCenterModalProps> = (
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-stone-400 text-[11px] font-bold">Destination Web3 Wallet Address:</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setWithdrawAddress("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs");
-                        setWithdrawNetwork("Tron (TRC-20)");
-                      }}
-                      className="text-[10px] text-emerald-400 hover:underline cursor-pointer"
-                    >
-                      Use OneKey Address
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWithdrawAddress("UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG");
+                          setWithdrawNetwork("The Open Network (TON)");
+                        }}
+                        className="text-[10px] text-cyan-400 hover:underline cursor-pointer font-bold"
+                      >
+                        Use TON Wallet (UQDl...WgrG)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWithdrawAddress("TYz6zLnmuDx4Fwm7evdGNfJwgRM8YM68hs");
+                          setWithdrawNetwork("Tron (TRC-20)");
+                        }}
+                        className="text-[10px] text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        Use OneKey
+                      </button>
+                    </div>
                   </div>
                   <input
                     type="text"

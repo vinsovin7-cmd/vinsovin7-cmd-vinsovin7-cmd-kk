@@ -363,7 +363,7 @@ export const AdminControlPalace: React.FC<AdminControlPalaceProps> = ({
   };
 
   // TEST PAYOUT FORM
-  const [testPayoutWallet, setTestPayoutWallet] = useState("UQCeMpY46o_P3qA20vK-89f41b4904558ecb2_HLNt");
+  const [testPayoutWallet, setTestPayoutWallet] = useState("UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG");
   const [testPayoutGross, setTestPayoutGross] = useState(0.05);
   const [isProcessingPayout, setIsProcessingPayout] = useState(false);
 

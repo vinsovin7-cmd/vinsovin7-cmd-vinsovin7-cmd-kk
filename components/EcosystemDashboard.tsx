@@ -718,7 +718,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
       label: "Telegram @Wallet (USDT on TON)",
       icon: <Wallet size={15} />,
       title: "💎 Telegram @Wallet & TON Jetton Ecosystem Treasury",
-      subtitle: "Connected to TON address UQCE...HLNt with live USDT earnings balance, APY & transfers"
+      subtitle: "Connected to TON address UQDl...WgrG with live USDT earnings balance, APY & transfers"
     },
     {
       id: "external_api",
@@ -1011,7 +1011,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400 font-mono mt-0.5">
-                          Connected TON Address: <span className="text-emerald-400 font-bold">UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt</span>
+                          Connected TON Address: <span className="text-emerald-400 font-bold">UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG</span>
                         </p>
                       </div>
                     </div>
@@ -1059,7 +1059,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                         <span className="px-1.5 py-0.5 bg-sky-950 text-sky-200 rounded text-[9px] font-mono border border-sky-700 font-bold">SPEC</span>
                       </button>
                       <a
-                        href="https://tonviewer.com/UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt"
+                        href="https://tonviewer.com/UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border border-stone-700 cursor-pointer"
@@ -1202,7 +1202,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                             <span>Full Ecosystem Access to USDT Balance Verified</span>
                           </div>
                           <p className="text-stone-400 leading-relaxed text-[11px] font-sans">
-                            Your TON wallet address <code className="text-emerald-300 font-mono font-bold">UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt</code> is permanently bound to the ecosystem runtime. Any earnings from visitors, sales, ads, or blockchain checkouts automatically credit directly to your USDT balance inside Telegram @Wallet.
+                            Your TON wallet address <code className="text-emerald-300 font-mono font-bold">UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG</code> is permanently bound to the ecosystem runtime. Any earnings from visitors, sales, ads, or blockchain checkouts automatically credit directly to your USDT balance inside Telegram @Wallet.
                           </p>
                         </div>
                       </div>
@@ -2164,7 +2164,7 @@ export const EcosystemDashboard: React.FC<EcosystemDashboardProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400 font-mono mt-0.5">
-                          Address: <span className="text-emerald-400 font-bold">UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt</span> • Available: <span className="text-white font-bold font-mono">${(stats?.totalRevenueRecorded || 845.50).toFixed(2)} USDT</span>
+                          Address: <span className="text-emerald-400 font-bold">UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG</span> • Available: <span className="text-white font-bold font-mono">${(stats?.totalRevenueRecorded || 845.50).toFixed(2)} USDT</span>
                         </p>
                       </div>
                     </div>

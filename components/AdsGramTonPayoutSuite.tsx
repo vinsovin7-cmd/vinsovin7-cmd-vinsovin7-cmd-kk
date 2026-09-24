@@ -128,7 +128,7 @@ export const AdsGramTonPayoutSuite: React.FC<AdsGramTonPayoutSuiteProps> = ({ on
       });
     }, 1000);
 
-    const targetWallet = walletAccount?.address || "UQCeMpY46o_P3qA20vK-89f41b4904558ecb2_HLNt";
+    const targetWallet = walletAccount?.address || "UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG";
 
     try {
       const result = await adsgram.showAd(adType, targetWallet, {

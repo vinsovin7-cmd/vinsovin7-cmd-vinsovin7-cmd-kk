@@ -110,7 +110,7 @@ export const TelegramInEcosystemApp: React.FC<TelegramInEcosystemAppProps> = ({
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
 
-  const tonAddress = "UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt";
+  const tonAddress = "UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG";
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Contacts list

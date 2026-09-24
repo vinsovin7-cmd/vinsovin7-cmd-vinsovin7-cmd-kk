@@ -594,6 +594,17 @@ export const FranzMultiMessengerWrapper: React.FC<FranzMultiMessengerWrapperProp
             <span>👑</span>
             <span className="tracking-wide">OWNER VIP: UNLOCKED</span>
           </button>
+
+          {/* TON Community & TMA Deep Link Button */}
+          <a
+            href="/#community"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/70 border border-amber-500/50 text-[11px] text-amber-300 font-bold hover:bg-amber-900 transition-colors shadow-sm"
+            title="Open Zealy/Galxe Community Hub & TMAs"
+          >
+            <span>💎</span>
+            <span>TON Hub & TMAs</span>
+            <span className="font-mono text-[10px] text-emerald-400">UQDl...WgrG</span>
+          </a>
         </div>
 
         {/* Right: Window Control buttons (_ □ ✕) */}

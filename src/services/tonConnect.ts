@@ -75,9 +75,9 @@ export class TonConnectService {
       } else {
         // Default non-custodial wallet configured for ecosystem rewards
         this.currentAccount = {
-          address: "UQCeMpY46o_P3qA20vK-89f41b4904558ecb2_HLNt",
+          address: "UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG",
           rawAddress: "0:e23a4f618b76c8c07e0f2149b5c2a4bf73c4d7b844",
-          walletName: "Tonkeeper (Non-Custodial)",
+          walletName: "TON Ecosystem Wallet (@wallet)",
           icon: "💎",
           connectedAt: new Date().toISOString(),
           network: "mainnet",

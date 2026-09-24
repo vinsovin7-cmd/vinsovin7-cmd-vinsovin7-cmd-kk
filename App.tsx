@@ -23,6 +23,7 @@ import { SreymaraQueenConversationalAI } from './components/SreymaraQueenConvers
 import { CrossBorderPaymentGatewaySuite } from './components/CrossBorderPaymentGatewaySuite';
 import { CoinbaseAgentMcpSuite } from './components/CoinbaseAgentMcpSuite';
 import { FranzMultiMessengerWrapper } from './components/FranzMultiMessengerWrapper';
+import { CommunityEcosystemHub } from './components/CommunityEcosystemHub';
 import { ShoppingBag, Mail, Sparkles, BookOpen, Layers, Globe, ShieldCheck, Activity, X, Eye, EyeOff, Maximize2, Minimize2, Coins, GitBranch, Wallet, Zap, Send, ExternalLink, Download, Share2, ChevronDown, ChevronUp, Grid, Smartphone, Crown, Lock, Video, Film, Users, UserCheck, Heart, Usb, Star, Mic, Bot, Building2, CreditCard, TrendingUp, MessageSquare } from 'lucide-react';
 
 const AuthorCard = ({ name, role, delay }: { name: string, role: string, delay: string }) => {
@@ -48,11 +49,14 @@ const SEVEN_COLOR_STARS = [
 
 const App: React.FC = () => {
   const [selectedStar, setSelectedStar] = useState<typeof SEVEN_COLOR_STARS[0] | null>(null);
-  const [activeMainTab, setActiveMainTab] = useState<"franz_messenger" | "web_to_app" | "adsgram_ton" | "revenue" | "ton_wallet" | "external_api" | "cross_border_payments" | "coinbase_mcp" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
+  const [activeMainTab, setActiveMainTab] = useState<"community_hub" | "franz_messenger" | "web_to_app" | "adsgram_ton" | "revenue" | "ton_wallet" | "external_api" | "cross_border_payments" | "coinbase_mcp" | "telegram_auth" | "solscan" | "sco_monetization" | "mail_ai" | "sreymara_appz" | "quantum" | "admin_palace" | "cinema_video" | "cloudflare" | "visitor_records" | "datingarts">((): any => {
     if (typeof window !== "undefined") {
       const pathname = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       const href = window.location.href.toLowerCase();
+      if (hash.includes("community") || hash.includes("zealy") || hash.includes("galxe") || hash.includes("tma") || hash.includes("quest")) {
+        return "community_hub";
+      }
       // Dedicated Franz Multi-Messenger URL detection (/franz or #franz)
       if (pathname.startsWith("/franz") || pathname.startsWith("/messenger") || hash.includes("franz") || hash.includes("messenger") || hash.includes("webview")) {
         return "franz_messenger";
@@ -147,7 +151,11 @@ const App: React.FC = () => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "").toLowerCase();
       const pathname = window.location.pathname.toLowerCase();
-      if (pathname.startsWith("/franz") || pathname.startsWith("/messenger") || hash.includes("franz") || hash.includes("messenger") || hash.includes("webview")) {
+      if (hash.includes("community") || hash.includes("zealy") || hash.includes("galxe") || hash.includes("tma") || hash.includes("quest")) {
+        setActiveMainTab("community_hub");
+        setIsTabHidden(false);
+      }
+      else if (pathname.startsWith("/franz") || pathname.startsWith("/messenger") || hash.includes("franz") || hash.includes("messenger") || hash.includes("webview")) {
         setActiveMainTab("franz_messenger");
         setIsTabHidden(false);
       }
@@ -416,6 +424,25 @@ const App: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-stone-950 animate-ping" />
                   LIVE MIC
                 </span>
+              </button>
+
+              {/* Sreymara Community Hub, TMAs & Zealy/Galxe Quests Tab */}
+              <button
+                id="btn-nav-community-hub"
+                onClick={() => {
+                  setActiveMainTab("community_hub");
+                  setIsTabHidden(false);
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-lg ${
+                  activeMainTab === "community_hub" && !isTabHidden
+                    ? "bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-500 text-stone-950 border-amber-300 ring-2 ring-emerald-400/50"
+                    : "bg-amber-950/60 text-amber-300 hover:text-white border-amber-700/70"
+                }`}
+                title="Zealy/Galxe Community Quests, Telegram Channels, 4 Autonomous TMAs & TON Payouts"
+              >
+                <Sparkles size={14} className="text-amber-400" />
+                <span>Community & TMAs</span>
+                <span className="px-1.5 py-0.2 bg-emerald-400 text-stone-950 rounded text-[9px] font-black uppercase">ZEALY / TON</span>
               </button>
 
               {/* Franz Multi-Messenger Core Wrapper & Isolated Webview Engine Tab */}
@@ -946,6 +973,13 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* VIEW: COMMUNITY ECOSYSTEM HUB & ZEALY/GALXE QUESTS */}
+        {!isTabHidden && activeMainTab === "community_hub" && (
+          <div className="w-full max-w-7xl mx-auto px-4 py-4 animate-fade-in space-y-6">
+            <CommunityEcosystemHub onNavigateToFranz={() => setActiveMainTab("franz_messenger")} />
+          </div>
+        )}
+
         {/* VIEW: FRANZ MULTI-MESSENGER ELECTRON CORE WRAPPER & ISOLATED WEBVIEW ENGINE */}
         {!isTabHidden && activeMainTab === "franz_messenger" && (
           <div className="w-full h-[88vh] min-h-[660px] max-h-[920px] rounded-2xl overflow-hidden border border-stone-800 shadow-2xl animate-fade-in flex flex-col">
@@ -955,8 +989,11 @@ const App: React.FC = () => {
 
         {/* VIEW: WEBSITE TO APP CONVERTER (com.webtoapp.converter from Google Play) */}
         {!isTabHidden && activeMainTab === "web_to_app" && (
-          <div className="space-y-6 animate-fade-in flex flex-col items-center">
+          <div className="space-y-8 animate-fade-in flex flex-col items-center w-full max-w-7xl mx-auto">
             <WebsiteToAppConverter onClose={() => setActiveMainTab("revenue")} />
+            <div className="w-full pt-4">
+              <CommunityEcosystemHub onNavigateToFranz={() => setActiveMainTab("franz_messenger")} />
+            </div>
           </div>
         )}
 

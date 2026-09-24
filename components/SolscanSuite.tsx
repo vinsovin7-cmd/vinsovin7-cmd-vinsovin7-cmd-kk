@@ -83,7 +83,7 @@ export const SolscanSuite: React.FC<SolscanSuiteProps> = ({ onFundsReceived }) =
   const [pushHash, setPushHash] = useState<string>("4xY8kP2mL9qR7sT0uV1wX3yZ5aB7cD9eF1gH3iJ5kL8N");
   const [pushAmount, setPushAmount] = useState<string>("150.00");
   const [pushAsset, setPushAsset] = useState<"USDT" | "SOL" | "USDC">("USDT");
-  const [pushRecipient, setPushRecipient] = useState<string>("UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt");
+  const [pushRecipient, setPushRecipient] = useState<string>("UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG");
   const [isPushing, setIsPushing] = useState<boolean>(false);
   const [pushSuccessMsg, setPushSuccessMsg] = useState<string | null>(null);
 

@@ -103,7 +103,7 @@ export const TelegramTonWallet: React.FC<TelegramTonWalletProps> = ({
       chain: "TON",
       name: "The Open Network (TON)",
       symbol: "TON / USDT",
-      address: "UQCEmPuekMNIhr5eIQRq-U9-UFPgtzi1WKGzRpjX-ctNHLNt",
+      address: "UQDlOTSlGL73BFgqkrYbBH2qZjPGtjhT0V41bv6ObdhpWgrG",
       balance: realDepositBalance,
       usdRate: 1.0,
       icon: "💎"
